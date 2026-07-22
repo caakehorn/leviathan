@@ -16,6 +16,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous">
   <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;700;900&amp;family=Space+Grotesk:wght@400;500;700&amp;family=IBM+Plex+Mono:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
   <meta name="ext-resource-dependency" content="data/leviathan.enc" data-resource-id="leviathan">
+  <meta name="ext-resource-dependency" content="data/wiki-data.json" data-resource-id="wikidata">
   <style>
     html { scroll-behavior: smooth; }
     html, body { margin: 0; padding: 0; background: #020008; color: #e8e6ff; }
@@ -518,7 +519,18 @@ class Component extends DCLogic {
       this.D.favCtx = (favCtxJ && favCtxJ.favs) || [];
       this.D.nameOf = {};
       for (const t of msg.threads) if (t.name) this.D.nameOf[t.id] = t.name;
-      if (this.initWiki) this.initWiki(data.wikiPages, data.wikiText, data.wikiLog);
+      // The wiki now ships as a separate plaintext dataset rebuilt from the
+      // public wiki-brain repo (tools/build-wiki-data.py); the snapshot inside
+      // the encrypted bundle is only the fallback if that file is missing.
+      let wikiPages = data.wikiPages, wikiText = data.wikiText, wikiLog = data.wikiLog;
+      try {
+        const wres = await fetch(src('wikidata', 'data/wiki-data.json'));
+        if (wres.ok) {
+          const wd = await wres.json();
+          if (wd && wd.wikiPages) { wikiPages = wd.wikiPages; wikiText = wd.wikiText; wikiLog = wd.wikiLog; }
+        }
+      } catch (e) { /* keep the bundle snapshot */ }
+      if (this.initWiki) this.initWiki(wikiPages, wikiText, wikiLog);
       this.setState({ loading: false });
       this.animateCounters();
     }
