@@ -65,8 +65,22 @@
       }
       const tags = {};
       for (const p of pages) for (const t of (p.tags || [])) { (tags[t] = tags[t] || []).push(p.id); }
-      this.WK = { pages, byId, typed, prose, inDeg, outDeg, tags, log: (logJ && logJ.ops) || [] };
+      const log = (logJ && logJ.ops) || [];
+      // latest date the corpus knows about — the "now" that open-ended ranges
+      // (dre: "present") and the timeline axes extend to
+      const isD = (d) => /^\d{4}-\d{2}(-\d{2})?/.test(d || '');
+      let maxD = '2026-01-01';
+      for (const p of pages) for (const d of [p.created, p.drs, p.dre]) if (isD(d) && d.slice(0, 10) > maxD) maxD = (d + '-01-01').slice(0, 10);
+      for (const o of log) if (isD(o.d) && o.d > maxD) maxD = o.d;
+      this.WK = { pages, byId, typed, prose, inDeg, outDeg, tags, log, maxD };
       this.WT = textJ || {};
+      // live counts in the hints instead of hardcoded snapshot numbers
+      const words = pages.reduce((a, p) => a + (p.words || 0), 0);
+      this.WHINTS = Object.assign({}, this.WHINTS, {
+        reader: 'THE SECOND BRAIN, VERBATIM · ' + pages.length + ' PAGES · CLICK ANY [[LINK]] · SEARCH LEFT · TYPED CONNECTIONS UP TOP',
+        claims: typed.length + ' TYPED EDGES, EACH ONE AN ARGUED CLAIM · SCROLL THE FEED · CLICK A CARD EDGE TO OPEN SOURCE OR TARGET',
+        mass: 'THE CORPUS BY WEIGHT · ' + words.toLocaleString() + ' WORDS TILED BY DOMAIN AND PAGE · HOVER FOR COUNTS · CLICK TO READ'
+      });
     },
 
     wikiOpen(id) {
@@ -93,7 +107,10 @@
         ];
       }
       if (s.tab === 'claims') {
-        const types = ['ALL', 'parallels', 'causes', 'evidences', 'instantiates', 'precedes', 'contradicts', 'contextualizes', 'co-occurs'];
+        // chip row built from the data: the 8 most common edge types actually in the graph
+        const counts = {};
+        if (WK) for (const e of WK.typed) counts[e.type] = (counts[e.type] || 0) + 1;
+        const types = ['ALL', ...Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 8).map(([t]) => t)];
         return types.map(t => ({ label: t.toUpperCase(), onClick: () => { this.setState({ claimType: t }); if (this.M.claims) this.M.claims.scroll = 0; }, style: cs(s.claimType === t, TCOL[t] || '#9b8cf2') }));
       }
       if (s.tab === 'census') {
@@ -140,9 +157,20 @@
         padding: '14px 8px 4px', color: col, cursor: 'default'
       });
       if (q) {
-        const hits = WK.pages.filter(p => p.title.toLowerCase().includes(q) || p.id.toLowerCase().includes(q) || (p.summary || '').toLowerCase().includes(q)).slice(0, 60);
-        items.push({ label: hits.length + ' MATCHES', onClick: () => {}, style: headStyle('#5b6472') });
+        const metaHit = (p) => p.title.toLowerCase().includes(q) || p.id.toLowerCase().includes(q)
+          || (p.summary || '').toLowerCase().includes(q)
+          || (p.tags || []).some(t => t.toLowerCase().includes(q))
+          || (p.aliases || []).some(a => a.toLowerCase().includes(q));
+        const hits = WK.pages.filter(metaHit).slice(0, 60);
+        // fall through to the page bodies for anything the metadata didn't catch
+        const seen = new Set(hits.map(p => p.id));
+        const body = q.length >= 3 ? WK.pages.filter(p => !seen.has(p.id) && ((this.WT[p.id] || '').toLowerCase().includes(q))).slice(0, 60 - Math.min(60, hits.length)) : [];
+        items.push({ label: (hits.length + body.length) + ' MATCHES', onClick: () => {}, style: headStyle('#5b6472') });
         for (const p of hits) items.push({ label: p.title, onClick: () => this.wikiOpen(p.id), style: itemStyle(p.id === active, DCOL[p.domain]) });
+        if (body.length) {
+          items.push({ label: '◈ IN PAGE TEXT · ' + body.length, onClick: () => {}, style: headStyle('#5b6472') });
+          for (const p of body) items.push({ label: p.title, onClick: () => this.wikiOpen(p.id), style: itemStyle(p.id === active, DCOL[p.domain]) });
+        }
         return items;
       }
       for (const d of DOMS) {
@@ -277,7 +305,9 @@
           html += '<div style="float:right;width:290px;margin:0 0 18px 26px;border:1px solid #1d2430;background:#0a0d13;">';
           html += '<div style="' + MONO + 'font-size:9px;letter-spacing:0.22em;color:' + dcol + ';padding:9px 13px;border-bottom:1px solid #161b24;">INFOBOX</div>';
           for (const [k, v] of rows) {
-            const vv = Array.isArray(v) ? v.join(', ') : String(v);
+            // older data snapshots carry raw [[target|label]] markup in infobox values — show the label
+            const unwl = (s) => String(s).replace(/\[\[([^\]|]+)\|([^\]]+)\]\]/g, '$2').replace(/\[\[([^\]]+)\]\]/g, (m, p1) => p1.split('/').pop());
+            const vv = Array.isArray(v) ? v.map(unwl).join(', ') : unwl(v);
             html += '<div style="display:flex;gap:10px;padding:7px 13px;border-bottom:1px solid #10141b;">'
               + '<div style="' + MONO + 'font-size:9px;letter-spacing:0.08em;color:#5b6472;min-width:92px;padding-top:2px;">' + esc(k.replace(/_/g, ' ').toUpperCase()) + '</div>'
               + '<div style="' + MONO + 'font-size:10.5px;line-height:1.7;color:#c9c5bb;">' + esc(vv) + '</div></div>';
@@ -611,10 +641,10 @@
       for (const p of people) {
         let a = p.drs || (p.infobox && (p.infobox.first_contact || p.infobox.date_range_start)) || '';
         let b = p.dre || (p.infobox && p.infobox.last_contact) || '';
-        if (!a && p.created) continue;
-        if (!a) continue;
-        if (!/^\d{4}/.test(a)) continue;
-        if (!b || !/^\d{4}/.test(b)) b = a;
+        if (!a || !/^\d{4}/.test(a)) continue;
+        // "present" (or any non-date end) means the range is still open — run it to the corpus's latest date
+        if (b && !/^\d{4}/.test(b)) b = WK.maxD;
+        if (!b) b = a;
         const pad = (d) => (d + '-01-01').slice(0, 10);
         rows.push({ p, a: this.d2i(pad(a)), b: Math.max(this.d2i(pad(a)), this.d2i(pad(b))), known: (p.infobox && (p.infobox.known_for || p.infobox.relationship_to_dan)) || p.summary || '' });
       }
@@ -628,11 +658,11 @@
       if (st.censusSort === 'first') rows.sort((x, y) => x.a - y.a);
       else if (st.censusSort === 'span') rows.sort((x, y) => (y.b - y.a) - (x.b - x.a));
       else rows.sort((x, y) => x.p.title.localeCompare(y.p.title));
-      const t0 = Math.min(...rows.map(r => r.a)), t1 = this.d2i('2026-07-21');
+      const t0 = Math.min(...rows.map(r => r.a)), t1 = this.d2i(this.WK.maxD);
       const gx0 = 190, gx1 = W - 30, gy0 = 34, gy1 = H - 34;
       const xOf = (i) => gx0 + ((i - t0) / (t1 - t0)) * (gx1 - gx0);
       // year grid
-      const y0y = this.i2d(t0).getUTCFullYear(), y1y = 2026;
+      const y0y = this.i2d(t0).getUTCFullYear(), y1y = this.i2d(t1).getUTCFullYear();
       ctx.textAlign = 'center'; ctx.textBaseline = 'top';
       for (let y = y0y; y <= y1y; y++) {
         const x = xOf(this.d2i(y + '-01-01'));
@@ -692,7 +722,8 @@
       for (const p of WK.pages) {
         if (!p.drs || !/^\d{4}/.test(p.drs)) continue;
         const pad = (d) => (d + '-01-01').slice(0, 10);
-        let b = (p.dre && /^\d{4}/.test(p.dre)) ? p.dre : p.drs;
+        // open-ended ranges (dre: "present") extend to the corpus's latest date
+        let b = (p.dre && /^\d{4}/.test(p.dre)) ? p.dre : (p.dre ? WK.maxD : p.drs);
         items.push({ p, a: this.d2i(pad(p.drs)), b: Math.max(this.d2i(pad(p.drs)), this.d2i(pad(b))) });
       }
       this.M.strata = { items, hover: null };
@@ -704,12 +735,12 @@
       const items = st.strataDom === 'ALL' ? St.items : St.items.filter(i => i.p.domain === st.strataDom);
       const doms = st.strataDom === 'ALL' ? DOMS.filter(d => St.items.some(i => i.p.domain === d)) : [st.strataDom];
       const t0 = Math.min(...items.map(i => i.a), this.d2i('2004-01-01'));
-      const t1 = this.d2i('2026-07-21');
+      const t1 = this.d2i(this.WK.maxD);
       const gx0 = 120, gx1 = W - 26, gy0 = 30, gy1 = H - 30;
       const xOf = (i) => gx0 + ((i - t0) / (t1 - t0)) * (gx1 - gx0);
       // year grid
       ctx.textAlign = 'center'; ctx.textBaseline = 'top';
-      for (let y = this.i2d(t0).getUTCFullYear(); y <= 2026; y++) {
+      for (let y = this.i2d(t0).getUTCFullYear(); y <= this.i2d(t1).getUTCFullYear(); y++) {
         const x = xOf(this.d2i(y + '-01-01'));
         if (x < gx0) continue;
         ctx.strokeStyle = C.grid;

@@ -13,6 +13,9 @@ js/
   wiki-modules.js     # wiki / corpus reader
 data/
   leviathan.enc       # AES-256-GCM encrypted content bundle (decrypted in-browser)
+  wiki-data.json      # WIKI section dataset, built from github.com/caakehorn/wiki-brain
+tools/
+  build-wiki-data.py  # regenerates data/wiki-data.json from a wiki-brain checkout
 .nojekyll             # disables GitHub's Jekyll build (see below)
 .github/workflows/
   pages.yml           # GitHub Actions workflow that deploys to Pages
@@ -25,6 +28,19 @@ so viewers need an internet connection but the repo needs no install step.
 The `data/leviathan.enc` bundle is encrypted; the site prompts for a passphrase and
 decrypts it in the browser using the Web Crypto API. The plaintext only ever exists
 in memory in the visitor's tab.
+
+The WIKI section's dataset (`data/wiki-data.json`) is the exception: it is built
+from the [wiki-brain](https://github.com/caakehorn/wiki-brain) repository — the
+authoritative wiki source, already served publicly at
+caakehorn.github.io/wiki-brain — so it ships unencrypted and can be refreshed
+without re-packing the bundle:
+
+```bash
+tools/build-wiki-data.py --wiki-brain /path/to/wiki-brain
+```
+
+If the file is absent the site falls back to the wiki snapshot inside the
+encrypted bundle.
 
 ## Viewing on GitHub Pages
 
