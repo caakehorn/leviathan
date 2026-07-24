@@ -29,7 +29,9 @@
       tagmap: 'THEMES AS GRAVITY \u00b7 TAGS THAT SHARE PAGES ATTRACT \u00b7 CLICK A TAG TO LIST ITS PAGES \u00b7 CLICK A PAGE TO READ',
       mass: 'THE CORPUS BY WEIGHT \u00b7 234,736 WORDS TILED BY DOMAIN AND PAGE \u00b7 HOVER FOR COUNTS \u00b7 CLICK TO READ',
       lattice: 'GRAPH FORENSICS \u00b7 EDGE-TYPE SPECTRUM \u00b7 RECIPROCITY \u00b7 THE ORPHAN RING = PAGES NOTHING POINTS TO \u00b7 CLICK TO READ',
-      evidence: 'WHERE THE KNOWLEDGE COMES FROM \u00b7 EVERY BAR A RAW SOURCE \u00b7 CLICK TO SEE THE PAGES IT FEEDS \u00b7 CLICK A PAGE TO READ'
+      evidence: 'WHERE THE KNOWLEDGE COMES FROM \u00b7 EVERY BAR A RAW SOURCE \u00b7 CLICK TO SEE THE PAGES IT FEEDS \u00b7 CLICK A PAGE TO READ',
+      chronicle: 'PRESS PLAY \u00b7 THE WIKI BUILDING ITSELF, WEEK BY WEEK \u00b7 CLAIMS SURFACE AS PAGES ENTER THE RECORD \u00b7 DRAG THE LANES TO SCRUB',
+      genesis: 'PRESS PLAY \u00b7 WATCH THE GRAPH FORM, PAGE BY PAGE \u00b7 GRAB A NODE ONCE IT EXISTS \u00b7 DRAG THE STRIP BELOW TO SCRUB'
     },
 
     sectionBtnStyle(on, tone) {
@@ -135,6 +137,24 @@
         return [[24, 'TOP 24'], [48, 'TOP 48']].map(([v, l]) => ({
           label: l, onClick: () => this.setState({ evTop: v }), style: cs(s.evTop === v, '#4fc3e8')
         }));
+      }
+      if (s.tab === 'chronicle') {
+        return [
+          { label: s.chroniclePlay ? '❚❚ PAUSE' : '▶ PLAY', onClick: () => this.setState(st => ({ chroniclePlay: !st.chroniclePlay })), style: cs(s.chroniclePlay, '#9b8cf2') },
+          { label: '↺ RESTART', onClick: () => this.chronicleRestart(), style: cs(false) },
+          ...[[0.35, 'SLOW'], [1, 'NORMAL'], [3, 'FAST']].map(([v, l]) => ({
+            label: l, onClick: () => this.setState({ chronicleSpeed: v }), style: cs(s.chronicleSpeed === v, '#9b8cf2')
+          }))
+        ];
+      }
+      if (s.tab === 'genesis') {
+        return [
+          { label: s.genesisPlay ? '❚❚ PAUSE' : '▶ PLAY', onClick: () => this.setState(st => ({ genesisPlay: !st.genesisPlay })), style: cs(s.genesisPlay, '#9b8cf2') },
+          { label: '↺ RESTART', onClick: () => this.genesisRestart(), style: cs(false) },
+          ...[[0.35, 'SLOW'], [1, 'NORMAL'], [3, 'FAST']].map(([v, l]) => ({
+            label: l, onClick: () => this.setState({ genesisSpeed: v }), style: cs(s.genesisSpeed === v, '#9b8cf2')
+          }))
+        ];
       }
       return [];
     },
@@ -1317,6 +1337,314 @@
         const hit = (E.pageHits || []).find(r => p.x >= r.x && p.x <= r.x + r.w && p.y >= r.y && p.y <= r.y + r.h);
         if (hit) { this.wikiOpen(hit.id); return; }
         E.pinned = E.hover && E.pinned !== E.hover ? E.hover : null;
+      }
+    },
+
+    // ============================================================
+    // WIKI 11 \u2014 CHRONICLE  (the wiki building itself, POLYGRAPH-style \u00b7
+    // op-log rates as pens, claims surfacing as pages enter the record)
+    // ============================================================
+    CHRON_PENS: [
+      ['ingest', 'INGEST', '#e8a33d'],
+      ['connect', 'CONNECT', '#9b8cf2'],
+      ['write', 'WRITE', '#7fd486'],
+      ['maintain', 'MAINTAIN', '#4fc3e8']
+    ],
+    CHRON_BUCKET: {
+      ingest: 'ingest', connect: 'connect', rename: 'connect',
+      build: 'write', edit: 'write', add: 'write', rewrite: 'write',
+      triage: 'maintain', lint: 'maintain', fix: 'maintain'
+    },
+    initChronicle() {
+      const WK = this.WK;
+      const log = WK.log;
+      if (!log.length) { this.M.chronicle = { empty: true }; return; }
+      // the log is a dense, days-long authoring burst rather than a slow multi-year
+      // trickle (see ACCRETION) \u2014 daily buckets give it real texture, weekly ones don't
+      const d0 = this.d2i(log[0].d);
+      const d1 = this.d2i(WK.maxD);
+      const nD = Math.max(2, (d1 - d0) + 2);
+      const sums = {}; for (const [k] of this.CHRON_PENS) sums[k] = new Float32Array(nD);
+      const tot = new Float32Array(nD);
+      for (const o of log) {
+        const i = this.d2i(o.d) - d0;
+        if (i < 0 || i >= nD) continue;
+        const b = this.CHRON_BUCKET[o.k] || 'maintain';
+        sums[b][i]++; tot[i]++;
+      }
+      const rates = {};
+      for (const [k] of this.CHRON_PENS) {
+        rates[k] = new Float32Array(nD);
+        for (let i = 0; i < nD; i++) rates[k][i] = tot[i] > 0 ? sums[k][i] / tot[i] * 100 : 0;
+      }
+      const maxRate = {};
+      for (const [k] of this.CHRON_PENS) { let m = 0.001; for (let i = 0; i < nD; i++) m = Math.max(m, rates[k][i]); maxRate[k] = m; }
+      let maxVol = 1;
+      for (let i = 0; i < nD; i++) maxVol = Math.max(maxVol, tot[i]);
+      // fragment feed \u2014 an argued claim (or the summary) surfacing the day a page enters the record
+      const frags = [];
+      for (const p of WK.pages) {
+        if (!p.created || !/^\d{4}-\d{2}-\d{2}/.test(p.created)) continue;
+        const i = this.d2i(p.created) - d0;
+        if (i < 0 || i >= nD) continue;
+        const claimHit = (p.connections || []).find(c => c.claim && c.claim.length > 12);
+        const text = (claimHit && claimHit.claim) || p.summary || '';
+        if (!text) continue;
+        frags.push({ pos: i, text, tag: p.title, shownAt: 0 });
+      }
+      frags.sort((a, b) => a.pos - b.pos);
+      const dayLabel = (i) => this.i2d(d0 + i).toISOString().slice(0, 10);
+      this.M.chronicle = { d0, d1, nD, rates, maxRate, tot, maxVol, frags, dayLabel, play: 0.001, scrub: false, scrubGeo: null };
+    },
+    chronicleRestart() {
+      const Ch = this.M.chronicle; if (!Ch || Ch.empty) return;
+      Ch.play = 0.001; for (const f of Ch.frags) f.shownAt = 0;
+      this.setState({ chroniclePlay: true });
+    },
+    draw_chronicle(ctx, W, H, dt) {
+      if (!this.WK) return this.wkStandby(ctx, W, H);
+      if (!this.M.chronicle) this.initChronicle();
+      const C = this.COL, Ch = this.M.chronicle, st = this.state;
+      if (Ch.empty) { ctx.font = '11px ' + this.MONO; ctx.fillStyle = C.dim; ctx.textAlign = 'center'; ctx.fillText('NO LOG DATA', W / 2, H / 2); return; }
+      if (st.chroniclePlay && !Ch.scrub) {
+        Ch.play += st.chronicleSpeed * dt;
+        if (Ch.play >= Ch.nD - 0.01) { Ch.play = Ch.nD - 0.01; this.setState({ chroniclePlay: false }); }
+      }
+      const chartR = W * 0.6, fx = chartR + 8, fw = W - fx - 16;
+      const padL = 100, padT = 54, padB = 60;
+      const laneGap = 9;
+      const nLanes = this.CHRON_PENS.length + 1;
+      const laneH = (H - padT - padB - laneGap * (nLanes - 1)) / nLanes;
+      const xOf = (i) => padL + (i / (Ch.nD - 1)) * (chartR - padL - 20);
+      const playX = xOf(Ch.play);
+      const geo = { padL, padT, laneH, laneGap, x0: padL, x1: chartR - 20, xOf };
+      const vy0 = padT + this.CHRON_PENS.length * (laneH + laneGap);
+
+      ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+      ctx.font = '700 17px ' + this.GROT; ctx.fillStyle = '#cfc4ff';
+      ctx.fillText('CHRONICLE', 18, 32);
+      ctx.font = '9px ' + this.MONO; ctx.fillStyle = C.dim;
+      ctx.fillText(this.WK.log.length + ' LOGGED OPERATIONS \u00b7 THE WIKI BUILDING ITSELF, DAY BY DAY', 18, 48);
+      const di = Math.min(Ch.nD - 1, Math.floor(Ch.play));
+      ctx.font = '600 13px ' + this.MONO; ctx.fillStyle = C.txt; ctx.textAlign = 'right';
+      ctx.fillText(Ch.dayLabel(di) + ' \u00b7 ' + Math.round(Ch.tot[di]) + ' OPS THAT DAY', chartR - 20, 32);
+      ctx.textAlign = 'left';
+
+      const lanes = this.CHRON_PENS.map(([k, label, col]) => ({ data: Ch.rates[k], label, unit: '% OF DAY', color: col, max: Ch.maxRate[k] }));
+      this.drawPenLanes(ctx, geo, lanes, Ch.play, st.chroniclePlay);
+      this.drawVolumeLane(ctx, geo, vy0, Ch.tot, Ch.maxVol, Ch.play, '#9b8cf2');
+
+      ctx.strokeStyle = 'rgba(232,230,225,0.5)'; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(playX, padT - 6); ctx.lineTo(playX, vy0 + laneH + 8); ctx.stroke();
+      ctx.font = '9px ' + this.MONO; ctx.fillStyle = C.dim; ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+      for (let i = 0; i < Ch.nD; i += Math.max(1, Math.ceil(Ch.nD / 10))) {
+        ctx.fillText(Ch.dayLabel(i).slice(5), xOf(i), vy0 + laneH + 12);
+      }
+      Ch.scrubGeo = { x0: padL, x1: chartR - 20, y1: vy0 + laneH };
+
+      this.drawFragmentFeed(ctx, { fx, fy: padT - 22, fw, fh: H - padT - 36 }, Ch.frags, Ch.play, 'CLAIMS SURFACING \u00b7 AS PAGES ENTER THE WIKI', '#cfc4ff');
+    },
+    pt_chronicle(type, p) {
+      const Ch = this.M.chronicle; if (!Ch || Ch.empty) return;
+      const g = Ch.scrubGeo; if (!g) return;
+      if (type === 'down' && p.x < g.x1 + 20 && p.x > g.x0 - 20) {
+        Ch.scrub = true;
+        Ch.play = Math.max(0.001, Math.min(Ch.nD - 0.01, ((p.x - g.x0) / (g.x1 - g.x0)) * (Ch.nD - 1)));
+      } else if (type === 'move' && Ch.scrub && this.mouse.down) {
+        Ch.play = Math.max(0.001, Math.min(Ch.nD - 0.01, ((p.x - g.x0) / (g.x1 - g.x0)) * (Ch.nD - 1)));
+      } else if (type === 'up' || type === 'leave') {
+        Ch.scrub = false;
+      }
+    },
+
+    // ============================================================
+    // WIKI 12 \u2014 GENESIS  (time-lapse of the knowledge graph forming \u00b7
+    // same instrument shell as POLYGRAPH \u2014 pens, playhead, fragment
+    // feed \u2014 applied to the wiki's own link structure instead of text)
+    // ============================================================
+    initGenesis(W, H) {
+      const WK = this.WK;
+      // the whole corpus was written in a dense, days-long sprint (see CHRONICLE) \u2014
+      // daily reveal steps give the time-lapse real motion, weekly ones would not
+      const dated = WK.pages.filter(p => p.created && /^\d{4}-\d{2}-\d{2}/.test(p.created));
+      const d0 = dated.length ? Math.min(...dated.map(p => this.d2i(p.created))) : this.d2i(WK.maxD) - 30;
+      const d1 = this.d2i(WK.maxD);
+      const nD = Math.max(2, (d1 - d0) + 2);
+      const nodes = WK.pages.map(p => {
+        const revealD = (p.created && /^\d{4}-\d{2}-\d{2}/.test(p.created)) ? Math.max(0, this.d2i(p.created) - d0) : 0;
+        return {
+          p, id: p.id, revealD,
+          x: W / 2 + (Math.random() - 0.5) * W * 0.7, y: H / 2 + (Math.random() - 0.5) * H * 0.7,
+          vx: 0, vy: 0, r: 2.5 + Math.sqrt(p.words || 10) * 0.05
+        };
+      });
+      const byId = {}; nodes.forEach(n => { byId[n.id] = n; });
+      const edges = [], seenE = new Set();
+      for (const e of WK.typed) {
+        if (!byId[e.a] || !byId[e.b] || e.a === e.b) continue;
+        const key = e.a < e.b ? e.a + '|' + e.b : e.b + '|' + e.a;
+        if (seenE.has(key)) continue; seenE.add(key);
+        const a = byId[e.a], b = byId[e.b];
+        edges.push({ a, b, type: e.type, claim: e.claim, revealD: Math.max(a.revealD, b.revealD) });
+      }
+      const pagesD = new Float32Array(nD), edgesD = new Float32Array(nD);
+      for (const n of nodes) { const i = Math.floor(n.revealD); if (i >= 0 && i < nD) pagesD[i]++; }
+      for (const e of edges) { const i = Math.floor(e.revealD); if (i >= 0 && i < nD) edgesD[i]++; }
+      let maxP = 1, maxE = 1;
+      for (let i = 0; i < nD; i++) { maxP = Math.max(maxP, pagesD[i]); maxE = Math.max(maxE, edgesD[i]); }
+      const frags = edges.filter(e => e.claim && e.claim.length > 10)
+        .map(e => ({ pos: e.revealD, text: e.claim, tag: e.a.p.title.slice(0, 20) + ' \u2192 ' + e.b.p.title.slice(0, 20), shownAt: 0 }))
+        .sort((a, b) => a.pos - b.pos);
+      const dayLabel = (i) => this.i2d(d0 + i).toISOString().slice(0, 10);
+      this.M.genesis = {
+        d0, d1, nD, nodes, edges, byId, pagesD, edgesD, maxP, maxE, frags, dayLabel,
+        play: 0.001, scrub: false, scrubGeo: null, hover: null, pinned: null, drag: null, downPos: null
+      };
+    },
+    genesisRestart() {
+      const Ge = this.M.genesis; if (!Ge) return;
+      Ge.play = 0.001; for (const f of Ge.frags) f.shownAt = 0;
+      this.setState({ genesisPlay: true });
+    },
+    draw_genesis(ctx, W, H, dt) {
+      if (!this.WK) return this.wkStandby(ctx, W, H);
+      if (!this.M.genesis) this.initGenesis(W, H);
+      const C = this.COL, Ge = this.M.genesis, st = this.state;
+      dt = Math.min(dt, 0.03);
+      if (st.genesisPlay && !Ge.scrub) {
+        Ge.play += st.genesisSpeed * dt;
+        if (Ge.play >= Ge.nD - 0.01) { Ge.play = Ge.nD - 0.01; this.setState({ genesisPlay: false }); }
+      }
+      const fx = W - 260, fw = 244;
+      const stripH = 96;
+      const gx0 = 16, gx1 = fx - 14, gy0 = 44, gy1 = H - stripH - 10;
+      const active = Ge.nodes.filter(n => n.revealD <= Ge.play);
+      const activeEdges = Ge.edges.filter(e => e.revealD <= Ge.play);
+
+      // force sim, revealed nodes only \u2014 the layout settles as each page joins it
+      const cx = (gx0 + gx1) / 2, cy = (gy0 + gy1) / 2;
+      for (let i = 0; i < active.length; i++) {
+        const a = active[i];
+        a.vx += (cx - a.x) * 0.35 * dt; a.vy += (cy - a.y) * 0.35 * dt;
+        for (let j = i + 1; j < active.length; j++) {
+          const b = active[j];
+          let dx = b.x - a.x, dy = b.y - a.y;
+          const d2 = dx * dx + dy * dy + 300;
+          const f = 9000 / d2 * dt;
+          const d = Math.sqrt(d2);
+          dx /= d; dy /= d;
+          a.vx -= dx * f; a.vy -= dy * f;
+          b.vx += dx * f; b.vy += dy * f;
+        }
+      }
+      for (const e of activeEdges) {
+        const rest = 40;
+        const dx = e.b.x - e.a.x, dy = e.b.y - e.a.y;
+        const d = Math.hypot(dx, dy) || 1;
+        const f = (d - rest) * 1.8 * dt / d;
+        e.a.vx += dx * f; e.a.vy += dy * f;
+        e.b.vx -= dx * f; e.b.vy -= dy * f;
+      }
+      for (const n of active) {
+        if (Ge.drag === n) { n.x = this.mouse.x; n.y = this.mouse.y; n.vx = 0; n.vy = 0; continue; }
+        const damp = Math.pow(0.9, dt * 60);
+        n.vx *= damp; n.vy *= damp;
+        n.x += n.vx * dt; n.y += n.vy * dt;
+        n.x = Math.max(gx0 + 10, Math.min(gx1 - 10, n.x));
+        n.y = Math.max(gy0 + 10, Math.min(gy1 - 10, n.y));
+      }
+
+      ctx.save();
+      ctx.beginPath(); ctx.rect(gx0, gy0, gx1 - gx0, gy1 - gy0); ctx.clip();
+      const focus = Ge.pinned || Ge.hover;
+      for (const e of activeEdges) {
+        const lit = focus && (e.a === focus || e.b === focus);
+        ctx.strokeStyle = lit ? 'rgba(155,140,242,0.7)' : (TCOL[e.type] || '#5b6472') + '30';
+        ctx.lineWidth = lit ? 1.6 : 0.8;
+        ctx.beginPath(); ctx.moveTo(e.a.x, e.a.y); ctx.lineTo(e.b.x, e.b.y); ctx.stroke();
+      }
+      for (const n of active) {
+        const lit = n === Ge.hover || n === Ge.pinned;
+        ctx.beginPath(); ctx.arc(n.x, n.y, lit ? n.r + 3 : n.r, 0, Math.PI * 2);
+        ctx.fillStyle = lit ? '#ffffff' : (DCOL[n.p.domain] || '#8b94a4') + 'cc';
+        ctx.fill();
+        if (lit || n.r > 6) {
+          ctx.font = (lit ? '600 ' : '') + '8.5px ' + this.MONO;
+          ctx.fillStyle = lit ? C.txt : '#6b7484';
+          ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+          ctx.fillText(n.p.title.slice(0, 26), n.x, n.y + n.r + 3);
+        }
+      }
+      ctx.restore();
+
+      Ge.hover = null;
+      const mx = this.mouse.x, my = this.mouse.y;
+      if (mx >= gx0 && mx <= gx1 && my >= gy0 && my <= gy1) {
+        let best = 1e9;
+        for (const n of active) { const d = Math.hypot(mx - n.x, my - n.y); if (d < n.r + 8 && d < best) { best = d; Ge.hover = n; } }
+      }
+      if (this.cv) this.cv.style.cursor = Ge.drag ? 'grabbing' : (Ge.hover ? 'grab' : 'crosshair');
+
+      ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+      ctx.font = '700 17px ' + this.GROT; ctx.fillStyle = '#cfc4ff';
+      ctx.fillText('GENESIS', 18, 32);
+      ctx.font = '9px ' + this.MONO; ctx.fillStyle = C.dim;
+      const di = Math.min(Ge.nD - 1, Math.floor(Ge.play));
+      ctx.fillText(active.length + ' PAGES \u00b7 ' + activeEdges.length + ' TYPED EDGES \u00b7 AS OF ' + Ge.dayLabel(di), 18, 48);
+
+      // bottom instrument strip \u2014 pages/day + edges/day, playhead scrub
+      const stripY = gy1 + 14;
+      const laneH = (stripH - 20) / 2;
+      const sx0 = gx0 + 90, sx1 = gx1;
+      const xOf = (i) => sx0 + (i / (Ge.nD - 1)) * (sx1 - sx0);
+      const lanes = [
+        { data: Ge.pagesD, label: 'PAGES/DAY', unit: '', color: '#7fd486', max: Ge.maxP },
+        { data: Ge.edgesD, label: 'EDGES/DAY', unit: '', color: '#9b8cf2', max: Ge.maxE }
+      ];
+      this.drawPenLanes(ctx, { padL: sx0, padT: stripY, laneH, laneGap: 4, x0: sx0, x1: sx1, xOf }, lanes, Ge.play, st.genesisPlay);
+      const playX = xOf(Ge.play);
+      ctx.strokeStyle = 'rgba(232,230,225,0.5)'; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(playX, stripY - 6); ctx.lineTo(playX, stripY + laneH * 2 + 4 + 8); ctx.stroke();
+      Ge.scrubGeo = { x0: sx0, x1: sx1, y0: stripY - 10, y1: stripY + laneH * 2 + 4 + 10 };
+
+      this.drawFragmentFeed(ctx, { fx, fy: 8, fw, fh: H - 24 }, Ge.frags, Ge.play, 'CLAIMS FORMING \u00b7 AS EDGES CONNECT', '#cfc4ff');
+
+      const show = Ge.pinned || Ge.hover;
+      if (show) {
+        this.card(ctx, mx >= 0 ? mx : show.x, my >= 0 ? my : show.y, [
+          [show.p.title, '#e8e6e1', '600 12px ' + this.GROT],
+          [show.p.domain.toUpperCase() + (show.p.created ? ' \u00b7 CREATED ' + show.p.created : ' \u00b7 UNDATED \u00b7 PRESENT FROM THE START'), DCOL[show.p.domain] || C.dim],
+          ['CLICK TO OPEN THE PAGE', C.dim, '8.5px ' + this.MONO]
+        ], { border: show === Ge.pinned ? '#9b8cf2' : C.line });
+      }
+    },
+    pt_genesis(type, p) {
+      const Ge = this.M.genesis; if (!Ge) return;
+      const g = Ge.scrubGeo;
+      const inStrip = g && p.y >= g.y0 && p.y <= g.y1 + 26;
+      if (type === 'down') {
+        if (inStrip) {
+          Ge.scrub = true;
+          Ge.play = Math.max(0.001, Math.min(Ge.nD - 0.01, ((p.x - g.x0) / (g.x1 - g.x0)) * (Ge.nD - 1)));
+          return;
+        }
+        if (Ge.hover) { Ge.drag = Ge.hover; Ge.downPos = { x: p.x, y: p.y }; Ge.hover.vx = 0; Ge.hover.vy = 0; }
+        else Ge.pinned = null;
+      } else if (type === 'move') {
+        if (Ge.scrub && this.mouse.down) {
+          Ge.play = Math.max(0.001, Math.min(Ge.nD - 0.01, ((p.x - g.x0) / (g.x1 - g.x0)) * (Ge.nD - 1)));
+        } else if (Ge.drag && this.mouse.down) {
+          Ge.drag.vx = p.dx * 24; Ge.drag.vy = p.dy * 24;
+        }
+      } else if (type === 'up' || type === 'leave') {
+        if (Ge.drag) {
+          const moved = Ge.downPos ? Math.hypot(p.x - Ge.downPos.x, p.y - Ge.downPos.y) : 0;
+          if (moved < 5) this.wikiOpen(Ge.drag.p.id);
+          Ge.drag = null;
+        } else if (!Ge.scrub && type === 'up' && Ge.hover) {
+          Ge.pinned = (Ge.pinned === Ge.hover ? null : Ge.hover);
+        }
+        Ge.scrub = false;
       }
     }
   };
