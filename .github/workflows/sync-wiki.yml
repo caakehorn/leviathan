@@ -1,0 +1,140 @@
+name: Sync wiki data from wiki-brain
+
+# Keeps data/wiki-data.json in step with the authoritative wiki source at
+# github.com/caakehorn/wiki-brain.
+#
+# Fires three ways:
+#   schedule            — hourly safety net; a no-op run costs ~20s
+#   repository_dispatch — instant, if wiki-brain is set up to notify us
+#                         (see README "Keeping the WIKI section in sync")
+#   workflow_dispatch   — manual, with an optional force rebuild
+#
+# A push made with GITHUB_TOKEN does not trigger other workflows, so the Pages
+# deploy is invoked explicitly as a dependent job rather than left to pages.yml's
+# own push trigger.
+
+on:
+  schedule:
+    - cron: '17 * * * *'
+  repository_dispatch:
+    types: [wiki-brain-updated]
+  workflow_dispatch:
+    inputs:
+      force:
+        description: 'Rebuild even if wiki-brain has not moved'
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: sync-wiki
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    outputs:
+      changed: ${{ steps.commit.outputs.changed }}
+    steps:
+      - name: Checkout leviathan
+        uses: actions/checkout@v4
+
+      - name: Checkout wiki-brain
+        uses: actions/checkout@v4
+        with:
+          repository: caakehorn/wiki-brain
+          path: .wiki-brain
+          # public repo; swap in a PAT here if it is ever made private
+          # token: ${{ secrets.WIKI_BRAIN_TOKEN }}
+
+      - name: Has wiki-brain moved?
+        id: check
+        run: |
+          upstream="$(git -C .wiki-brain rev-parse HEAD)"
+          current="$(python3 -c "import json;print(json.load(open('data/wiki-data.json')).get('source_commit',''))" 2>/dev/null || echo '')"
+          echo "upstream=$upstream" >> "$GITHUB_OUTPUT"
+          echo "wiki-brain HEAD : $upstream"
+          echo "built from      : ${current:-<none>}"
+          if [ "$upstream" = "$current" ] && [ "${{ inputs.force }}" != "true" ]; then
+            echo "stale=false" >> "$GITHUB_OUTPUT"
+            echo "already up to date — nothing to do"
+          else
+            echo "stale=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Set up Python
+        if: steps.check.outputs.stale == 'true'
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      # Required, not optional: without it the frontmatter's nested connections
+      # and sources cannot be parsed and the build emits 0 typed edges.
+      - name: Install PyYAML
+        if: steps.check.outputs.stale == 'true'
+        run: pip install 'pyyaml==6.*'
+
+      - name: Rebuild wiki-data.json
+        if: steps.check.outputs.stale == 'true'
+        run: python3 tools/build-wiki-data.py --wiki-brain .wiki-brain
+
+      # A rebuild always rewrites the "generated" date, so a forced re-run on an
+      # unchanged source would otherwise produce a date-only commit.
+      - name: Discard a date-only rebuild
+        if: steps.check.outputs.stale == 'true'
+        run: |
+          python3 - <<'PY'
+          import json, subprocess, sys
+          new = json.load(open('data/wiki-data.json'))
+          try:
+              old = json.loads(subprocess.check_output(
+                  ['git', 'show', 'HEAD:data/wiki-data.json'], text=True))
+          except Exception:
+              sys.exit(0)
+          if {k: v for k, v in new.items() if k != 'generated'} == \
+             {k: v for k, v in old.items() if k != 'generated'}:
+              subprocess.check_call(['git', 'checkout', '--', 'data/wiki-data.json'])
+              print('only the generated date changed — reverted')
+          PY
+
+      - name: Commit and push
+        id: commit
+        if: steps.check.outputs.stale == 'true'
+        run: |
+          if git diff --quiet -- data/wiki-data.json; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "wiki-data.json is unchanged"
+            exit 0
+          fi
+          stats="$(python3 -c "
+          import json
+          d = json.load(open('data/wiki-data.json'))
+          p = d['wikiPages']['pages']
+          print('%d pages, %d typed edges, %s words, %d log ops' % (
+              len(p),
+              sum(len(x.get('connections', [])) for x in p),
+              format(sum(x.get('words', 0) for x in p), ','),
+              len(d['wikiLog']['ops'])))
+          ")"
+          git config user.name  'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add data/wiki-data.json
+          git commit -m "Sync wiki data from wiki-brain@${{ steps.check.outputs.upstream }}" \
+                     -m "$stats"
+          git push
+          echo "changed=true" >> "$GITHUB_OUTPUT"
+          echo "$stats" >> "$GITHUB_STEP_SUMMARY"
+
+  # GITHUB_TOKEN pushes do not fire pages.yml on their own, so call it directly.
+  deploy:
+    needs: sync
+    if: needs.sync.outputs.changed == 'true'
+    uses: ./.github/workflows/pages.yml
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
