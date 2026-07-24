@@ -43,6 +43,64 @@ tools/build-wiki-data.py --wiki-brain /path/to/wiki-brain
 If the file is absent the site falls back to the wiki snapshot inside the
 encrypted bundle.
 
+**PyYAML is required.** The wiki frontmatter carries nested lists of dicts
+(`connections`, `sources`) that the no-dependency fallback parser cannot read —
+without it the build still *succeeds* but emits zero typed edges and no sources,
+silently gutting the CLAIMS / HEALTH / EVIDENCE / GENESIS / SCHEMA views. The
+script therefore refuses to run without it, and also refuses to overwrite the
+existing dataset if a rebuild loses more than 20% of its pages, words, or edges
+(override with `--allow-shrink` when a large deletion is genuine).
+
+## Keeping the WIKI section in sync
+
+`.github/workflows/sync-wiki.yml` keeps `data/wiki-data.json` in step with
+wiki-brain automatically. It runs hourly, compares wiki-brain's current commit
+against the `source_commit` recorded in the dataset, and exits in a few seconds
+when nothing has moved. When wiki-brain *has* moved it rebuilds, commits the
+result with the upstream SHA in the message, and then deploys the site.
+
+It deploys by calling `pages.yml` directly rather than relying on that
+workflow's own push trigger: a push made with `GITHUB_TOKEN` deliberately does
+not start another workflow run, so the deploy would otherwise never fire.
+
+You can also run it from **Actions → Sync wiki data from wiki-brain → Run
+workflow**, which takes a *force* option to rebuild even when the source hasn't
+moved. A forced rebuild that changes nothing but the `generated` date is
+discarded rather than committed.
+
+### Optional: update within seconds instead of within the hour
+
+The hourly poll needs no setup on the wiki-brain side. To make edits propagate
+immediately, add this to **wiki-brain** as `.github/workflows/notify-leviathan.yml`:
+
+```yaml
+name: Notify leviathan
+on:
+  push:
+    branches: [main]
+    paths: ['wiki/**', 'log.md']
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          curl -fsS -X POST \
+            -H "Authorization: Bearer $TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            https://api.github.com/repos/caakehorn/leviathan/dispatches \
+            -d '{"event_type":"wiki-brain-updated"}'
+        env:
+          TOKEN: ${{ secrets.LEVIATHAN_DISPATCH_TOKEN }}
+```
+
+`LEVIATHAN_DISPATCH_TOKEN` is a fine-grained PAT with **Contents: read and
+write** on `caakehorn/leviathan`, stored as an Actions secret in wiki-brain.
+The hourly schedule stays on as a safety net either way.
+
+> GitHub disables scheduled workflows in repositories with no activity for 60
+> days. The sync commits here count as activity, so this only matters if
+> wiki-brain also goes quiet for that long.
+
 ## Viewing on GitHub Pages
 
 Because the page uses `{{ ... }}` bindings that are meant for the browser, **Jekyll must

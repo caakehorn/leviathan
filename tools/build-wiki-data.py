@@ -12,7 +12,12 @@ dataset ships as plaintext; the encrypted bundle keeps everything else.
 Usage:
   tools/build-wiki-data.py --wiki-brain /path/to/wiki-brain [--out data/wiki-data.json]
 
-Stdlib only, PyYAML used when available (lenient fallback otherwise).
+Requires PyYAML. The frontmatter carries nested lists of dicts (`connections`,
+`sources`), which the no-dependency fallback parser cannot read: without PyYAML
+the build still succeeds but yields ZERO typed edges and no sources, silently
+gutting the CLAIMS / HEALTH / EVIDENCE / GENESIS / SCHEMA views. That failure is
+invisible in the output, so PyYAML is required rather than optional, and the
+build refuses to overwrite a healthy dataset with a degraded one.
 """
 from __future__ import annotations
 
@@ -216,16 +221,54 @@ def git_sha(root: Path) -> str:
         return "unknown"
 
 
+def sanity_check(pages: list[dict], typed: int, words: int, out: Path,
+                 allow_shrink: bool) -> str | None:
+    """Return an error message if this build looks degraded, else None.
+
+    Guards the unattended path: a half-checked-out source or a frontmatter
+    regression should stop the pipeline, not quietly publish a thinner wiki.
+    """
+    if not pages:
+        return "no pages parsed"
+    if typed == 0:
+        return ("0 typed edges parsed — frontmatter is not being read "
+                "(is PyYAML installed?)")
+    if allow_shrink or not out.exists():
+        return None
+    try:
+        prev = json.loads(out.read_text(encoding="utf-8"))
+    except Exception:
+        return None
+    old_pages = len(prev.get("wikiPages", {}).get("pages", []))
+    old_words = sum(p.get("words", 0) for p in prev.get("wikiPages", {}).get("pages", []))
+    old_typed = sum(1 for p in prev.get("wikiPages", {}).get("pages", [])
+                    for c in p.get("connections", []))
+    for label, new, old in (("pages", len(pages), old_pages),
+                            ("words", words, old_words),
+                            ("typed edges", typed, old_typed)):
+        if old and new < old * 0.8:
+            return (f"{label} dropped {old} -> {new} (>20%); refusing to overwrite. "
+                    f"Re-run with --allow-shrink if this is intentional.")
+    return None
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--wiki-brain", required=True, type=Path)
     ap.add_argument("--out", type=Path,
                     default=Path(__file__).resolve().parent.parent / "data" / "wiki-data.json")
+    ap.add_argument("--allow-shrink", action="store_true",
+                    help="skip the regression guard (genuine large deletions)")
     args = ap.parse_args()
     root = args.wiki_brain.resolve()
     if not (root / "wiki").is_dir():
         print(f"error: {root} has no wiki/ directory", file=sys.stderr)
         return 1
+    if yaml is None:
+        print("error: PyYAML is required (pip install pyyaml); without it the "
+              "connections and sources frontmatter cannot be parsed and the "
+              "build would silently emit 0 typed edges", file=sys.stderr)
+        return 2
 
     pages, text = build_pages(root)
     ops = build_log(root)
@@ -233,6 +276,11 @@ def main() -> int:
     typed = sum(1 for p in pages for c in p["connections"]
                 if c["page"] in known and c["page"] != p["id"])
     words = sum(p["words"] for p in pages)
+
+    bad = sanity_check(pages, typed, words, args.out, args.allow_shrink)
+    if bad:
+        print(f"error: {bad}", file=sys.stderr)
+        return 3
 
     out = {
         "generated": datetime.date.today().isoformat(),
