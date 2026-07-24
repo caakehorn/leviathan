@@ -295,7 +295,10 @@
   </div>
 
   <!-- ======== TAB BAR ======== -->
-  <div style="display: flex; gap: 6px; padding: 8px 22px; border-bottom: 1px solid #161b24; align-items: center; background: rgba(7,9,13,0.86); overflow-x: auto;">
+  <!-- wraps rather than scrolls: with 17 wiki / 19 corpus modules a single
+       nowrap row pushes the last several tabs past the right edge, where the
+       horizontal scroll gives no visible affordance to find them -->
+  <div style="display: flex; flex-wrap: wrap; gap: 6px; padding: 8px 22px; border-bottom: 1px solid #161b24; align-items: center; background: rgba(7,9,13,0.86);">
     <div onClick="{{ toCorpus }}" style="{{ corpusBtnStyle }}">◈ CORPUS</div>
     <div onClick="{{ toWiki }}" style="{{ wikiBtnStyle }}">◈ WIKI</div>
     <div style="width: 1px; align-self: stretch; background: #222a37; margin: 2px 8px;"></div>
@@ -305,7 +308,7 @@
       </div>
     </sc-for>
     <div style="flex: 1;"></div>
-    <div style="font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: 0.14em; color: #3d4554;">KEYS 1&ndash;9</div>
+    <div style="font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: 0.14em; color: #3d4554; white-space: nowrap;">KEYS 1&ndash;9 0 - =</div>
   </div>
 
   <!-- ======== STAGE ======== -->
