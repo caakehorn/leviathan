@@ -10,7 +10,8 @@ js/
   support.js          # runtime: custom <x-dc> template engine, resource loading
   galaxy-cluster.js   # particle background simulation
   void-engine.js      # VOID visual layer
-  wiki-modules.js     # wiki / corpus reader
+  wiki-modules.js     # wiki reader + first-wave wiki visualizers
+  wiki-analytics.js   # second-wave wiki instruments computed from page prose
 data/
   leviathan.enc       # AES-256-GCM encrypted content bundle (decrypted in-browser)
   wiki-data.json      # WIKI section dataset, built from github.com/caakehorn/wiki-brain
