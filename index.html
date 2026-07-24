@@ -9,6 +9,7 @@
 <script src="./js/void-engine.js"></script>
 <script src="./js/wiki-modules.js"></script>
 <script src="./js/wiki-analytics.js"></script>
+<script src="./js/wiki-reader.js"></script>
 </head>
 <body>
 <x-dc>
@@ -322,23 +323,9 @@
       </sc-for>
     </div>
 
-    <!-- wiki reader overlay -->
+    <!-- wiki reader — js/wiki-reader.js owns this entire subtree -->
     <sc-if value="{{ readerOn }}" hint-placeholder-val="{{ false }}">
-      <div style="position: absolute; inset: 0; display: flex; background: #07090d; z-index: 5;">
-        <div style="width: 302px; min-width: 302px; border-right: 1px solid #161b24; display: flex; flex-direction: column; background: #0a0d13;">
-          <div style="padding: 12px 14px 8px;">
-            <input value="{{ wikiSearch }}" onChange="{{ setWikiSearch }}" placeholder="search 343 pages…" style="width: 100%; background: rgba(0,0,0,0.4); border: 1px solid #1d2430; color: #e8e6e1; font-family: 'IBM Plex Mono', monospace; font-size: 11px; padding: 8px 10px; outline: none; box-sizing: border-box;">
-          </div>
-          <div style="flex: 1; overflow-y: auto; padding: 0 8px 14px;">
-            <sc-for list="{{ readerNav }}" as="n" hint-placeholder-count="8">
-              <div onClick="{{ n.onClick }}" style="{{ n.style }}">{{ n.label }}</div>
-            </sc-for>
-          </div>
-        </div>
-        <div style="flex: 1; overflow-y: auto; user-select: text; -webkit-user-select: text;">
-          <div ref="{{ readerBodyRef }}" style="max-width: 880px; margin: 0 auto; padding: 30px 44px 90px;"></div>
-        </div>
-      </div>
+      <div ref="{{ readerRef }}"></div>
     </sc-if>
 
     <!-- loading overlay -->
@@ -405,7 +392,6 @@ class Component extends DCLogic {
     // wiki
     section: 'corpus',
     wikiPage: 'wiki/self/overview',
-    wikiSearch: '',
     webDom: 'ALL',
     webEdges: 'typed',
     claimType: 'ALL',
@@ -447,6 +433,9 @@ class Component extends DCLogic {
       Object.assign(this, window.WikiAnalytics);
       this.WHINTS = hints;
     }
+    // the reader is a full replacement, mixed in last so it owns readerRef,
+    // renderReaderBody and the markdown pipeline outright
+    if (window.WikiReader) Object.assign(this, window.WikiReader);
     this.alive = true;
     this.mouse = { x: -1, y: -1, down: false, dragTab: null };
     this.lastT = 0;
@@ -4449,10 +4438,7 @@ class Component extends DCLogic {
       corpusBtnStyle: this.sectionBtnStyle ? this.sectionBtnStyle(s.section !== 'wiki', C.amber) : {},
       wikiBtnStyle: this.sectionBtnStyle ? this.sectionBtnStyle(s.section === 'wiki', C.violet) : {},
       readerOn: s.section === 'wiki' && s.tab === 'reader',
-      readerNav: this.readerNav ? this.readerNav(s) : [],
-      readerBodyRef: this.readerBodyRef2 || ((el) => { this._readerEl = el; if (el && this.renderReaderBody) this.renderReaderBody(); }),
-      wikiSearch: s.wikiSearch,
-      setWikiSearch: (e) => this.setState({ wikiSearch: e.target.value }),
+      readerRef: this._readerRef || (this._readerRef = (el) => { if (this.readerRef) this.readerRef(el); }),
       canvasRef: this.canvasRef,
       cMsgs: this.fmt(s.cnt.m), cThreads: this.fmt(s.cnt.t), cPlaces: this.fmt(s.cnt.p), cKm: this.fmt(s.cnt.k), cWorks: this.fmt(s.cnt.w), cPages: this.fmt(s.cnt.wp)
     };
