@@ -8,6 +8,7 @@
 <script src="./js/galaxy-cluster.js"></script>
 <script src="./js/void-engine.js"></script>
 <script src="./js/wiki-modules.js"></script>
+<script src="./js/wiki-analytics.js"></script>
 </head>
 <body>
 <x-dc>
@@ -413,7 +414,14 @@ class Component extends DCLogic {
     chroniclePlay: false,
     chronicleSpeed: 1,
     genesisPlay: false,
-    genesisSpeed: 1
+    genesisSpeed: 1,
+    epistemePlay: false,
+    epistemeSpeed: 5,
+    epistemeOrder: 'certainty',
+    attentionDom: 'ALL',
+    dictionDom: 'mind',
+    schemaMode: 'core',
+    echoMin: 0.25
   };
 
   // ---------- constants ----------
@@ -429,6 +437,13 @@ class Component extends DCLogic {
   // ---------- lifecycle ----------
   componentDidMount() {
     if (window.WikiModules) Object.assign(this, window.WikiModules);
+    // second-wave wiki analytics ship in their own file; fold their hints into
+    // the shared WHINTS map rather than letting the assign clobber it
+    if (window.WikiAnalytics) {
+      const hints = Object.assign({}, this.WHINTS, window.WikiAnalytics.WHINTS_X);
+      Object.assign(this, window.WikiAnalytics);
+      this.WHINTS = hints;
+    }
     this.alive = true;
     this.mouse = { x: -1, y: -1, down: false, dragTab: null };
     this.lastT = 0;
@@ -439,7 +454,7 @@ class Component extends DCLogic {
       if (this.state.phase !== 'archive') return;
       if (e.target && (e.target.tagName === 'TEXTAREA' || e.target.tagName === 'INPUT')) return;
       const order = this.state.section === 'wiki'
-        ? ['reader', 'web', 'claims', 'census', 'strata', 'accrete', 'tagmap', 'mass', 'lattice', 'evidence', 'chronicle', 'genesis']
+        ? ['reader', 'web', 'claims', 'census', 'strata', 'accrete', 'tagmap', 'mass', 'lattice', 'evidence', 'chronicle', 'genesis', 'episteme', 'attention', 'diction', 'schema', 'echo']
         : ['pulse', 'clock', 'orbits', 'atlas', 'lexicon', 'shelf', 'weather', 'annie', 'signal', 'mirror', 'gravity', 'forensic', 'rings', 'silence', 'psyche', 'sync', 'drift', 'oracle', 'authority'];
       const i = '1234567890-='.indexOf(e.key);
       if (i >= 0 && order[i]) this.setTab(order[i]);
@@ -450,6 +465,7 @@ class Component extends DCLogic {
       if (e.key === ' ' && this.state.tab === 'authority') { e.preventDefault(); this.setState(s => ({ authorityPlay: !s.authorityPlay })); }
       if (e.key === ' ' && this.state.tab === 'chronicle') { e.preventDefault(); this.setState(s => ({ chroniclePlay: !s.chroniclePlay })); }
       if (e.key === ' ' && this.state.tab === 'genesis') { e.preventDefault(); this.setState(s => ({ genesisPlay: !s.genesisPlay })); }
+      if (e.key === ' ' && this.state.tab === 'episteme') { e.preventDefault(); this.setState(s => ({ epistemePlay: !s.epistemePlay })); }
     };
     window.addEventListener('keydown', this.onKey);
     if (this.state.phase !== 'splash') setTimeout(() => this._setPhase(this.state.phase), 30);
@@ -4239,7 +4255,7 @@ class Component extends DCLogic {
   renderVals() {
     const s = this.state, C = this.COL;
     const tabDefs = s.section === 'wiki'
-      ? [['reader', 'READER'], ['web', 'WEB'], ['claims', 'CLAIMS'], ['census', 'CENSUS'], ['strata', 'STRATA'], ['accrete', 'ACCRETION'], ['tagmap', 'TAGS'], ['mass', 'MASS'], ['lattice', 'HEALTH'], ['evidence', 'EVIDENCE'], ['chronicle', 'CHRONICLE'], ['genesis', 'GENESIS']]
+      ? [['reader', 'READER'], ['web', 'WEB'], ['claims', 'CLAIMS'], ['census', 'CENSUS'], ['strata', 'STRATA'], ['accrete', 'ACCRETION'], ['tagmap', 'TAGS'], ['mass', 'MASS'], ['lattice', 'HEALTH'], ['evidence', 'EVIDENCE'], ['chronicle', 'CHRONICLE'], ['genesis', 'GENESIS'], ['episteme', 'EPISTEME'], ['attention', 'ATTENTION'], ['diction', 'DICTION'], ['schema', 'SCHEMA'], ['echo', 'ECHO']]
       : [['pulse', 'PULSE'], ['clock', 'CLOCK'], ['orbits', 'ORBITS'], ['atlas', 'ATLAS'], ['lexicon', 'LEXICON'], ['shelf', 'SHELF'], ['weather', 'WEATHER'], ['annie', 'POLYGRAPH'], ['signal', 'SIGNAL'], ['mirror', 'MIRROR'], ['gravity', 'GRAVITY'], ['forensic', 'FORENSIC'], ['rings', 'RINGS'], ['silence', 'SILENCE'], ['psyche', 'PSYCHE'], ['sync', 'SYNC'], ['drift', 'DRIFT'], ['oracle', 'ORACLE'], ['authority', 'AUTHORITY']];
     const ACC = s.section === 'wiki' ? C.violet : C.amber;
     const tabs = tabDefs.map(([id, label], i) => ({

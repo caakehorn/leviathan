@@ -156,6 +156,8 @@
           }))
         ];
       }
+      // second-wave analytics (js/wiki-analytics.js) own the rest
+      if (this.wikiChipsX) { const x = this.wikiChipsX(s, C); if (x) return x; }
       return [];
     },
 
