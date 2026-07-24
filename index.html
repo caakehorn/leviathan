@@ -386,6 +386,10 @@ class Component extends DCLogic {
     weatherLayers: { love: true, prof: true, sorry: true, qual: true, imp: true, caps: true },
     anniePlay: false,
     annieSpeed: 4,
+    oraclePlay: false,
+    oracleSpeed: 4,
+    authorityPlay: false,
+    authoritySpeed: 4,
     signalMusic: false,
     mirrorMode: 'affection',
     forensicOn: { plead: true, apol: true, bomb: true, den: true },
@@ -405,7 +409,11 @@ class Component extends DCLogic {
     strataDom: 'ALL',
     tagMin: 2,
     massDom: 'ALL',
-    evTop: 24
+    evTop: 24,
+    chroniclePlay: false,
+    chronicleSpeed: 1,
+    genesisPlay: false,
+    genesisSpeed: 1
   };
 
   // ---------- constants ----------
@@ -431,13 +439,17 @@ class Component extends DCLogic {
       if (this.state.phase !== 'archive') return;
       if (e.target && (e.target.tagName === 'TEXTAREA' || e.target.tagName === 'INPUT')) return;
       const order = this.state.section === 'wiki'
-        ? ['reader', 'web', 'claims', 'census', 'strata', 'accrete', 'tagmap', 'mass', 'lattice', 'evidence']
-        : ['pulse', 'clock', 'orbits', 'atlas', 'lexicon', 'shelf', 'weather', 'annie', 'signal', 'mirror', 'gravity', 'forensic', 'rings', 'silence', 'psyche', 'sync', 'drift'];
+        ? ['reader', 'web', 'claims', 'census', 'strata', 'accrete', 'tagmap', 'mass', 'lattice', 'evidence', 'chronicle', 'genesis']
+        : ['pulse', 'clock', 'orbits', 'atlas', 'lexicon', 'shelf', 'weather', 'annie', 'signal', 'mirror', 'gravity', 'forensic', 'rings', 'silence', 'psyche', 'sync', 'drift', 'oracle', 'authority'];
       const i = '1234567890-='.indexOf(e.key);
       if (i >= 0 && order[i]) this.setTab(order[i]);
       if (e.key === ' ' && this.state.tab === 'atlas') { e.preventDefault(); this.setState(s => ({ atlasPlay: !s.atlasPlay })); }
       if (e.key === ' ' && this.state.tab === 'annie') { e.preventDefault(); this.setState(s => ({ anniePlay: !s.anniePlay })); }
       if (e.key === ' ' && this.state.tab === 'weather' && this.state.weatherView === 'pens') { e.preventDefault(); this.setState(s => ({ weatherPlay: !s.weatherPlay })); }
+      if (e.key === ' ' && this.state.tab === 'oracle') { e.preventDefault(); this.setState(s => ({ oraclePlay: !s.oraclePlay })); }
+      if (e.key === ' ' && this.state.tab === 'authority') { e.preventDefault(); this.setState(s => ({ authorityPlay: !s.authorityPlay })); }
+      if (e.key === ' ' && this.state.tab === 'chronicle') { e.preventDefault(); this.setState(s => ({ chroniclePlay: !s.chroniclePlay })); }
+      if (e.key === ' ' && this.state.tab === 'genesis') { e.preventDefault(); this.setState(s => ({ genesisPlay: !s.genesisPlay })); }
     };
     window.addEventListener('keydown', this.onKey);
     if (this.state.phase !== 'splash') setTimeout(() => this._setPhase(this.state.phase), 30);
@@ -3926,12 +3938,309 @@ class Component extends DCLogic {
     }
   }
 
+  // ============================================================
+  // MODULE 18 — ORACLE  (the same full-corpus record as POLYGRAPH ·
+  // all six rhetorical channels, read as a rotating radar instead
+  // of parallel lanes — one hexagon per month, ghosted trail behind it)
+  // ============================================================
+  OPENS = [
+    ['love', 'LOVE', '#e87da0'],
+    ['sorry', 'APOLOGY', '#7fd486'],
+    ['qual', 'HEDGE', '#4fc3e8'],
+    ['imp', 'COMMAND', '#e8a33d'],
+    ['prof', 'PROFANITY', '#e85d4f'],
+    ['caps', 'SHOUT', '#e8e6e1']
+  ];
+  initOracle() {
+    const D = this.D;
+    const mIdx = (m) => +m.slice(0, 4) * 12 + (+m.slice(5, 7) - 1);
+    const m0 = mIdx(D.msg.monthly[0][0]);
+    const m1 = mIdx(D.msg.monthly[D.msg.monthly.length - 1][0]);
+    const nM = m1 - m0 + 1;
+    const vol = new Float32Array(nM);
+    for (const [m, s, r] of D.msg.monthly) { const i = mIdx(m) - m0; if (i >= 0 && i < nM) vol[i] = s + r; }
+    const tot = new Float32Array(nM);
+    const sums = {};
+    for (const [k] of this.OPENS) sums[k] = new Float32Array(nM);
+    for (const d of D.rhet) {
+      const i = mIdx(d.date) - m0;
+      if (i < 0 || i >= nM) continue;
+      tot[i] += d.total || 0;
+      for (const [k] of this.OPENS) sums[k][i] += d[k] || 0;
+    }
+    const rates = {};
+    for (const [k] of this.OPENS) {
+      rates[k] = new Float32Array(nM);
+      for (let i = 0; i < nM; i++) rates[k][i] = tot[i] > 20 ? sums[k][i] / tot[i] * 100 : 0;
+    }
+    const maxRate = {};
+    for (const [k] of this.OPENS) { let m = 0.001; for (let i = 0; i < nM; i++) m = Math.max(m, rates[k][i]); maxRate[k] = m; }
+    let maxVol = 1;
+    for (let i = 0; i < nM; i++) maxVol = Math.max(maxVol, vol[i]);
+    const fragSrc = (D.crossFrags && D.crossFrags.length) ? D.crossFrags : D.frags;
+    const frags = fragSrc.map(f => ({
+      pos: (mIdx(f.day.slice(0, 7)) - m0) + (+f.day.slice(8, 10) - 1) / 30.5,
+      text: f.text, tag: f.day, shownAt: 0
+    })).filter(f => f.pos >= 0 && f.pos < nM).sort((a, b) => a.pos - b.pos);
+    const monthLabel = (i) => { const y = Math.floor((m0 + i) / 12), mo = (m0 + i) % 12; return y + '-' + String(mo + 1).padStart(2, '0'); };
+    this.M.oracle = { nM, m0, rates, maxRate, vol, maxVol, frags, monthLabel, play: 0.001, scrub: false, scrubGeo: null };
+  }
+  oracleRestart = () => { if (this.M.oracle) { this.M.oracle.play = 0.001; for (const f of this.M.oracle.frags) f.shownAt = 0; this.setState({ oraclePlay: true }); } };
+  draw_oracle(ctx, W, H, dt) {
+    if (!this.M.oracle) this.initOracle();
+    const C = this.COL, Or = this.M.oracle, st = this.state;
+    if (st.oraclePlay && !Or.scrub) {
+      Or.play += st.oracleSpeed * dt;
+      if (Or.play >= Or.nM - 0.01) { Or.play = Or.nM - 0.01; this.setState({ oraclePlay: false }); }
+    }
+    const railW = W * 0.6, fx = railW + 8, fw = W - fx - 16;
+    const stripH = 84, radarB = H - stripH - 10;
+    const cx = railW / 2, cy = (54 + radarB) / 2 + 6;
+    const R = Math.max(40, Math.min(railW * 0.36, (radarB - 60) * 0.42));
+
+    ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+    ctx.font = '700 17px ' + this.GROT; ctx.fillStyle = C.violetHi;
+    ctx.fillText('ORACLE', 18, 32);
+    ctx.font = '9px ' + this.MONO; ctx.fillStyle = C.dim;
+    ctx.fillText('FULL CORPUS · SIX RHETORICAL CHANNELS · ONE HEXAGON PER MONTH · 2011 → 2026', 18, 48);
+    const mi = Math.min(Or.nM - 1, Math.floor(Or.play));
+    const my2 = Or.monthLabel(mi);
+    const MN = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
+    ctx.font = '600 13px ' + this.MONO; ctx.fillStyle = C.txt; ctx.textAlign = 'right';
+    ctx.fillText(MN[+my2.slice(5, 7) - 1] + ' ' + my2.slice(0, 4) + ' · ' + this.fmt(Or.vol[mi]) + ' MSGS', railW - 8, 32);
+    ctx.textAlign = 'left';
+
+    // axes + grid rings
+    const angleOf = (i) => -Math.PI / 2 + i * (Math.PI * 2 / this.OPENS.length);
+    ctx.strokeStyle = C.grid; ctx.lineWidth = 1;
+    for (let ring = 1; ring <= 4; ring++) {
+      ctx.beginPath();
+      this.OPENS.forEach(([, , ], i) => {
+        const a = angleOf(i), r = R * ring / 4;
+        const x = cx + Math.cos(a) * r, y = cy + Math.sin(a) * r;
+        i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+      });
+      ctx.closePath(); ctx.stroke();
+    }
+    this.OPENS.forEach(([k, label, col], i) => {
+      const a = angleOf(i);
+      ctx.strokeStyle = 'rgba(232,230,225,0.12)';
+      ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(cx + Math.cos(a) * R, cy + Math.sin(a) * R); ctx.stroke();
+      const lx = cx + Math.cos(a) * (R + 14), ly = cy + Math.sin(a) * (R + 14);
+      ctx.font = '9px ' + this.MONO; ctx.fillStyle = col;
+      ctx.textAlign = Math.cos(a) > 0.3 ? 'left' : Math.cos(a) < -0.3 ? 'right' : 'center';
+      ctx.textBaseline = Math.sin(a) > 0.3 ? 'top' : Math.sin(a) < -0.3 ? 'bottom' : 'middle';
+      ctx.fillText(label, lx, ly);
+    });
+    ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+
+    // ghost trail — the six months behind the playhead, fading
+    const vertexAt = (play) => {
+      const v = this.oracleValAtGiven(Or, play);
+      return this.OPENS.map(([k], i) => {
+        const a = angleOf(i), r = Math.min(1, v[k] / Or.maxRate[k]) * R;
+        return { x: cx + Math.cos(a) * r, y: cy + Math.sin(a) * r };
+      });
+    };
+    for (let g = 6; g >= 1; g--) {
+      const p = Or.play - g * 1.15;
+      if (p < 0) continue;
+      const verts = vertexAt(p);
+      ctx.beginPath();
+      verts.forEach((v, i) => i === 0 ? ctx.moveTo(v.x, v.y) : ctx.lineTo(v.x, v.y));
+      ctx.closePath();
+      ctx.strokeStyle = 'rgba(155,140,242,' + (0.05 + (6 - g) * 0.02).toFixed(3) + ')';
+      ctx.lineWidth = 1; ctx.stroke();
+    }
+    // current hexagon
+    const verts = vertexAt(Or.play);
+    ctx.beginPath();
+    verts.forEach((v, i) => i === 0 ? ctx.moveTo(v.x, v.y) : ctx.lineTo(v.x, v.y));
+    ctx.closePath();
+    ctx.fillStyle = 'rgba(155,140,242,0.14)'; ctx.fill();
+    ctx.strokeStyle = C.violetHi; ctx.lineWidth = 1.6; ctx.stroke();
+    const curVal = this.oracleValAtGiven(Or, Or.play);
+    verts.forEach((v, i) => {
+      const [k, , col] = this.OPENS[i];
+      ctx.fillStyle = col;
+      ctx.beginPath(); ctx.arc(v.x, v.y, 3.4, 0, Math.PI * 2); ctx.fill();
+      ctx.font = '600 9px ' + this.MONO;
+      ctx.fillText(curVal[k].toFixed(1), v.x + 6, v.y - 6);
+    });
+
+    // scrub strip along the bottom — volume + era bands + playhead
+    const stripY = radarB + 10;
+    const geo = { padL: 46, padT: stripY, laneH: stripH - 22, laneGap: 0, x0: 46, x1: railW - 12, xOf: (m) => 46 + (m / (Or.nM - 1)) * (railW - 12 - 46) };
+    this.drawEraBands(ctx, geo.xOf, (di) => {
+      const d = this.i2d(this.D.day0 + di);
+      return (d.getUTCFullYear() * 12 + d.getUTCMonth()) - Or.m0 + (d.getUTCDate() - 1) / 30.5;
+    }, stripY - 12, stripY + geo.laneH);
+    this.drawVolumeLane(ctx, geo, stripY, Or.vol, Or.maxVol, Or.play, C.violet);
+    const playX = geo.xOf(Or.play);
+    ctx.strokeStyle = 'rgba(232,230,225,0.5)'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(playX, stripY - 6); ctx.lineTo(playX, stripY + geo.laneH + 4); ctx.stroke();
+    Or.scrubGeo = { x0: geo.x0, x1: geo.x1, y1: stripY + geo.laneH };
+
+    this.drawFragmentFeed(ctx, { fx, fy: 8, fw, fh: H - 24 }, Or.frags, Or.play, 'HIGH-SIGNAL FRAGMENTS · FULL RECORD', '#cfc4ff');
+  }
+  oracleValAtGiven(Or, play) {
+    const i0 = Math.floor(Math.min(Or.nM - 1, Math.max(0, play))), f = Math.max(0, play) - i0;
+    const out = {};
+    for (const [k] of this.OPENS) { const a = Or.rates[k]; out[k] = a[i0] * (1 - f) + a[Math.min(Or.nM - 1, i0 + 1)] * f; }
+    return out;
+  }
+  pt_oracle(type, p) {
+    const Or = this.M.oracle; if (!Or) return;
+    const g = Or.scrubGeo; if (!g) return;
+    if (type === 'down' && p.x < g.x1 + 20 && p.x > g.x0 - 20 && p.y > g.y1 - 30) {
+      Or.scrub = true;
+      Or.play = Math.max(0.001, Math.min(Or.nM - 0.01, ((p.x - g.x0) / (g.x1 - g.x0)) * (Or.nM - 1)));
+    } else if (type === 'move' && Or.scrub && this.mouse.down) {
+      Or.play = Math.max(0.001, Math.min(Or.nM - 0.01, ((p.x - g.x0) / (g.x1 - g.x0)) * (Or.nM - 1)));
+    } else if (type === 'up' || type === 'leave') {
+      Or.scrub = false;
+    }
+  }
+
+  // ============================================================
+  // MODULE 19 — AUTHORITY  (who's asserting, who's deferring ·
+  // command vs hedge, monthly, full corpus, with a diverging
+  // balance lane between them — same instrument shell as POLYGRAPH)
+  // ============================================================
+  initAuthority() {
+    const D = this.D;
+    const mIdx = (m) => +m.slice(0, 4) * 12 + (+m.slice(5, 7) - 1);
+    const m0 = mIdx(D.msg.monthly[0][0]);
+    const m1 = mIdx(D.msg.monthly[D.msg.monthly.length - 1][0]);
+    const nM = m1 - m0 + 1;
+    const vol = new Float32Array(nM);
+    for (const [m, s, r] of D.msg.monthly) { const i = mIdx(m) - m0; if (i >= 0 && i < nM) vol[i] = s + r; }
+    const tot = new Float32Array(nM);
+    const sums = { imp: new Float32Array(nM), qual: new Float32Array(nM) };
+    for (const d of D.rhet) {
+      const i = mIdx(d.date) - m0;
+      if (i < 0 || i >= nM) continue;
+      tot[i] += d.total || 0;
+      sums.imp[i] += d.imp || 0; sums.qual[i] += d.qual || 0;
+    }
+    const rates = { imp: new Float32Array(nM), qual: new Float32Array(nM) };
+    const bal = new Float32Array(nM);
+    for (let i = 0; i < nM; i++) {
+      rates.imp[i] = tot[i] > 20 ? sums.imp[i] / tot[i] * 100 : 0;
+      rates.qual[i] = tot[i] > 20 ? sums.qual[i] / tot[i] * 100 : 0;
+      bal[i] = rates.imp[i] - rates.qual[i];
+    }
+    const maxRate = { imp: 0.001, qual: 0.001 };
+    let maxBal = 0.001, maxVol = 1;
+    for (let i = 0; i < nM; i++) {
+      maxRate.imp = Math.max(maxRate.imp, rates.imp[i]); maxRate.qual = Math.max(maxRate.qual, rates.qual[i]);
+      maxBal = Math.max(maxBal, Math.abs(bal[i])); maxVol = Math.max(maxVol, vol[i]);
+    }
+    const fragSrc = (D.crossFrags && D.crossFrags.length) ? D.crossFrags : D.frags;
+    const frags = fragSrc.map(f => ({
+      pos: (mIdx(f.day.slice(0, 7)) - m0) + (+f.day.slice(8, 10) - 1) / 30.5,
+      text: f.text, tag: f.day, shownAt: 0
+    })).filter(f => f.pos >= 0 && f.pos < nM).sort((a, b) => a.pos - b.pos);
+    const monthLabel = (i) => { const y = Math.floor((m0 + i) / 12), mo = (m0 + i) % 12; return y + '-' + String(mo + 1).padStart(2, '0'); };
+    this.M.authority = { nM, m0, rates, maxRate, bal, maxBal, vol, maxVol, frags, monthLabel, play: 0.001, scrub: false, scrubGeo: null };
+  }
+  authorityRestart = () => { if (this.M.authority) { this.M.authority.play = 0.001; for (const f of this.M.authority.frags) f.shownAt = 0; this.setState({ authorityPlay: true }); } };
+  draw_authority(ctx, W, H, dt) {
+    if (!this.M.authority) this.initAuthority();
+    const C = this.COL, Au = this.M.authority, st = this.state;
+    if (st.authorityPlay && !Au.scrub) {
+      Au.play += st.authoritySpeed * dt;
+      if (Au.play >= Au.nM - 0.01) { Au.play = Au.nM - 0.01; this.setState({ authorityPlay: false }); }
+    }
+    const chartR = W * 0.62;
+    const padL = 110, padT = 64, padB = 74;
+    const laneGap = 10;
+    const nLanes = 4; // command, hedge, balance, volume
+    const laneH = (H - padT - padB - laneGap * (nLanes - 1)) / nLanes;
+    const xOf = (m) => padL + (m / (Au.nM - 1)) * (chartR - padL - 20);
+    const playX = xOf(Au.play);
+    const geo = { padL, padT, laneH, laneGap, x0: padL, x1: chartR - 20, xOf };
+
+    this.drawEraBands(ctx, xOf, (di) => {
+      const d = this.i2d(this.D.day0 + di);
+      return (d.getUTCFullYear() * 12 + d.getUTCMonth()) - Au.m0 + (d.getUTCDate() - 1) / 30.5;
+    }, padT - 14, padT + 3 * (laneH + laneGap) + laneH);
+
+    ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+    ctx.font = '700 17px ' + this.GROT; ctx.fillStyle = C.amberHi;
+    ctx.fillText('AUTHORITY', 18, 32);
+    ctx.font = '9px ' + this.MONO; ctx.fillStyle = C.dim;
+    ctx.fillText('FULL CORPUS · COMMAND VS HEDGE, MONTHLY · WHO IS ASSERTING, WHO IS DEFERRING', 18, 48);
+    const mi = Math.min(Au.nM - 1, Math.floor(Au.play));
+    const my2 = Au.monthLabel(mi);
+    const MN = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
+    ctx.font = '600 13px ' + this.MONO; ctx.fillStyle = C.txt; ctx.textAlign = 'right';
+    ctx.fillText(MN[+my2.slice(5, 7) - 1] + ' ' + my2.slice(0, 4) + ' · ' + this.fmt(Au.vol[mi]) + ' MSGS', chartR - 20, 32);
+    ctx.textAlign = 'left';
+
+    const lanes = [
+      { data: Au.rates.imp, label: 'COMMAND', unit: '/100 MSG', color: C.amber, max: Au.maxRate.imp },
+      { data: Au.rates.qual, label: 'HEDGE', unit: '/100 MSG', color: C.cyan, max: Au.maxRate.qual }
+    ];
+    this.drawPenLanes(ctx, geo, lanes, Au.play, st.authorityPlay);
+
+    // diverging balance lane — amber up (asserting), cyan down (deferring)
+    const balY0 = padT + 2 * (laneH + laneGap);
+    ctx.fillStyle = 'rgba(13,17,24,0.6)';
+    ctx.fillRect(geo.x0, balY0, geo.x1 - geo.x0, laneH);
+    ctx.strokeStyle = C.grid; ctx.strokeRect(geo.x0 + 0.5, balY0 + 0.5, geo.x1 - geo.x0, laneH);
+    ctx.font = '9px ' + this.MONO; ctx.fillStyle = C.dim; ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+    ctx.fillText('BALANCE', geo.x0 - 12, balY0 + laneH / 2);
+    ctx.textAlign = 'left';
+    const midY = balY0 + laneH / 2;
+    ctx.strokeStyle = 'rgba(232,230,225,0.2)';
+    ctx.beginPath(); ctx.moveTo(geo.x0, midY); ctx.lineTo(geo.x1, midY); ctx.stroke();
+    const n = Au.nM, bw = Math.max(1.4, (geo.x1 - geo.x0) / n - 1);
+    for (let i = 0; i < n; i++) {
+      const x = xOf(i), v = Au.bal[i], hh = Math.min(1, Math.abs(v) / Au.maxBal) * (laneH / 2 - 4);
+      const past = i <= Au.play;
+      ctx.fillStyle = v >= 0 ? (past ? C.amber + 'cc' : C.amber + '29') : (past ? C.cyan + 'cc' : C.cyan + '29');
+      if (v >= 0) ctx.fillRect(x - bw / 2, midY - hh, bw, hh);
+      else ctx.fillRect(x - bw / 2, midY, bw, hh);
+    }
+    const bi0 = Math.floor(Math.min(n - 1, Au.play)), bf = Au.play - bi0;
+    const bv = Au.bal[bi0] * (1 - bf) + Au.bal[Math.min(n - 1, bi0 + 1)] * bf;
+    ctx.font = '600 10px ' + this.MONO; ctx.fillStyle = bv >= 0 ? C.amber : C.cyan; ctx.textAlign = 'left';
+    ctx.fillText((bv >= 0 ? '+' : '') + bv.toFixed(1) + (bv >= 0 ? ' ASSERTING' : ' DEFERRING'), playX + 8, midY - (bv >= 0 ? 8 : -18));
+
+    const vy0 = padT + 3 * (laneH + laneGap);
+    this.drawVolumeLane(ctx, geo, vy0, Au.vol, Au.maxVol, Au.play, C.faint);
+
+    ctx.strokeStyle = 'rgba(232,230,225,0.5)'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(playX, padT - 6); ctx.lineTo(playX, vy0 + laneH + 8); ctx.stroke();
+    ctx.font = '9px ' + this.MONO; ctx.fillStyle = C.dim; ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+    for (let i = 0; i < Au.nM; i++) {
+      if ((Au.m0 + i) % 12 === 0) ctx.fillText(String(Math.floor((Au.m0 + i) / 12)), xOf(i), vy0 + laneH + 12);
+    }
+    Au.scrubGeo = { x0: padL, x1: chartR - 20, y1: vy0 + laneH };
+
+    const fx = chartR + 8, fw = W - fx - 16;
+    this.drawFragmentFeed(ctx, { fx, fy: padT - 22, fw, fh: H - padT - 36 }, Au.frags, Au.play, 'AUTHORITY FRAGMENTS · VERBATIM · FULL RECORD', C.amber);
+  }
+  pt_authority(type, p) {
+    const Au = this.M.authority; if (!Au) return;
+    const g = Au.scrubGeo; if (!g) return;
+    if (type === 'down' && p.x < g.x1 + 20 && p.x > g.x0 - 20) {
+      Au.scrub = true;
+      Au.play = Math.max(0.001, Math.min(Au.nM - 0.01, ((p.x - g.x0) / (g.x1 - g.x0)) * (Au.nM - 1)));
+    } else if (type === 'move' && Au.scrub && this.mouse.down) {
+      Au.play = Math.max(0.001, Math.min(Au.nM - 0.01, ((p.x - g.x0) / (g.x1 - g.x0)) * (Au.nM - 1)));
+    } else if (type === 'up' || type === 'leave') {
+      Au.scrub = false;
+    }
+  }
+
   // ---------- UI state plumbing ----------
   renderVals() {
     const s = this.state, C = this.COL;
     const tabDefs = s.section === 'wiki'
-      ? [['reader', 'READER'], ['web', 'WEB'], ['claims', 'CLAIMS'], ['census', 'CENSUS'], ['strata', 'STRATA'], ['accrete', 'ACCRETION'], ['tagmap', 'TAGS'], ['mass', 'MASS'], ['lattice', 'HEALTH'], ['evidence', 'EVIDENCE']]
-      : [['pulse', 'PULSE'], ['clock', 'CLOCK'], ['orbits', 'ORBITS'], ['atlas', 'ATLAS'], ['lexicon', 'LEXICON'], ['shelf', 'SHELF'], ['weather', 'WEATHER'], ['annie', 'POLYGRAPH'], ['signal', 'SIGNAL'], ['mirror', 'MIRROR'], ['gravity', 'GRAVITY'], ['forensic', 'FORENSIC'], ['rings', 'RINGS'], ['silence', 'SILENCE'], ['psyche', 'PSYCHE'], ['sync', 'SYNC'], ['drift', 'DRIFT']];
+      ? [['reader', 'READER'], ['web', 'WEB'], ['claims', 'CLAIMS'], ['census', 'CENSUS'], ['strata', 'STRATA'], ['accrete', 'ACCRETION'], ['tagmap', 'TAGS'], ['mass', 'MASS'], ['lattice', 'HEALTH'], ['evidence', 'EVIDENCE'], ['chronicle', 'CHRONICLE'], ['genesis', 'GENESIS']]
+      : [['pulse', 'PULSE'], ['clock', 'CLOCK'], ['orbits', 'ORBITS'], ['atlas', 'ATLAS'], ['lexicon', 'LEXICON'], ['shelf', 'SHELF'], ['weather', 'WEATHER'], ['annie', 'POLYGRAPH'], ['signal', 'SIGNAL'], ['mirror', 'MIRROR'], ['gravity', 'GRAVITY'], ['forensic', 'FORENSIC'], ['rings', 'RINGS'], ['silence', 'SILENCE'], ['psyche', 'PSYCHE'], ['sync', 'SYNC'], ['drift', 'DRIFT'], ['oracle', 'ORACLE'], ['authority', 'AUTHORITY']];
     const ACC = s.section === 'wiki' ? C.violet : C.amber;
     const tabs = tabDefs.map(([id, label], i) => ({
       num: '0' + (i + 1), label,
@@ -4048,6 +4357,22 @@ class Component extends DCLogic {
       chips = [[30, '\u2265 30 MSGS/MO'], [100, '\u2265 100'], [300, '\u2265 300']].map(([v, l]) => ({
         label: l, onClick: () => this.setState({ driftMin: v }), style: this.chipStyle(s.driftMin === v)
       }));
+    } else if (s.tab === 'oracle') {
+      chips = [
+        { label: s.oraclePlay ? '\u275a\u275a PAUSE' : '\u25b6 PLAY', onClick: () => this.setState(st => ({ oraclePlay: !st.oraclePlay })), style: this.chipStyle(s.oraclePlay, C.violet) },
+        { label: '\u21ba RESTART', onClick: this.oracleRestart, style: this.chipStyle(false) },
+        ...[[1.5, 'SLOW'], [4, 'NORMAL'], [12, 'FAST']].map(([v, l]) => ({
+          label: l, onClick: () => this.setState({ oracleSpeed: v }), style: this.chipStyle(s.oracleSpeed === v, C.violet)
+        }))
+      ];
+    } else if (s.tab === 'authority') {
+      chips = [
+        { label: s.authorityPlay ? '\u275a\u275a PAUSE' : '\u25b6 PLAY', onClick: () => this.setState(st => ({ authorityPlay: !st.authorityPlay })), style: this.chipStyle(s.authorityPlay) },
+        { label: '\u21ba RESTART', onClick: this.authorityRestart, style: this.chipStyle(false) },
+        ...[[1.5, 'SLOW'], [4, 'NORMAL'], [12, 'FAST']].map(([v, l]) => ({
+          label: l, onClick: () => this.setState({ authoritySpeed: v }), style: this.chipStyle(s.authoritySpeed === v)
+        }))
+      ];
     }
 
     const hints = {
@@ -4069,7 +4394,9 @@ class Component extends DCLogic {
       silence: 'THE NEGATIVE SPACE \u00b7 3,353 OF 5,563 DAYS HAVE NO MESSAGES \u00b7 DEPTH = LENGTH OF SILENCE \u00b7 CLICK TO PIN',
       psyche: 'WHAT HE RATED \u00d7 HOW HE WAS TALKING \u00b7 HALO = RHETORICAL CHARGE WITHIN \u00b114 DAYS \u00b7 CLICK TO PIN',
       sync: 'LINGUISTIC STYLE MATCHING \u00b7 TEN GRAMMAR CHANNELS, HIM VS THEM \u00b7 RIGHT = THEY SPEAK HIS LANGUAGE \u00b7 CLICK TO PIN THE BREAKDOWN',
-      drift: 'EVERY ACTIVE MONTH COMPARED TO EVERY OTHER \u00b7 AMBER = SAME VOICE \u00b7 CYAN = OPPOSITE VOICE \u00b7 THE DIAGONAL IS IDENTITY \u00b7 HOVER A CELL'
+      drift: 'EVERY ACTIVE MONTH COMPARED TO EVERY OTHER \u00b7 AMBER = SAME VOICE \u00b7 CYAN = OPPOSITE VOICE \u00b7 THE DIAGONAL IS IDENTITY \u00b7 HOVER A CELL',
+      oracle: 'PRESS PLAY \u00b7 SIX RHETORICAL PENS AS A ROTATING RADAR, ONE READING PER MONTH \u00b7 GHOST RINGS ARE THE MONTHS BEHIND IT \u00b7 DRAG THE STRIP TO SCRUB',
+      authority: 'PRESS PLAY \u00b7 COMMAND VS HEDGE, MONTHLY \u00b7 THE BALANCE LANE TIPS AMBER WHEN HE ASSERTS, CYAN WHEN HE DEFERS \u00b7 DRAG TO SCRUB'
     };
 
     const msg = s.msg;
