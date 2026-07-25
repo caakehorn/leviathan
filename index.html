@@ -2169,6 +2169,7 @@ class Component extends DCLogic {
       tag: f.day,
       shownAt: 0
     })).filter(f => f.pos >= 0 && f.pos < nM).sort((a, b) => a.pos - b.pos);
+    this.penAttributeFrags(frags, this.APENS, rates, maxRate);
     const monthLabel = (i) => {
       const y = Math.floor((m0 + i) / 12), mo = (m0 + i) % 12;
       return y + '-' + String(mo + 1).padStart(2, '0');
@@ -3631,7 +3632,10 @@ class Component extends DCLogic {
     }
   }
 
-  // frags: [{ pos, text, tag, shownAt }] sorted by pos · returns surfaced count
+  // frags: [{ pos, text, tag, shownAt, pen, id }] sorted by pos.
+  // `pen` is the colour of the lane this record registered on, so the reader
+  // can see which frequency a given sentence is what spiked; `id` is the page
+  // it came from. Returns hit-rects so the owning pt_ handler can open them.
   drawFragmentFeed(ctx, geo, frags, playPos, title, accent) {
     const C = this.COL;
     ctx.fillStyle = 'rgba(11,15,21,0.85)';
@@ -3646,16 +3650,23 @@ class Component extends DCLogic {
       else f.shownAt = 0;
     }
     const feed = visible.slice(-5).reverse();
+    const rects = [];
+    const mx = this.mouse ? this.mouse.x : -1, my = this.mouse ? this.mouse.y : -1;
     let fy = geo.fy + 40;
     const yMax = geo.fy + geo.fh - 26;
     for (let i = 0; i < feed.length; i++) {
       const f = feed[i];
+      const rowTop = fy - 11;
       const age = (now - f.shownAt) / 1000;
       const chars = Math.floor(age * 60);
       const txt = f.text.slice(0, chars);
       const alpha = i === 0 ? 1 : Math.max(0.25, 0.8 - i * 0.18);
-      ctx.font = '9px ' + this.MONO; ctx.fillStyle = accent + Math.round(alpha * 230).toString(16).padStart(2, '0');
-      ctx.fillText(f.tag, geo.fx + 14, fy);
+      // the tag carries the pen colour — this is the attribution
+      const tagCol = f.pen || accent;
+      const hot = f.id && mx >= geo.fx && mx <= geo.fx + geo.fw && my >= rowTop && my <= rowTop + 16;
+      ctx.font = '9px ' + this.MONO;
+      ctx.fillStyle = tagCol + Math.round((hot ? 1 : alpha) * 230).toString(16).padStart(2, '0');
+      ctx.fillText((f.id ? (hot ? '▸ ' : '') : '') + f.tag, geo.fx + 14, fy);
       fy += 14;
       ctx.font = (i === 0 ? '500 12.5px ' : '11px ') + this.GROT;
       ctx.fillStyle = 'rgba(232,230,225,' + alpha + ')';
@@ -3667,6 +3678,7 @@ class Component extends DCLogic {
         if (fy > yMax) break;
       }
       if (fy <= yMax) { ctx.fillText(line + (i === 0 && chars < f.text.length ? '▌' : ''), geo.fx + 14, fy); fy += lh + 12; }
+      if (f.id) rects.push({ x: geo.fx, y: rowTop, w: geo.fw, h: Math.min(fy, yMax) - rowTop, id: f.id });
       if (fy > yMax) break;
     }
     if (!visible.length) {
@@ -3675,7 +3687,7 @@ class Component extends DCLogic {
     }
     ctx.font = '8px ' + this.MONO; ctx.fillStyle = C.faint;
     ctx.fillText(visible.length + ' / ' + frags.length + ' FRAGMENTS SURFACED', geo.fx + 14, geo.fy + geo.fh - 10);
-    return visible.length;
+    return rects;
   }
 
   drawEraBands(ctx, xOf, toPos, y0, y1) {
@@ -3781,6 +3793,25 @@ class Component extends DCLogic {
     return g;
   }
 
+  // Tag each fragment with the colour of the pen that was loudest at its
+  // position, so the feed attributes the record to a frequency rather than
+  // colouring everything with the instrument accent.
+  penAttributeFrags(frags, pens, rates, maxRate) {
+    for (const f of frags) {
+      const i = Math.max(0, Math.round(f.pos));
+      let best = null, bv = -1;
+      for (const pen of pens) {
+        const k = pen[0], col = pen[2];
+        const arr = rates[k];
+        if (!arr || i >= arr.length) continue;
+        const v = arr[i] / (maxRate[k] || 1);
+        if (v > bv) { bv = v; best = col; }
+      }
+      if (best) f.pen = best;
+    }
+    return frags;
+  }
+
   // Shared scrub/click handling for pen instruments. Returns 'click' when the
   // pointer went down and up in the same spot, so the caller can decide what
   // that means (which page to open); scrubbing is handled here outright.
@@ -3859,6 +3890,7 @@ class Component extends DCLogic {
       tag: f.week + (f.type === 'high_signal' ? ' · HIGH SIGNAL' : ''),
       shownAt: 0
     })).filter(f => f.pos >= 0 && f.pos < nW + 1).sort((a, b) => a.pos - b.pos);
+    this.penAttributeFrags(frags, this.WPENS, rate, maxRate);
     // high-volatility days → lightning markers
     const an = wx.analysis || {};
     const bolts = (an.high_volatility_weather_days || []).map(d => ({
@@ -4106,6 +4138,7 @@ class Component extends DCLogic {
       pos: (mIdx(f.day.slice(0, 7)) - m0) + (+f.day.slice(8, 10) - 1) / 30.5,
       text: f.text, tag: f.day, shownAt: 0
     })).filter(f => f.pos >= 0 && f.pos < nM).sort((a, b) => a.pos - b.pos);
+    this.penAttributeFrags(frags, this.OPENS, rates, maxRate);
     const monthLabel = (i) => { const y = Math.floor((m0 + i) / 12), mo = (m0 + i) % 12; return y + '-' + String(mo + 1).padStart(2, '0'); };
     this.M.oracle = { nM, m0, rates, maxRate, vol, maxVol, frags, monthLabel, play: 0.001, scrub: false, scrubGeo: null };
   }
@@ -4265,6 +4298,7 @@ class Component extends DCLogic {
       pos: (mIdx(f.day.slice(0, 7)) - m0) + (+f.day.slice(8, 10) - 1) / 30.5,
       text: f.text, tag: f.day, shownAt: 0
     })).filter(f => f.pos >= 0 && f.pos < nM).sort((a, b) => a.pos - b.pos);
+    this.penAttributeFrags(frags, [['imp', 'COMMAND', this.COL.amber], ['qual', 'HEDGE', this.COL.cyan]], rates, maxRate);
     const monthLabel = (i) => { const y = Math.floor((m0 + i) / 12), mo = (m0 + i) % 12; return y + '-' + String(mo + 1).padStart(2, '0'); };
     this.M.authority = { nM, m0, rates, maxRate, bal, maxBal, vol, maxVol, frags, monthLabel, play: 0.001, scrub: false, scrubGeo: null };
   }

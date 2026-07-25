@@ -1185,9 +1185,10 @@
         const claimHit = (p.connections || []).find(c => c.claim && c.claim.length > 12);
         const text = (claimHit && claimHit.claim) || p.summary || '';
         if (!text) continue;
-        frags.push({ pos: i, text, tag: p.title, shownAt: 0 });
+        frags.push({ pos: i, text, tag: p.title, shownAt: 0, id: p.id });
       }
       frags.sort((a, b) => a.pos - b.pos);
+      this.penAttributeFrags(frags, this.CHRON_PENS, rates, maxRate);
       const dayLabel = (i) => this.i2d(d0 + i).toISOString().slice(0, 10);
       this.M.chronicle = { d0, d1, nD, rates, maxRate, tot, maxVol, frags, dayLabel, play: 0.001, scrub: false, scrubGeo: null };
     },
@@ -1237,11 +1238,15 @@
       }
       Ch.scrubGeo = { x0: padL, x1: chartR - 20, y1: vy0 + laneH };
 
-      this.drawFragmentFeed(ctx, { fx, fy: padT - 22, fw, fh: H - padT - 36 }, Ch.frags, Ch.play, 'CLAIMS SURFACING \u00b7 AS PAGES ENTER THE WIKI', '#cfa8ff');
+      Ch.fragRects = this.drawFragmentFeed(ctx, { fx, fy: padT - 22, fw, fh: H - padT - 36 }, Ch.frags, Ch.play, 'CLAIMS SURFACING \u00b7 AS PAGES ENTER THE WIKI', '#cfa8ff');
     },
     pt_chronicle(type, p) {
       const Ch = this.M.chronicle; if (!Ch || Ch.empty) return;
       const g = Ch.scrubGeo; if (!g) return;
+      if (type === 'down') {
+        const hit = (Ch.fragRects || []).find(r => p.x >= r.x && p.x <= r.x + r.w && p.y >= r.y && p.y <= r.y + r.h);
+        if (hit) { this.wikiOpen(hit.id); return; }
+      }
       if (type === 'down' && p.x < g.x1 + 20 && p.x > g.x0 - 20) {
         Ch.scrub = true;
         Ch.play = Math.max(0.001, Math.min(Ch.nD - 0.01, ((p.x - g.x0) / (g.x1 - g.x0)) * (Ch.nD - 1)));
@@ -1288,7 +1293,11 @@
       let maxP = 1, maxE = 1;
       for (let i = 0; i < nD; i++) { maxP = Math.max(maxP, pagesD[i]); maxE = Math.max(maxE, edgesD[i]); }
       const frags = edges.filter(e => e.claim && e.claim.length > 10)
-        .map(e => ({ pos: e.revealD, text: e.claim, tag: e.a.p.title.slice(0, 20) + ' \u2192 ' + e.b.p.title.slice(0, 20), shownAt: 0 }))
+        .map(e => ({
+          pos: e.revealD, text: e.claim,
+          tag: e.a.p.title.slice(0, 20) + ' \u2192 ' + e.b.p.title.slice(0, 20),
+          shownAt: 0, id: e.a.p.id, pen: TCOL[e.type] || '#8fa878'
+        }))
         .sort((a, b) => a.pos - b.pos);
       const dayLabel = (i) => this.i2d(d0 + i).toISOString().slice(0, 10);
       this.M.genesis = {
@@ -1402,7 +1411,7 @@
       ctx.beginPath(); ctx.moveTo(playX, stripY - 6); ctx.lineTo(playX, stripY + laneH * 2 + 4 + 8); ctx.stroke();
       Ge.scrubGeo = { x0: sx0, x1: sx1, y0: stripY - 10, y1: stripY + laneH * 2 + 4 + 10 };
 
-      this.drawFragmentFeed(ctx, { fx, fy: 8, fw, fh: H - 24 }, Ge.frags, Ge.play, 'CLAIMS FORMING \u00b7 AS EDGES CONNECT', '#cfa8ff');
+      Ge.fragRects = this.drawFragmentFeed(ctx, { fx, fy: 8, fw, fh: H - 24 }, Ge.frags, Ge.play, 'CLAIMS FORMING \u00b7 AS EDGES CONNECT', '#cfa8ff');
 
       const show = Ge.pinned || Ge.hover;
       if (show) {
@@ -1418,6 +1427,8 @@
       const g = Ge.scrubGeo;
       const inStrip = g && p.y >= g.y0 && p.y <= g.y1 + 26;
       if (type === 'down') {
+        const fhit = (Ge.fragRects || []).find(r => p.x >= r.x && p.x <= r.x + r.w && p.y >= r.y && p.y <= r.y + r.h);
+        if (fhit) { this.wikiOpen(fhit.id); return; }
         if (inStrip) {
           Ge.scrub = true;
           Ge.play = Math.max(0.001, Math.min(Ge.nD - 0.01, ((p.x - g.x0) / (g.x1 - g.x0)) * (Ge.nD - 1)));

@@ -169,18 +169,37 @@
       for (let i = 0; i < nP; i++) { vol[i] = rows[i].w; maxVol = Math.max(maxVol, rows[i].w); }
 
       // fragment feed — the single most epistemically loaded sentence per page,
-      // with declared CONTRADICTION callouts winning outright
+      // with declared CONTRADICTION callouts winning outright. Each fragment
+      // records WHICH pen it lit, so the feed can colour the attribution and
+      // the reader can see that this sentence is what spiked that frequency.
+      const PEN_COL = {};
+      for (const [k, , col] of this.EP_PENS) PEN_COL[k] = col;
       const frags = [];
       rows.forEach((r, i) => {
         const sents = this.wkSentences(r.p.id);
         if (!sents.length) return;
-        let best = null, bestScore = 0;
+        let best = null, bestScore = 0, bestPen = 'cert';
         for (const s of sents) {
+          const h = (s.match(HEDGE_RE) || []).length;
+          const c = (s.match(CERT_RE) || []).length;
+          const n = (s.match(NEG_RE) || []).length;
+          const q = (s.match(/\?/g) || []).length;
           const contra = /CONTRADICTION/i.test(s) ? 6 : 0;
-          const sc = contra + (s.match(HEDGE_RE) || []).length * 2 + (s.match(CERT_RE) || []).length * 2 + (s.match(/\?/g) || []).length;
-          if (sc > bestScore) { bestScore = sc; best = s; }
+          const sc = contra + h * 2 + c * 2 + q;
+          if (sc > bestScore) {
+            bestScore = sc; best = s;
+            // attribute to the strongest signal in the winning sentence
+            const rank = [['hedge', h * 2], ['cert', c * 2], ['neg', n], ['quer', q * 2 + contra]];
+            rank.sort((a, b) => b[1] - a[1]);
+            bestPen = rank[0][1] > 0 ? rank[0][0] : 'cert';
+          }
         }
-        if (best && bestScore >= 2) frags.push({ pos: i, text: best, tag: r.p.title.slice(0, 38), shownAt: 0, id: r.p.id });
+        if (best && bestScore >= 2) {
+          frags.push({
+            pos: i, text: best, tag: r.p.title.slice(0, 38), shownAt: 0,
+            id: r.p.id, pen: PEN_COL[bestPen]
+          });
+        }
       });
 
       const hedged = rows.filter(r => r.idx < 0).length;
@@ -268,6 +287,12 @@
     },
     pt_episteme(type, p) {
       const E = this.M.episteme; if (!E) return;
+      // a fragment row is the most compelling thing on screen — let it be the
+      // thing you click, ahead of the column underneath the cursor
+      if (type === 'down') {
+        const hit = (E.fragRects || []).find(r => p.x >= r.x && p.x <= r.x + r.w && p.y >= r.y && p.y <= r.y + r.h);
+        if (hit) { this.wikiOpen(hit.id); return; }
+      }
       if (this.penScrub('episteme', type, p) === 'click' && E.hover >= 0) this.wikiOpen(E.rows[E.hover].p.id);
     },
 
