@@ -1,17 +1,20 @@
 // LEVIATHAN · WIKI section — reader + visualizer modules
 // Mixed into the console Component prototype at mount.
 (function () {
+  // SLIME — same nine-domain ramp the reader uses, so a domain is the same
+  // colour whether you meet it on a canvas or on a page.
   const DCOL = {
-    self: '#e8a33d', timeline: '#4fc3e8', people: '#e87da0', mind: '#9b8cf2',
-    work: '#7fd486', interests: '#ffd28a', health: '#e85d4f', places: '#a6e6ff', legal: '#8b94a4'
+    self: '#39ff14', timeline: '#b026ff', people: '#ccff00', mind: '#7b2dff',
+    work: '#00ffa3', interests: '#e0aaff', health: '#7dffb0', places: '#c77dff', legal: '#9ecb4a'
   };
   const DOMS = ['self', 'timeline', 'people', 'mind', 'work', 'interests', 'health', 'places', 'legal'];
+  // SLIME — matches the reader's edge ramp; contradicts keeps the hottest purple
   const TCOL = {
-    causes: '#e85d4f', 'caused-by': '#e85d4f', evidences: '#4fc3e8', 'evidenced-by': '#4fc3e8',
-    instantiates: '#9b8cf2', 'instance-of': '#9b8cf2', precedes: '#e8a33d', follows: '#e8a33d',
-    parallels: '#7fd486', mirrors: '#7fd486', contradicts: '#ff2d95', 'co-occurs': '#8b94a4',
-    supplies: '#ffd28a', 'supplied-by': '#ffd28a', contextualizes: '#a6e6ff', escalates: '#e87da0',
-    resolves: '#7fd486', 'component-of': '#8b94a4', contains: '#8b94a4', related: '#5b6472'
+    causes: '#ccff00', 'caused-by': '#ccff00', evidences: '#39ff14', 'evidenced-by': '#39ff14',
+    instantiates: '#7b2dff', 'instance-of': '#7b2dff', precedes: '#7dffb0', follows: '#7dffb0',
+    parallels: '#00ffa3', mirrors: '#00ffa3', contradicts: '#e01aff', 'co-occurs': '#8fa878',
+    supplies: '#c77dff', 'supplied-by': '#c77dff', contextualizes: '#e0aaff', escalates: '#b026ff',
+    resolves: '#00ffa3', 'component-of': '#8fa878', contains: '#8fa878', related: '#5f7a4e'
   };
   const esc = (s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
@@ -38,7 +41,7 @@
       return {
         fontFamily: "'IBM Plex Mono', monospace", fontSize: '10.5px', letterSpacing: '0.18em',
         padding: '6px 13px', cursor: 'pointer', fontWeight: on ? 700 : 400,
-        color: on ? tone : '#5b6472', background: on ? 'rgba(155,140,242,0.06)' : 'transparent',
+        color: on ? tone : '#6f8a5e', background: on ? 'rgba(123,45,255,0.06)' : 'transparent',
         border: '1px solid ' + (on ? tone : '#1d2430'), whiteSpace: 'nowrap', transition: 'all 130ms ease'
       };
     },
@@ -98,12 +101,12 @@
       if (s.tab === 'reader') {
         return [
           { label: '\u2302 MASTER INDEX', onClick: () => this.wikiOpen('wiki/self/index'), style: cs(false) },
-          { label: '\u2684 RANDOM PAGE', onClick: () => { if (WK) this.wikiOpen(WK.pages[Math.floor(Math.random() * WK.pages.length)].id); }, style: cs(false, '#9b8cf2') }
+          { label: '\u2684 RANDOM PAGE', onClick: () => { if (WK) this.wikiOpen(WK.pages[Math.floor(Math.random() * WK.pages.length)].id); }, style: cs(false, '#7b2dff') }
         ];
       }
       if (s.tab === 'web') {
         return [
-          { label: s.webEdges === 'typed' ? 'TYPED EDGES' : 'ALL EDGES', onClick: () => { this.setState(st => ({ webEdges: st.webEdges === 'typed' ? 'all' : 'typed' })); }, style: cs(true, '#9b8cf2') },
+          { label: s.webEdges === 'typed' ? 'TYPED EDGES' : 'ALL EDGES', onClick: () => { this.setState(st => ({ webEdges: st.webEdges === 'typed' ? 'all' : 'typed' })); }, style: cs(true, '#7b2dff') },
           { label: 'ALL', onClick: () => this.setState({ webDom: 'ALL' }), style: cs(s.webDom === 'ALL') },
           ...DOMS.map(d => ({ label: d.toUpperCase(), onClick: () => this.setState({ webDom: d }), style: cs(s.webDom === d, DCOL[d]) }))
         ];
@@ -113,11 +116,11 @@
         const counts = {};
         if (WK) for (const e of WK.typed) counts[e.type] = (counts[e.type] || 0) + 1;
         const types = ['ALL', ...Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 8).map(([t]) => t)];
-        return types.map(t => ({ label: t.toUpperCase(), onClick: () => { this.setState({ claimType: t }); if (this.M.claims) this.M.claims.scroll = 0; }, style: cs(s.claimType === t, TCOL[t] || '#9b8cf2') }));
+        return types.map(t => ({ label: t.toUpperCase(), onClick: () => { this.setState({ claimType: t }); if (this.M.claims) this.M.claims.scroll = 0; }, style: cs(s.claimType === t, TCOL[t] || '#7b2dff') }));
       }
       if (s.tab === 'census') {
         return [['first', 'BY FIRST CONTACT'], ['span', 'BY LONGEVITY'], ['name', 'A\u2013Z']].map(([id, l]) => ({
-          label: l, onClick: () => this.setState({ censusSort: id }), style: cs(s.censusSort === id, '#e87da0')
+          label: l, onClick: () => this.setState({ censusSort: id }), style: cs(s.censusSort === id, '#c77dff')
         }));
       }
       if (s.tab === 'strata') {
@@ -126,7 +129,7 @@
       }
       if (s.tab === 'tagmap') {
         return [[1, 'ALL LINKS'], [2, '\u2265 2 SHARED'], [3, '\u2265 3 SHARED']].map(([v, l]) => ({
-          label: l, onClick: () => { this.setState({ tagMin: v }); this.M.tagmap = null; }, style: cs(s.tagMin === v, '#9b8cf2')
+          label: l, onClick: () => { this.setState({ tagMin: v }); this.M.tagmap = null; }, style: cs(s.tagMin === v, '#7b2dff')
         }));
       }
       if (s.tab === 'mass') {
@@ -135,24 +138,24 @@
       }
       if (s.tab === 'evidence') {
         return [[24, 'TOP 24'], [48, 'TOP 48']].map(([v, l]) => ({
-          label: l, onClick: () => this.setState({ evTop: v }), style: cs(s.evTop === v, '#4fc3e8')
+          label: l, onClick: () => this.setState({ evTop: v }), style: cs(s.evTop === v, '#b026ff')
         }));
       }
       if (s.tab === 'chronicle') {
         return [
-          { label: s.chroniclePlay ? '❚❚ PAUSE' : '▶ PLAY', onClick: () => this.setState(st => ({ chroniclePlay: !st.chroniclePlay })), style: cs(s.chroniclePlay, '#9b8cf2') },
+          { label: s.chroniclePlay ? '❚❚ PAUSE' : '▶ PLAY', onClick: () => this.setState(st => ({ chroniclePlay: !st.chroniclePlay })), style: cs(s.chroniclePlay, '#7b2dff') },
           { label: '↺ RESTART', onClick: () => this.chronicleRestart(), style: cs(false) },
           ...[[0.35, 'SLOW'], [1, 'NORMAL'], [3, 'FAST']].map(([v, l]) => ({
-            label: l, onClick: () => this.setState({ chronicleSpeed: v }), style: cs(s.chronicleSpeed === v, '#9b8cf2')
+            label: l, onClick: () => this.setState({ chronicleSpeed: v }), style: cs(s.chronicleSpeed === v, '#7b2dff')
           }))
         ];
       }
       if (s.tab === 'genesis') {
         return [
-          { label: s.genesisPlay ? '❚❚ PAUSE' : '▶ PLAY', onClick: () => this.setState(st => ({ genesisPlay: !st.genesisPlay })), style: cs(s.genesisPlay, '#9b8cf2') },
+          { label: s.genesisPlay ? '❚❚ PAUSE' : '▶ PLAY', onClick: () => this.setState(st => ({ genesisPlay: !st.genesisPlay })), style: cs(s.genesisPlay, '#7b2dff') },
           { label: '↺ RESTART', onClick: () => this.genesisRestart(), style: cs(false) },
           ...[[0.35, 'SLOW'], [1, 'NORMAL'], [3, 'FAST']].map(([v, l]) => ({
-            label: l, onClick: () => this.setState({ genesisSpeed: v }), style: cs(s.genesisSpeed === v, '#9b8cf2')
+            label: l, onClick: () => this.setState({ genesisSpeed: v }), style: cs(s.genesisSpeed === v, '#7b2dff')
           }))
         ];
       }
@@ -260,7 +263,7 @@
       for (const e of edges) {
         if (!active(e.a) || !active(e.b)) continue;
         const hot = focus && (e.a === focus || e.b === focus);
-        if (e.type) ctx.strokeStyle = hot ? (TCOL[e.type] || '#9b8cf2') : 'rgba(155,140,242,' + (hot ? 0.9 : 0.16) + ')';
+        if (e.type) ctx.strokeStyle = hot ? (TCOL[e.type] || '#7b2dff') : 'rgba(123,45,255,' + (hot ? 0.9 : 0.16) + ')';
         else ctx.strokeStyle = hot ? 'rgba(139,148,164,0.55)' : 'rgba(139,148,164,0.06)';
         ctx.beginPath(); ctx.moveTo(e.a.x, e.a.y); ctx.lineTo(e.b.x, e.b.y); ctx.stroke();
       }
@@ -269,7 +272,7 @@
       const mx = this.mouse.x, my = this.mouse.y;
       for (const n of Wb.nodes) {
         if (!active(n)) continue;
-        const col = DCOL[n.p.domain] || '#8b94a4';
+        const col = DCOL[n.p.domain] || '#8fa878';
         const isF = n === focus;
         const near = focus && !isF && (edges.some(e => (e.a === focus && e.b === n) || (e.b === focus && e.a === n)));
         ctx.beginPath();
@@ -278,7 +281,7 @@
         ctx.fill();
         if (n.deg > 14 || isF) {
           ctx.font = (isF ? '10px ' : '8.5px ') + this.MONO;
-          ctx.fillStyle = isF ? '#e8e6e1' : 'rgba(139,148,164,0.75)';
+          ctx.fillStyle = isF ? '#e9ffe6' : 'rgba(139,148,164,0.75)';
           ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
           ctx.fillText(n.p.title.slice(0, 26), n.x, n.y - n.r - 3);
         }
@@ -290,7 +293,7 @@
       Wb.hover = hover;
       if (hover && hover !== Wb.pinned) {
         this.card(ctx, hover.x, hover.y, [
-          [hover.p.title, '#e8e6e1', '600 11px ' + this.MONO],
+          [hover.p.title, '#e9ffe6', '600 11px ' + this.MONO],
           [hover.p.domain.toUpperCase() + ' \u00b7 ' + hover.p.words.toLocaleString() + ' WORDS \u00b7 ' + hover.deg + ' EDGES', DCOL[hover.p.domain]],
           ['CLICK TO PIN \u00b7 DOUBLE-CLICK TO READ', C.dim, '9px ' + this.MONO]
         ]);
@@ -305,13 +308,13 @@
         ctx.strokeStyle = DCOL[p.domain];
         ctx.beginPath(); ctx.rect(x, y, w, h); ctx.fill(); ctx.stroke();
         ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
-        ctx.font = '600 12px ' + this.MONO; ctx.fillStyle = '#e8e6e1';
+        ctx.font = '600 12px ' + this.MONO; ctx.fillStyle = '#e9ffe6';
         ctx.fillText(p.title.slice(0, 34), x + 14, y + 24);
         ctx.font = '9px ' + this.MONO; ctx.fillStyle = DCOL[p.domain];
         ctx.fillText(p.domain.toUpperCase() + ' \u00b7 ' + (p.page_type || '').toUpperCase() + ' \u00b7 ' + p.words.toLocaleString() + ' WORDS', x + 14, y + 41);
         ctx.font = '10px ' + this.MONO; ctx.fillStyle = '#b9b4a9';
         sum.forEach((s, i) => ctx.fillText(s, x + 14, y + 62 + i * 15));
-        ctx.fillStyle = '#9b8cf2'; ctx.font = '600 10px ' + this.MONO;
+        ctx.fillStyle = '#7b2dff'; ctx.font = '600 10px ' + this.MONO;
         ctx.fillText('\u25b8 OPEN IN READER', x + 14, y + h - 12);
         Wb.openBtn = { x: x + 14, y: y + h - 24, w: 140, h: 18 };
       } else Wb.openBtn = null;
@@ -362,11 +365,11 @@
         const y = 52 + i * 26;
         if (y > H - 30) return;
         const on = st.claimType === 'ALL' || st.claimType === t;
-        const col = TCOL[t] || '#8b94a4';
+        const col = TCOL[t] || '#8fa878';
         ctx.fillStyle = on ? col : 'rgba(91,100,114,0.4)';
         ctx.fillRect(18, y - 4, Math.max(3, (n / maxC) * 120), 8);
         ctx.font = '9px ' + this.MONO;
-        ctx.fillStyle = on ? '#c9c5bb' : '#5b6472';
+        ctx.fillStyle = on ? '#c9c5bb' : '#6f8a5e';
         ctx.fillText(t.toUpperCase() + ' \u00b7 ' + n, 18, y + 13);
         Cl.typeHits.push({ y0: y - 8, y1: y + 20, t });
       });
@@ -391,7 +394,7 @@
         if (y + ch > 0) {
           const hov = mx > fx && mx < fx + fw && my > y && my < y + ch;
           if (hov) Cl.hoverRow = { e, x0: fx, x1: fx + fw, y0: y, y1: y + ch };
-          const col = TCOL[e.type] || '#8b94a4';
+          const col = TCOL[e.type] || '#8fa878';
           ctx.fillStyle = hov ? 'rgba(16,20,27,0.9)' : 'rgba(13,17,24,0.55)';
           ctx.strokeStyle = hov ? col : C.line;
           ctx.beginPath(); ctx.rect(fx, y, fw, ch); ctx.fill(); ctx.stroke();
@@ -425,7 +428,7 @@
       if (Cl.contentH > H) {
         const sh = Math.max(30, H * (H / Cl.contentH));
         const sy = (Cl.scroll / (Cl.contentH - H)) * (H - sh - 20) + 10;
-        ctx.fillStyle = 'rgba(155,140,242,0.35)';
+        ctx.fillStyle = 'rgba(123,45,255,0.35)';
         ctx.fillRect(W - 8, sy, 3, sh);
       }
     },
@@ -495,12 +498,12 @@
         const hov = my >= y && my < y + rh && mx >= gx0 - 175 && mx <= gx1;
         if (hov) Ce.hover = { ...r, y };
         const span = r.b - r.a;
-        const col = span > 2000 ? '#e87da0' : span > 400 ? '#e8a33d' : '#8b94a4';
+        const col = span > 2000 ? '#c77dff' : span > 400 ? '#39ff14' : '#8fa878';
         ctx.fillStyle = hov ? '#ffffff' : col + (hov ? '' : 'cc');
         ctx.fillRect(x0, y + rh * 0.22, x1 - x0, Math.max(2, rh * 0.5));
         if (rh >= 9 || hov) {
           ctx.font = (hov ? '600 ' : '') + Math.min(10, rh - 2.5) + 'px ' + this.MONO;
-          ctx.fillStyle = hov ? '#e8e6e1' : '#6b7484';
+          ctx.fillStyle = hov ? '#e9ffe6' : '#6b7484';
           ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
           ctx.fillText(r.p.title.slice(0, 24), gx0 - 10, y + rh / 2);
         }
@@ -512,8 +515,8 @@
         const r = Ce.hover;
         ctx.font = '10px ' + this.MONO;
         const lines = [
-          [r.p.title, '#e8e6e1', '600 11px ' + this.MONO],
-          [this.fmtDate(r.a, true) + ' \u2192 ' + this.fmtDate(r.b, true) + ' \u00b7 ' + Math.round((r.b - r.a) / 365 * 10) / 10 + ' YRS', '#e87da0'],
+          [r.p.title, '#e9ffe6', '600 11px ' + this.MONO],
+          [this.fmtDate(r.a, true) + ' \u2192 ' + this.fmtDate(r.b, true) + ' \u00b7 ' + Math.round((r.b - r.a) / 365 * 10) / 10 + ' YRS', '#c77dff'],
           ...this.wkWrap(ctx, r.known.slice(0, 200), 330).slice(0, 4).map(l => [l, '#b9b4a9']),
           ['CLICK TO OPEN THE PAGE', C.dim, '8.5px ' + this.MONO]
         ];
@@ -598,7 +601,7 @@
         const it = St.hover;
         ctx.font = '10px ' + this.MONO;
         this.card(ctx, mx, my, [
-          [it.p.title, '#e8e6e1', '600 11px ' + this.MONO],
+          [it.p.title, '#e9ffe6', '600 11px ' + this.MONO],
           [this.fmtDate(it.a, true) + ' \u2192 ' + this.fmtDate(it.b, true), DCOL[it.p.domain]],
           ...this.wkWrap(ctx, (it.p.summary || '').slice(0, 170), 320).slice(0, 3).map(l => [l, '#b9b4a9']),
           ['CLICK TO OPEN', C.dim, '8.5px ' + this.MONO]
@@ -615,7 +618,7 @@
     // ============================================================
     initAccrete() {
       const WK = this.WK;
-      const KCOL = { ingest: '#e8a33d', connect: '#9b8cf2', rename: '#4fc3e8', build: '#7fd486', edit: '#e87da0', add: '#e87da0', triage: '#8b94a4', lint: '#8b94a4', rewrite: '#e85d4f', fix: '#e85d4f' };
+      const KCOL = { ingest: '#39ff14', connect: '#7b2dff', rename: '#b026ff', build: '#00ffa3', edit: '#c77dff', add: '#c77dff', triage: '#8fa878', lint: '#8fa878', rewrite: '#e01aff', fix: '#e01aff' };
       const byDay = {};
       for (const o of WK.log) {
         const k = KCOL[o.k] ? o.k : 'other';
@@ -659,9 +662,9 @@
         const y = gy1 - (s.cumN / A.totN) * (gy1 - gy0) * 0.92;
         if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
       });
-      ctx.strokeStyle = 'rgba(155,140,242,0.9)'; ctx.lineWidth = 1.6; ctx.stroke();
+      ctx.strokeStyle = 'rgba(123,45,255,0.9)'; ctx.lineWidth = 1.6; ctx.stroke();
       ctx.lineTo(gx0 + (n - 0.5) * bw, gy1); ctx.lineTo(gx0 + bw / 2, gy1); ctx.closePath();
-      ctx.fillStyle = 'rgba(155,140,242,0.07)'; ctx.fill();
+      ctx.fillStyle = 'rgba(123,45,255,0.07)'; ctx.fill();
       // op bars
       A.series.forEach((s, i) => {
         const x = gx0 + i * bw;
@@ -670,7 +673,7 @@
         let y = gy1;
         for (const [k, cnt] of Object.entries(s.ops)) {
           const h = (cnt / A.maxOps) * (gy1 - gy0) * 0.85;
-          ctx.fillStyle = (A.KCOL[k] || '#5b6472') + (A.hover === s ? '' : 'cc');
+          ctx.fillStyle = (A.KCOL[k] || '#6f8a5e') + (A.hover === s ? '' : 'cc');
           ctx.fillRect(x + 1, y - h, Math.max(2, bw - 2), h);
           y -= h;
         }
@@ -695,13 +698,13 @@
         ctx.fillText(k.toUpperCase(), lx + 11, H - 22);
         lx += 24 + ctx.measureText(k.toUpperCase()).width;
       }
-      ctx.fillStyle = 'rgba(155,140,242,0.9)'; ctx.fillRect(lx, H - 25, 14, 2);
+      ctx.fillStyle = 'rgba(123,45,255,0.9)'; ctx.fillRect(lx, H - 25, 14, 2);
       ctx.fillStyle = '#6b7484'; ctx.fillText('CUMULATIVE PAGES', lx + 20, H - 22);
       if (A.hover) {
         const s = A.hover;
-        const lines = [[s.ds, '#e8e6e1', '600 11px ' + this.MONO]];
-        if (s.ops) for (const [k, cnt] of Object.entries(s.ops)) lines.push([cnt + ' \u00d7 ' + k.toUpperCase(), A.KCOL[k] || '#8b94a4']);
-        lines.push([s.cumN + ' PAGES \u00b7 ' + s.cumW.toLocaleString() + ' WORDS TO DATE', '#9b8cf2']);
+        const lines = [[s.ds, '#e9ffe6', '600 11px ' + this.MONO]];
+        if (s.ops) for (const [k, cnt] of Object.entries(s.ops)) lines.push([cnt + ' \u00d7 ' + k.toUpperCase(), A.KCOL[k] || '#8fa878']);
+        lines.push([s.cumN + ' PAGES \u00b7 ' + s.cumW.toLocaleString() + ' WORDS TO DATE', '#7b2dff']);
         this.card(ctx, mx, my, lines);
       }
     },
@@ -737,7 +740,7 @@
       // edges
       for (const e of T.edges) {
         const hot = T.pinned && (e.a === T.pinned || e.b === T.pinned);
-        ctx.strokeStyle = hot ? 'rgba(155,140,242,0.8)' : 'rgba(155,140,242,' + Math.min(0.4, 0.05 + e.w * 0.04) + ')';
+        ctx.strokeStyle = hot ? 'rgba(123,45,255,0.8)' : 'rgba(123,45,255,' + Math.min(0.4, 0.05 + e.w * 0.04) + ')';
         ctx.lineWidth = Math.min(4, 0.5 + e.w * 0.5);
         ctx.beginPath(); ctx.moveTo(e.a.x, e.a.y); ctx.lineTo(e.b.x, e.b.y); ctx.stroke();
       }
@@ -747,9 +750,9 @@
       for (const n of T.nodes) {
         const isP = n === T.pinned;
         ctx.beginPath(); ctx.arc(n.x, n.y, n.r, 0, Math.PI * 2);
-        ctx.fillStyle = isP ? '#cfc4ff' : 'rgba(155,140,242,' + (0.14 + Math.min(0.5, n.n * 0.02)) + ')';
+        ctx.fillStyle = isP ? '#cfa8ff' : 'rgba(123,45,255,' + (0.14 + Math.min(0.5, n.n * 0.02)) + ')';
         ctx.fill();
-        ctx.strokeStyle = isP ? '#ffffff' : 'rgba(155,140,242,0.6)';
+        ctx.strokeStyle = isP ? '#ffffff' : 'rgba(123,45,255,0.6)';
         ctx.stroke();
         ctx.font = (isP ? '600 ' : '') + Math.min(13, 8 + n.n * 0.2) + 'px ' + this.MONO;
         ctx.fillStyle = isP ? '#07090d' : '#c9c5bb';
@@ -760,7 +763,7 @@
       T.hover = hover;
       if (hover && hover !== T.pinned) {
         this.card(ctx, hover.x, hover.y, [
-          ['#' + hover.t, '#cfc4ff', '600 11px ' + this.MONO],
+          ['#' + hover.t, '#cfa8ff', '600 11px ' + this.MONO],
           [hover.n + ' PAGES \u00b7 CLICK TO LIST THEM', C.dim]
         ]);
       }
@@ -770,20 +773,20 @@
         const ids = T.pinned.ids.slice(0, 16);
         const x = W - 320, y = 56, w = 300, rowH = 20;
         const h = 44 + ids.length * rowH;
-        ctx.fillStyle = 'rgba(13,17,24,0.95)'; ctx.strokeStyle = '#9b8cf2';
+        ctx.fillStyle = 'rgba(13,17,24,0.95)'; ctx.strokeStyle = '#7b2dff';
         ctx.beginPath(); ctx.rect(x, y, w, h); ctx.fill(); ctx.stroke();
         ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
-        ctx.font = '600 11px ' + this.MONO; ctx.fillStyle = '#cfc4ff';
+        ctx.font = '600 11px ' + this.MONO; ctx.fillStyle = '#cfa8ff';
         ctx.fillText('#' + T.pinned.t + ' \u00b7 ' + T.pinned.n + ' PAGES', x + 14, y + 20);
         ids.forEach((id, i) => {
           const pp = this.WK.byId[id];
           const ry = y + 40 + i * rowH;
           const hov = mx >= x && mx <= x + w && my >= ry - rowH / 2 && my < ry + rowH / 2;
-          if (hov) { ctx.fillStyle = 'rgba(155,140,242,0.12)'; ctx.fillRect(x + 1, ry - rowH / 2, w - 2, rowH); }
+          if (hov) { ctx.fillStyle = 'rgba(123,45,255,0.12)'; ctx.fillRect(x + 1, ry - rowH / 2, w - 2, rowH); }
           ctx.font = '9.5px ' + this.MONO;
-          ctx.fillStyle = DCOL[pp.domain] || '#8b94a4';
+          ctx.fillStyle = DCOL[pp.domain] || '#8fa878';
           ctx.fillText('\u25b8', x + 14, ry);
-          ctx.fillStyle = hov ? '#e8e6e1' : '#a9a49a';
+          ctx.fillStyle = hov ? '#e9ffe6' : '#a9a49a';
           ctx.fillText(pp.title.slice(0, 34), x + 28, ry);
           T.pageHits.push({ x, y: ry - rowH / 2, w, h: rowH, id });
         });
@@ -916,7 +919,7 @@
         const r = Ms.hover;
         ctx.font = '10px ' + this.MONO;
         this.card(ctx, mx, my, [
-          [r.p.title, '#e8e6e1', '600 11px ' + this.MONO],
+          [r.p.title, '#e9ffe6', '600 11px ' + this.MONO],
           [r.d.toUpperCase() + ' \u00b7 ' + r.p.words.toLocaleString() + ' WORDS', DCOL[r.d]],
           ...this.wkWrap(ctx, (r.p.summary || '').slice(0, 150), 300).slice(0, 3).map(l => [l, '#b9b4a9']),
           ['CLICK TO OPEN', C.dim, '8.5px ' + this.MONO]
@@ -966,7 +969,7 @@
       for (const [v, l] of stats) {
         ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
         ctx.font = '600 22px ' + this.MONO;
-        ctx.fillStyle = l === 'ORPHANS' ? C.red : l === 'RECIPROCITY' ? '#9b8cf2' : '#e8e6e1';
+        ctx.fillStyle = l === 'ORPHANS' ? C.red : l === 'RECIPROCITY' ? '#7b2dff' : '#e9ffe6';
         ctx.fillText(String(v), sx, 46);
         ctx.font = '8px ' + this.MONO; ctx.fillStyle = C.dim;
         ctx.fillText(l, sx, 60);
@@ -980,9 +983,9 @@
       types.forEach(([t, n], i) => {
         const y = ty + i * 21;
         if (y > H - 130) return;
-        ctx.fillStyle = TCOL[t] || '#8b94a4';
+        ctx.fillStyle = TCOL[t] || '#8fa878';
         ctx.fillRect(tx, y, Math.max(3, (n / maxT) * 180), 9);
-        ctx.font = '8.5px ' + this.MONO; ctx.fillStyle = '#8b94a4';
+        ctx.font = '8.5px ' + this.MONO; ctx.fillStyle = '#8fa878';
         ctx.textBaseline = 'middle';
         ctx.fillText(t.toUpperCase() + ' ' + n, tx + Math.max(3, (n / maxT) * 180) + 8, y + 5);
       });
@@ -994,7 +997,7 @@
       L.outHist.forEach((n, i) => {
         const bw = hw / 13;
         const bh = (n / maxH) * hh;
-        ctx.fillStyle = i === 0 ? C.red : '#4fc3e8';
+        ctx.fillStyle = i === 0 ? C.red : '#b026ff';
         ctx.fillRect(hx + i * bw, hy - bh, bw - 2, bh);
         ctx.font = '7.5px ' + this.MONO; ctx.fillStyle = C.faint;
         ctx.textAlign = 'center';
@@ -1017,7 +1020,7 @@
         const hov = dx * dx + dy * dy < 64;
         if (hov) L.hover = { p, x, y };
         ctx.beginPath(); ctx.arc(x, y, hov ? 5 : 3, 0, Math.PI * 2);
-        ctx.fillStyle = hov ? '#ffffff' : (DCOL[p.domain] || '#8b94a4');
+        ctx.fillStyle = hov ? '#ffffff' : (DCOL[p.domain] || '#8fa878');
         ctx.fill();
       });
       ctx.font = '600 15px ' + this.MONO; ctx.fillStyle = C.red; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
@@ -1027,7 +1030,7 @@
       if (L.hover) {
         ctx.font = '10px ' + this.MONO;
         this.card(ctx, L.hover.x, L.hover.y, [
-          [L.hover.p.title, '#e8e6e1', '600 11px ' + this.MONO],
+          [L.hover.p.title, '#e9ffe6', '600 11px ' + this.MONO],
           [L.hover.p.domain.toUpperCase() + ' \u00b7 ' + L.hover.p.words.toLocaleString() + ' WORDS', DCOL[L.hover.p.domain]],
           ['CLICK TO OPEN', C.dim, '8.5px ' + this.MONO]
         ]);
@@ -1049,14 +1052,14 @@
         const k = s.replace(/^raw\//, '');
         (srcMap[k] = srcMap[k] || []).push(p.id);
       }
-      const cat = (s) => /message|imessage|MASTER/i.test(s) ? ['MESSAGES', '#e8a33d']
-        : /facebook/i.test(s) ? ['FACEBOOK', '#4fc3e8']
-        : /gemini|chat/i.test(s) ? ['AI CHATS', '#9b8cf2']
-        : /location|semantic/i.test(s) ? ['LOCATION', '#7fd486']
-        : /dox|scan/i.test(s) ? ['DOCUMENTS', '#e87da0']
-        : /twitter|youtube|takeout/i.test(s) ? ['PLATFORM EXPORTS', '#a6e6ff']
-        : /ancestry|dna|gedcom/i.test(s) ? ['GENEALOGY', '#ffd28a']
-        : ['OTHER', '#8b94a4'];
+      const cat = (s) => /message|imessage|MASTER/i.test(s) ? ['MESSAGES', '#39ff14']
+        : /facebook/i.test(s) ? ['FACEBOOK', '#b026ff']
+        : /gemini|chat/i.test(s) ? ['AI CHATS', '#7b2dff']
+        : /location|semantic/i.test(s) ? ['LOCATION', '#00ffa3']
+        : /dox|scan/i.test(s) ? ['DOCUMENTS', '#c77dff']
+        : /twitter|youtube|takeout/i.test(s) ? ['PLATFORM EXPORTS', '#e0aaff']
+        : /ancestry|dna|gedcom/i.test(s) ? ['GENEALOGY', '#b6ff8f']
+        : ['OTHER', '#8fa878'];
       const rows = Object.entries(srcMap).map(([s, ids]) => ({ s, ids, n: ids.length, cat: cat(s) })).sort((a, b) => b.n - a.n);
       this.M.evidence = { rows, hover: null, pinned: null, pageHits: [] };
     },
@@ -1084,7 +1087,7 @@
         ctx.fillRect(gx0, y + rowH * 0.18, bw, rowH * 0.62);
         if (rowH >= 9) {
           ctx.font = (active ? '600 ' : '') + Math.min(9.5, rowH - 3) + 'px ' + this.MONO;
-          ctx.fillStyle = active ? '#e8e6e1' : '#6b7484';
+          ctx.fillStyle = active ? '#e9ffe6' : '#6b7484';
           const name = r.s.split('/').pop().slice(0, 46);
           ctx.fillText(name + ' \u00b7 ' + r.n, gx0 + bw + 10, y + rowH / 2);
         }
@@ -1105,11 +1108,11 @@
           const pp = this.WK.byId[id]; if (!pp) return;
           const ry = y + 48 + i * 19;
           const hov = mx >= x && mx <= x + w && my >= ry - 9 && my < ry + 10;
-          if (hov) { ctx.fillStyle = 'rgba(79,195,232,0.1)'; ctx.fillRect(x + 1, ry - 9, w - 2, 19); }
+          if (hov) { ctx.fillStyle = 'rgba(176,38,255,0.1)'; ctx.fillRect(x + 1, ry - 9, w - 2, 19); }
           ctx.font = '9px ' + this.MONO;
-          ctx.fillStyle = DCOL[pp.domain] || '#8b94a4';
+          ctx.fillStyle = DCOL[pp.domain] || '#8fa878';
           ctx.fillText('\u25b8', x + 14, ry);
-          ctx.fillStyle = hov ? '#e8e6e1' : '#a9a49a';
+          ctx.fillStyle = hov ? '#e9ffe6' : '#a9a49a';
           ctx.fillText(pp.title.slice(0, 36), x + 26, ry);
           E.pageHits.push({ x, y: ry - 9, w, h: 19, id });
         });
@@ -1117,7 +1120,7 @@
       if (E.hover && E.hover !== E.pinned) {
         ctx.font = '10px ' + this.MONO;
         this.card(ctx, mx, my, [
-          [E.hover.s.split('/').pop().slice(0, 44), '#e8e6e1', '600 10.5px ' + this.MONO],
+          [E.hover.s.split('/').pop().slice(0, 44), '#e9ffe6', '600 10.5px ' + this.MONO],
           [E.hover.cat[0] + ' \u00b7 FEEDS ' + E.hover.n + ' PAGES', E.hover.cat[1]],
           ['CLICK TO LIST THE PAGES', C.dim, '8.5px ' + this.MONO]
         ]);
@@ -1137,10 +1140,10 @@
     // op-log rates as pens, claims surfacing as pages enter the record)
     // ============================================================
     CHRON_PENS: [
-      ['ingest', 'INGEST', '#e8a33d'],
-      ['connect', 'CONNECT', '#9b8cf2'],
-      ['write', 'WRITE', '#7fd486'],
-      ['maintain', 'MAINTAIN', '#4fc3e8']
+      ['ingest', 'INGEST', '#39ff14'],
+      ['connect', 'CONNECT', '#7b2dff'],
+      ['write', 'WRITE', '#00ffa3'],
+      ['maintain', 'MAINTAIN', '#b026ff']
     ],
     CHRON_BUCKET: {
       ingest: 'ingest', connect: 'connect', rename: 'connect',
@@ -1213,7 +1216,7 @@
       const vy0 = padT + this.CHRON_PENS.length * (laneH + laneGap);
 
       ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
-      ctx.font = '700 17px ' + this.GROT; ctx.fillStyle = '#cfc4ff';
+      ctx.font = '700 17px ' + this.GROT; ctx.fillStyle = '#cfa8ff';
       ctx.fillText('CHRONICLE', 18, 32);
       ctx.font = '9px ' + this.MONO; ctx.fillStyle = C.dim;
       ctx.fillText(this.WK.log.length + ' LOGGED OPERATIONS \u00b7 THE WIKI BUILDING ITSELF, DAY BY DAY', 18, 48);
@@ -1224,7 +1227,7 @@
 
       const lanes = this.CHRON_PENS.map(([k, label, col]) => ({ data: Ch.rates[k], label, unit: '% OF DAY', color: col, max: Ch.maxRate[k] }));
       this.drawPenLanes(ctx, geo, lanes, Ch.play, st.chroniclePlay);
-      this.drawVolumeLane(ctx, geo, vy0, Ch.tot, Ch.maxVol, Ch.play, '#9b8cf2');
+      this.drawVolumeLane(ctx, geo, vy0, Ch.tot, Ch.maxVol, Ch.play, '#7b2dff');
 
       ctx.strokeStyle = 'rgba(232,230,225,0.5)'; ctx.lineWidth = 1;
       ctx.beginPath(); ctx.moveTo(playX, padT - 6); ctx.lineTo(playX, vy0 + laneH + 8); ctx.stroke();
@@ -1234,7 +1237,7 @@
       }
       Ch.scrubGeo = { x0: padL, x1: chartR - 20, y1: vy0 + laneH };
 
-      this.drawFragmentFeed(ctx, { fx, fy: padT - 22, fw, fh: H - padT - 36 }, Ch.frags, Ch.play, 'CLAIMS SURFACING \u00b7 AS PAGES ENTER THE WIKI', '#cfc4ff');
+      this.drawFragmentFeed(ctx, { fx, fy: padT - 22, fw, fh: H - padT - 36 }, Ch.frags, Ch.play, 'CLAIMS SURFACING \u00b7 AS PAGES ENTER THE WIKI', '#cfa8ff');
     },
     pt_chronicle(type, p) {
       const Ch = this.M.chronicle; if (!Ch || Ch.empty) return;
@@ -1351,14 +1354,14 @@
       const focus = Ge.pinned || Ge.hover;
       for (const e of activeEdges) {
         const lit = focus && (e.a === focus || e.b === focus);
-        ctx.strokeStyle = lit ? 'rgba(155,140,242,0.7)' : (TCOL[e.type] || '#5b6472') + '30';
+        ctx.strokeStyle = lit ? 'rgba(123,45,255,0.7)' : (TCOL[e.type] || '#6f8a5e') + '30';
         ctx.lineWidth = lit ? 1.6 : 0.8;
         ctx.beginPath(); ctx.moveTo(e.a.x, e.a.y); ctx.lineTo(e.b.x, e.b.y); ctx.stroke();
       }
       for (const n of active) {
         const lit = n === Ge.hover || n === Ge.pinned;
         ctx.beginPath(); ctx.arc(n.x, n.y, lit ? n.r + 3 : n.r, 0, Math.PI * 2);
-        ctx.fillStyle = lit ? '#ffffff' : (DCOL[n.p.domain] || '#8b94a4') + 'cc';
+        ctx.fillStyle = lit ? '#ffffff' : (DCOL[n.p.domain] || '#8fa878') + 'cc';
         ctx.fill();
         if (lit || n.r > 6) {
           ctx.font = (lit ? '600 ' : '') + '8.5px ' + this.MONO;
@@ -1378,7 +1381,7 @@
       if (this.cv) this.cv.style.cursor = Ge.drag ? 'grabbing' : (Ge.hover ? 'grab' : 'crosshair');
 
       ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
-      ctx.font = '700 17px ' + this.GROT; ctx.fillStyle = '#cfc4ff';
+      ctx.font = '700 17px ' + this.GROT; ctx.fillStyle = '#cfa8ff';
       ctx.fillText('GENESIS', 18, 32);
       ctx.font = '9px ' + this.MONO; ctx.fillStyle = C.dim;
       const di = Math.min(Ge.nD - 1, Math.floor(Ge.play));
@@ -1390,8 +1393,8 @@
       const sx0 = gx0 + 90, sx1 = gx1;
       const xOf = (i) => sx0 + (i / (Ge.nD - 1)) * (sx1 - sx0);
       const lanes = [
-        { data: Ge.pagesD, label: 'PAGES/DAY', unit: '', color: '#7fd486', max: Ge.maxP },
-        { data: Ge.edgesD, label: 'EDGES/DAY', unit: '', color: '#9b8cf2', max: Ge.maxE }
+        { data: Ge.pagesD, label: 'PAGES/DAY', unit: '', color: '#00ffa3', max: Ge.maxP },
+        { data: Ge.edgesD, label: 'EDGES/DAY', unit: '', color: '#7b2dff', max: Ge.maxE }
       ];
       this.drawPenLanes(ctx, { padL: sx0, padT: stripY, laneH, laneGap: 4, x0: sx0, x1: sx1, xOf }, lanes, Ge.play, st.genesisPlay);
       const playX = xOf(Ge.play);
@@ -1399,15 +1402,15 @@
       ctx.beginPath(); ctx.moveTo(playX, stripY - 6); ctx.lineTo(playX, stripY + laneH * 2 + 4 + 8); ctx.stroke();
       Ge.scrubGeo = { x0: sx0, x1: sx1, y0: stripY - 10, y1: stripY + laneH * 2 + 4 + 10 };
 
-      this.drawFragmentFeed(ctx, { fx, fy: 8, fw, fh: H - 24 }, Ge.frags, Ge.play, 'CLAIMS FORMING \u00b7 AS EDGES CONNECT', '#cfc4ff');
+      this.drawFragmentFeed(ctx, { fx, fy: 8, fw, fh: H - 24 }, Ge.frags, Ge.play, 'CLAIMS FORMING \u00b7 AS EDGES CONNECT', '#cfa8ff');
 
       const show = Ge.pinned || Ge.hover;
       if (show) {
         this.card(ctx, mx >= 0 ? mx : show.x, my >= 0 ? my : show.y, [
-          [show.p.title, '#e8e6e1', '600 12px ' + this.GROT],
+          [show.p.title, '#e9ffe6', '600 12px ' + this.GROT],
           [show.p.domain.toUpperCase() + (show.p.created ? ' \u00b7 CREATED ' + show.p.created : ' \u00b7 UNDATED \u00b7 PRESENT FROM THE START'), DCOL[show.p.domain] || C.dim],
           ['CLICK TO OPEN THE PAGE', C.dim, '8.5px ' + this.MONO]
-        ], { border: show === Ge.pinned ? '#9b8cf2' : C.line });
+        ], { border: show === Ge.pinned ? '#7b2dff' : C.line });
       }
     },
     pt_genesis(type, p) {

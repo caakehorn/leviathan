@@ -12,32 +12,36 @@
 // Replaces the previous reader wholesale (nav + markdown renderer + page
 // renderer); nothing here is layered on top of the old one.
 (function () {
-  // The wiki's nine domains pushed onto the VOID neon palette. The archive
-  // canvases keep their muted originals (WCOL); the reader runs hot.
+  // SLIME: the nine domains spread across a purple↔green ramp. Confined to two
+  // hue families they can't be told apart by hue alone, so the five greens and
+  // four purples alternate and are separated by lightness and saturation
+  // instead — and no two adjacent domains share a family.
   const DOM_NEON = {
-    self:      '#ffb03a',
-    timeline:  '#00f0ff',
-    people:    '#ff2d95',
-    mind:      '#7b2dff',
-    work:      '#00ff9d',
-    interests: '#ffd84d',
-    health:    '#ff4b3e',
-    places:    '#4dd8ff',
-    legal:     '#9aa4b8'
+    self:      '#39ff14',   // electric lime
+    timeline:  '#b026ff',   // vivid purple
+    people:    '#ccff00',   // acid yellow-green
+    mind:      '#7b2dff',   // violet
+    work:      '#00ffa3',   // spring green
+    interests: '#e0aaff',   // pale lilac
+    health:    '#7dffb0',   // mint
+    places:    '#c77dff',   // light purple
+    legal:     '#9ecb4a'    // olive
   };
   const DOMS = ['self', 'timeline', 'people', 'mind', 'work', 'interests', 'health', 'places', 'legal'];
 
-  // Edge types, coloured by what they DO to an argument.
+  // Edge types, coloured by what they DO to an argument. contradicts gets the
+  // hottest purple in the ramp — it is the alarm, and must not collide with
+  // the merely-structural edges.
   const EDGE_NEON = {
-    causes: '#ff4b3e', 'caused-by': '#ff4b3e',
-    evidences: '#00f0ff', 'evidenced-by': '#00f0ff',
+    causes: '#ccff00', 'caused-by': '#ccff00',
+    evidences: '#39ff14', 'evidenced-by': '#39ff14',
     instantiates: '#7b2dff', 'instance-of': '#7b2dff',
-    precedes: '#ffb03a', follows: '#ffb03a',
-    parallels: '#00ff9d', mirrors: '#00ff9d', resolves: '#00ff9d',
-    contradicts: '#ff2d95',
-    'co-occurs': '#9aa4b8', 'component-of': '#9aa4b8', contains: '#9aa4b8',
-    supplies: '#ffd84d', 'supplied-by': '#ffd84d',
-    contextualizes: '#4dd8ff', escalates: '#ff2d95', related: '#6b7484'
+    precedes: '#7dffb0', follows: '#7dffb0',
+    parallels: '#00ffa3', mirrors: '#00ffa3', resolves: '#00ffa3',
+    contradicts: '#e01aff',
+    'co-occurs': '#8fa878', 'component-of': '#8fa878', contains: '#8fa878',
+    supplies: '#c77dff', 'supplied-by': '#c77dff',
+    contextualizes: '#e0aaff', escalates: '#b026ff', related: '#5f7a4e'
   };
 
   const esc = (s) => String(s == null ? '' : s)
@@ -45,10 +49,10 @@
 
   const CSS = `
 /* ══════════ LEVIATHAN READER ══════════ */
-.rdr{position:absolute;inset:0;display:flex;background:#030109;z-index:5;
-  font-family:'IBM Plex Mono',monospace;--ac:#00f0ff;--ac2:#ff2d95}
+.rdr{position:absolute;inset:0;display:flex;background:#03000a;z-index:5;
+  font-family:'IBM Plex Mono',monospace;--ac:#39ff14;--ac2:#b026ff}
 .rdr *{box-sizing:border-box}
-.rdr ::selection{background:#ff2d95;color:#020008}
+.rdr ::selection{background:#b026ff;color:#040010}
 
 /* ── the CRT this whole thing is read through ──
    scanlines, mesh, a sweeping tracking band, grain and a mains flicker.
@@ -60,12 +64,12 @@
 .rdr-mesh{position:absolute;inset:0;z-index:31;pointer-events:none;opacity:.5;
   background:
     repeating-linear-gradient(90deg,rgba(123,45,255,.10) 0 1px,transparent 1px 46px),
-    repeating-linear-gradient(0deg,rgba(0,240,255,.06) 0 1px,transparent 1px 46px)}
+    repeating-linear-gradient(0deg,rgba(57,255,20,.06) 0 1px,transparent 1px 46px)}
 .rdr-vig{position:absolute;inset:0;z-index:32;pointer-events:none;
   background:radial-gradient(ellipse at 50% 40%,transparent 58%,rgba(2,0,8,.72) 100%)}
 /* VHS tracking band, drifts down the screen */
 .rdr-track{position:absolute;left:0;right:0;height:120px;z-index:41;pointer-events:none;
-  background:linear-gradient(180deg,transparent,rgba(0,240,255,.09) 30%,rgba(255,45,149,.11) 55%,transparent);
+  background:linear-gradient(180deg,transparent,rgba(57,255,20,.09) 30%,rgba(176,38,255,.11) 55%,transparent);
   mix-blend-mode:screen;animation:rdrTrack 7.5s linear infinite}
 @keyframes rdrTrack{0%{top:-140px;opacity:0}6%{opacity:1}94%{opacity:1}100%{top:100%;opacity:0}}
 /* grain */
@@ -75,27 +79,50 @@
 @keyframes rdrGrain{0%{background-position:0 0}25%{background-position:2px 1px}
   50%{background-position:1px 2px}75%{background-position:2px 2px}100%{background-position:0 1px}}
 
+/* ── SLIME DRIPS ──
+   Sporadic ooze creeping down both edges. Each strand has its own length,
+   offset, duration and delay so they never march in step; the bulb at the tip
+   swells before the strand fades and starts over somewhere else. */
+.rdr-drips{position:absolute;top:0;bottom:0;width:34px;z-index:36;pointer-events:none;overflow:hidden}
+.rdr-drips.l{left:0}
+.rdr-drips.r{right:0}
+.rdr-drips i{position:absolute;top:-4px;width:6px;height:0;border-radius:0 0 7px 7px;
+  background:linear-gradient(180deg,#39ff14,#00ffa3 45%,#b026ff);
+  box-shadow:0 0 12px #39ff14,0 0 30px rgba(57,255,20,.55),0 0 60px rgba(176,38,255,.35);
+  animation:rdrDrip var(--dur,15s) cubic-bezier(.35,0,.25,1) var(--del,0s) infinite}
+.rdr-drips i::after{content:'';position:absolute;left:50%;bottom:-6px;transform:translateX(-50%);
+  width:12px;height:13px;border-radius:0 0 50% 50%/0 0 60% 60%;
+  background:radial-gradient(circle at 50% 35%,#b6ff8f,#39ff14 55%,#00ffa3);
+  box-shadow:0 0 16px #39ff14,0 0 34px rgba(57,255,20,.6)}
+@keyframes rdrDrip{
+  0%,6%{height:0;opacity:0}
+  10%{opacity:1}
+  60%{height:var(--h,190px);opacity:1}
+  86%{height:var(--h,190px);opacity:1}
+  100%{height:var(--h,190px);opacity:0}}
+@media (prefers-reduced-motion:reduce){.rdr-drips{display:none}}
+
 /* ── reading progress rail ── */
 .rdr-rail{position:absolute;top:0;left:0;right:0;height:2px;z-index:41;pointer-events:none;background:rgba(255,255,255,.05)}
-.rdr-rail i{display:block;height:100%;width:0;background:linear-gradient(90deg,#7b2dff,#00f0ff 40%,#ff2d95);
+.rdr-rail i{display:block;height:100%;width:0;background:linear-gradient(90deg,#7b2dff,#39ff14 40%,#b026ff);
   box-shadow:0 0 10px var(--ac);transition:width .1s linear}
 
 /* ══════════ NAV ══════════ */
 .rdr-nav{width:296px;min-width:296px;display:flex;flex-direction:column;
-  background:linear-gradient(180deg,#07030f,#04010a);border-right:1px solid rgba(123,45,255,.30);position:relative;z-index:35}
+  background:linear-gradient(180deg,#0a0420,#050116);border-right:1px solid rgba(123,45,255,.30);position:relative;z-index:35}
 .rdr-nav::after{content:'';position:absolute;top:0;right:-1px;bottom:0;width:1px;
-  background:linear-gradient(180deg,transparent,#7b2dff,#00f0ff,transparent);opacity:.7}
+  background:linear-gradient(180deg,transparent,#7b2dff,#39ff14,transparent);opacity:.7}
 .rdr-srch{padding:14px 14px 10px;border-bottom:1px solid rgba(123,45,255,.18)}
-.rdr-srch input{width:100%;background:rgba(0,0,0,.55);border:1px solid rgba(0,240,255,.28);
-  color:#e8e6ff;font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.1em;
+.rdr-srch input{width:100%;background:rgba(0,0,0,.55);border:1px solid rgba(57,255,20,.28);
+  color:#e9ffe6;font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.1em;
   padding:9px 11px;outline:none;transition:border-color .15s,box-shadow .15s}
-.rdr-srch input::placeholder{color:#4d4774;letter-spacing:.14em}
-.rdr-srch input:focus{border-color:#ff2d95;box-shadow:0 0 0 1px rgba(255,45,149,.35),0 0 22px rgba(255,45,149,.28),inset 0 0 18px rgba(123,45,255,.15)}
-.rdr-count{margin-top:8px;font-size:8.5px;letter-spacing:.26em;color:#4d4774}
-.rdr-list{flex:1;overflow-y:auto;padding:4px 0 40px;scrollbar-width:thin;scrollbar-color:#7b2dff #06030d}
+.rdr-srch input::placeholder{color:#4d6a3c;letter-spacing:.14em}
+.rdr-srch input:focus{border-color:#b026ff;box-shadow:0 0 0 1px rgba(176,38,255,.35),0 0 22px rgba(176,38,255,.28),inset 0 0 18px rgba(123,45,255,.15)}
+.rdr-count{margin-top:8px;font-size:8.5px;letter-spacing:.26em;color:#4d6a3c}
+.rdr-list{flex:1;overflow-y:auto;padding:4px 0 40px;scrollbar-width:thin;scrollbar-color:#7b2dff #06021a}
 .rdr-list::-webkit-scrollbar{width:8px}
-.rdr-list::-webkit-scrollbar-track{background:#06030d}
-.rdr-list::-webkit-scrollbar-thumb{background:linear-gradient(180deg,#7b2dff,#00f0ff)}
+.rdr-list::-webkit-scrollbar-track{background:#06021a}
+.rdr-list::-webkit-scrollbar-thumb{background:linear-gradient(180deg,#7b2dff,#39ff14)}
 
 /* ── tree ──
    343 pages will not fit in a flat list, so the nav is a real collapsible
@@ -118,38 +145,38 @@
 .rdr-kids .rdr-kids{margin-left:11px;border-left:1px solid rgba(123,45,255,.22)}
 
 .rdr-frow{display:flex;align-items:center;gap:8px;width:100%;background:none;border:0;cursor:pointer;
-  font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:#8d86ad;letter-spacing:.06em;
+  font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:#93a884;letter-spacing:.06em;
   padding:5px 12px 5px 16px;text-align:left;transition:color .12s,background .12s}
 .rdr-frow:hover{color:#fff;background:rgba(123,45,255,.16)}
 .rdr-frow i{font-style:normal;font-size:7.5px;width:8px;color:var(--d);transition:transform .16s}
 .rdr-frow.open i{transform:rotate(90deg)}
 .rdr-frow s{flex:1;text-decoration:none}
-.rdr-frow u{text-decoration:none;font-size:8.5px;opacity:.75;color:#b9aef5}
+.rdr-frow u{text-decoration:none;font-size:8.5px;opacity:.75;color:#c9a8ff}
 .rdr-frow.ltr s{font-weight:700;letter-spacing:.2em;color:var(--d)}
 
 .rdr-it{display:block;width:100%;text-align:left;background:none;border:0;cursor:pointer;
-  font-family:'IBM Plex Mono',monospace;font-size:10.5px;line-height:1.42;color:#8d86ad;
+  font-family:'IBM Plex Mono',monospace;font-size:10.5px;line-height:1.42;color:#93a884;
   padding:5px 12px 5px 22px;border-left:2px solid transparent;position:relative;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:color .12s,background .12s}
 .rdr-it:hover{color:#fff;background:linear-gradient(90deg,rgba(123,45,255,.24),transparent);border-left-color:var(--d)}
-.rdr-it.on{color:#020008;background:var(--d);border-left-color:#fff;font-weight:600;
+.rdr-it.on{color:#040010;background:var(--d);border-left-color:#fff;font-weight:600;
   text-shadow:none;box-shadow:0 0 26px -6px var(--d)}
 .rdr-it.on::after{content:'◄';position:absolute;right:9px;font-size:8px}
-.rdr-it.idx{color:#cfc7f0}
+.rdr-it.idx{color:#d6ffc7}
 .rdr-it .k{opacity:.4;margin-right:6px}
-.rdr-it mark{background:none;color:#00f0ff;text-shadow:0 0 10px #00f0ff}
-.rdr-it.on mark{color:#020008;text-shadow:none;text-decoration:underline}
-.rdr-sub{display:block;font-size:8.5px;letter-spacing:.05em;color:#5f5880;margin-top:2px}
+.rdr-it mark{background:none;color:#39ff14;text-shadow:0 0 10px #39ff14}
+.rdr-it.on mark{color:#040010;text-shadow:none;text-decoration:underline}
+.rdr-sub{display:block;font-size:8.5px;letter-spacing:.05em;color:#5f7a4e;margin-top:2px}
 .rdr-it.on .rdr-sub{color:rgba(2,0,8,.65)}
-.rdr-empty{padding:26px 16px;font-size:10px;letter-spacing:.18em;color:#4d4774;line-height:2}
+.rdr-empty{padding:26px 16px;font-size:10px;letter-spacing:.18em;color:#4d6a3c;line-height:2}
 .rdr-hits{padding:11px 14px 6px;font-size:8.5px;letter-spacing:.26em;color:#7b2dff}
 
 /* ══════════ ARTICLE ══════════ */
 .rdr-scroll{flex:1;overflow-y:auto;position:relative;z-index:10;
-  scrollbar-width:thin;scrollbar-color:#7b2dff #030109}
+  scrollbar-width:thin;scrollbar-color:#7b2dff #03000a}
 .rdr-scroll::-webkit-scrollbar{width:11px}
-.rdr-scroll::-webkit-scrollbar-track{background:#030109}
-.rdr-scroll::-webkit-scrollbar-thumb{background:linear-gradient(180deg,#ff2d95,#7b2dff,#00f0ff)}
+.rdr-scroll::-webkit-scrollbar-track{background:#03000a}
+.rdr-scroll::-webkit-scrollbar-thumb{background:linear-gradient(180deg,#b026ff,#7b2dff,#39ff14)}
 /* full-bleed article; only the text columns are constrained */
 .rdr-art{max-width:none;margin:0;padding:0 0 220px;user-select:text;-webkit-user-select:text}
 .rdr-in{max-width:1080px;margin:0 auto;padding:0 56px;position:relative;z-index:2}
@@ -157,13 +184,18 @@
 /* ── masthead: full bleed, and LOUD ── */
 .rdr-head{position:relative;padding:66px 0 40px;overflow:hidden;isolation:isolate;
   background:
+    /* reading scrim, listed first so it sits ON TOP of the wash: five of the
+       nine domains are bright greens, and white eyebrow text on acid yellow
+       is unreadable without it. Fades out to the right so the watermark and
+       the aurora stay at full strength where no text sits. */
+    linear-gradient(100deg,rgba(3,0,10,.80) 0%,rgba(3,0,10,.55) 38%,rgba(3,0,10,.12) 68%,transparent 88%),
     radial-gradient(ellipse 120% 150% at 8% -30%,color-mix(in srgb,var(--d) 62%,transparent),transparent 60%),
     radial-gradient(ellipse 90% 120% at 92% 0%,color-mix(in srgb,#7b2dff 44%,transparent),transparent 62%),
     linear-gradient(180deg,color-mix(in srgb,var(--d) 20%,transparent),rgba(3,1,9,.2) 70%,transparent)}
 /* drifting aurora wash */
 .rdr-head::before{content:'';position:absolute;inset:-40%;z-index:-2;pointer-events:none;opacity:.55;
   background:conic-gradient(from 0deg,transparent,color-mix(in srgb,var(--d) 55%,transparent),
-    transparent 38%,rgba(0,240,255,.34) 55%,transparent 70%,rgba(255,45,149,.34) 86%,transparent);
+    transparent 38%,rgba(57,255,20,.34) 55%,transparent 70%,rgba(176,38,255,.34) 86%,transparent);
   animation:rdrSpin 26s linear infinite;filter:blur(46px)}
 @keyframes rdrSpin{to{transform:rotate(360deg)}}
 .rdr-head::after{content:'';position:absolute;inset:0;z-index:-1;pointer-events:none;
@@ -185,7 +217,7 @@
   font-size:9.5px;letter-spacing:.42em;color:#fff;margin-bottom:22px;
   text-shadow:0 0 4px var(--d),0 0 18px var(--d),0 0 40px var(--d)}
 .rdr-eyebrow s{text-decoration:none;opacity:.45}
-.rdr-eyebrow em{font-style:normal;padding:3px 9px;background:var(--d);color:#020008;font-weight:700;
+.rdr-eyebrow em{font-style:normal;padding:3px 9px;background:var(--d);color:#040010;font-weight:700;
   letter-spacing:.24em;box-shadow:0 0 22px var(--d)}
 
 /* the title: Unbounded 900 (same family as the splash) sitting WHITE and legible
@@ -194,13 +226,13 @@
 .rdr-title{position:relative;margin:0;font-family:'Unbounded',sans-serif;font-weight:900;
   font-size:clamp(36px,5.6vw,76px);line-height:1.02;letter-spacing:-.018em;color:#fff;
   text-wrap:balance;
-  text-shadow:3px 0 rgba(255,45,149,.85),-3px 0 rgba(0,240,255,.85),
+  text-shadow:3px 0 rgba(176,38,255,.85),-3px 0 rgba(57,255,20,.85),
     0 0 28px color-mix(in srgb,var(--d) 70%,transparent),
     0 0 90px color-mix(in srgb,var(--d) 55%,transparent)}
 .rdr-title::before,.rdr-title::after{content:attr(data-t);position:absolute;left:0;top:0;width:100%;
   pointer-events:none;opacity:0;text-shadow:none}
-.rdr-title::before{color:#ff2d95;animation:rdrGa 7s steps(1) infinite}
-.rdr-title::after{color:#00f0ff;animation:rdrGb 7s steps(1) infinite}
+.rdr-title::before{color:#b026ff;animation:rdrGa 7s steps(1) infinite}
+.rdr-title::after{color:#39ff14;animation:rdrGb 7s steps(1) infinite}
 @keyframes rdrGa{
   0%,87%,100%{opacity:0;transform:none;clip-path:inset(0 0 0 0)}
   88%{opacity:.95;transform:translate(-9px,2px);clip-path:inset(10% 0 58% 0)}
@@ -219,38 +251,38 @@
   box-shadow:0 0 20px -4px var(--c,#7b2dff),inset 0 0 18px -8px var(--c,#7b2dff);
   text-shadow:0 0 12px var(--c,#7b2dff)}
 .rdr-tags{display:flex;flex-wrap:wrap;gap:7px;margin-top:16px}
-.rdr-tag{font-size:9px;letter-spacing:.16em;color:#d9d0ff;
+.rdr-tag{font-size:9px;letter-spacing:.16em;color:#dcffc8;
   border:1px dashed rgba(123,45,255,.85);padding:4px 10px;background:rgba(123,45,255,.14);
   text-shadow:0 0 10px rgba(123,45,255,.9)}
 .rdr-tag::before{content:'#';opacity:.6}
 
 /* chromatic rule under the masthead — full bleed, animated */
 .rdr-rule{position:relative;height:3px;margin:0;overflow:hidden;
-  background:linear-gradient(90deg,#ff2d95,var(--d) 26%,#00f0ff 58%,#7b2dff 82%,#ff2d95);
+  background:linear-gradient(90deg,#b026ff,var(--d) 26%,#39ff14 58%,#7b2dff 82%,#b026ff);
   background-size:200% 100%;animation:rdrSlide 5s linear infinite;
   box-shadow:0 0 26px color-mix(in srgb,var(--d) 85%,transparent)}
 @keyframes rdrSlide{to{background-position:-200% 0}}
 
 /* ── body ── */
 .rdr-body{padding:44px 0 0;font-family:'Space Grotesk',sans-serif;position:relative}
-.rdr-body p{margin:0 0 19px;font-size:16.2px;line-height:1.88;color:#d3cee9;max-width:72ch}
+.rdr-body p{margin:0 0 19px;font-size:16.2px;line-height:1.88;color:#d2e8cb;max-width:72ch}
 /* lead-in: weight and a domain rule rather than a drop cap, which straddles
    two lines and reads as if it belongs to both */
-.rdr-body p.lead{position:relative;font-size:18.4px;line-height:1.78;color:#ece8ff;
+.rdr-body p.lead{position:relative;font-size:18.4px;line-height:1.78;color:#eeffe8;
   padding-left:22px;margin-bottom:26px}
 .rdr-body p.lead::before{content:'';position:absolute;left:0;top:.34em;bottom:.24em;width:3px;
   background:linear-gradient(180deg,var(--d),transparent);
   box-shadow:0 0 16px color-mix(in srgb,var(--d) 75%,transparent)}
 .rdr-body strong{color:#fff;font-weight:700;
   text-shadow:0 0 18px color-mix(in srgb,var(--d) 45%,transparent)}
-.rdr-body em{color:#c3b8ff;font-style:italic}
-.rdr-body code{font-family:'IBM Plex Mono',monospace;font-size:12.5px;background:#0d0620;
-  border:1px solid rgba(123,45,255,.4);padding:1px 6px;color:#ffd84d}
+.rdr-body em{color:#c9ff9e;font-style:italic}
+.rdr-body code{font-family:'IBM Plex Mono',monospace;font-size:12.5px;background:#100a26;
+  border:1px solid rgba(123,45,255,.4);padding:1px 6px;color:#ccff00}
 
 .rdr-body h2{position:relative;margin:52px 0 20px;padding-left:18px;
   font-family:'Unbounded',sans-serif;font-weight:700;font-size:clamp(19px,2.3vw,27px);
   line-height:1.2;color:#fff;letter-spacing:-.005em;
-  text-shadow:2px 0 rgba(255,45,149,.55),-2px 0 rgba(0,240,255,.55)}
+  text-shadow:2px 0 rgba(176,38,255,.55),-2px 0 rgba(57,255,20,.55)}
 .rdr-body h2::before{content:'';position:absolute;left:0;top:.1em;bottom:.1em;width:4px;
   background:linear-gradient(180deg,var(--d),transparent);box-shadow:0 0 14px var(--d)}
 .rdr-body h3{margin:34px 0 13px;font-family:'IBM Plex Mono',monospace;font-weight:600;
@@ -260,7 +292,7 @@
   font-size:10.5px;letter-spacing:.2em;text-transform:uppercase;color:#9d94c8}
 
 .rdr-body ul,.rdr-body ol{margin:0 0 20px;padding-left:24px;max-width:72ch}
-.rdr-body li{font-size:15.6px;line-height:1.82;color:#cdc7e6;margin-bottom:7px}
+.rdr-body li{font-size:15.6px;line-height:1.82;color:#cde8c6;margin-bottom:7px}
 .rdr-body li::marker{color:var(--d)}
 
 .rdr-body hr{border:0;height:1px;margin:36px 0;
@@ -269,22 +301,22 @@
 /* tables — 2,634 rows in this corpus, so they are a first-class citizen */
 .rdr-tw{overflow-x:auto;margin:0 0 26px;border:1px solid rgba(123,45,255,.3);background:rgba(6,3,16,.75)}
 .rdr-body table{border-collapse:collapse;width:100%;font-family:'IBM Plex Mono',monospace;font-size:12px}
-.rdr-body th{text-align:left;padding:10px 14px;background:color-mix(in srgb,var(--d) 16%,#0a0518);
+.rdr-body th{text-align:left;padding:10px 14px;background:color-mix(in srgb,var(--d) 16%,#0b0620);
   color:var(--d);font-weight:600;letter-spacing:.16em;font-size:9.5px;text-transform:uppercase;
   border-bottom:1px solid color-mix(in srgb,var(--d) 45%,transparent);white-space:nowrap}
 .rdr-body td{padding:10px 14px;color:#c2bcda;line-height:1.66;border-bottom:1px solid rgba(123,45,255,.13);vertical-align:top}
 .rdr-body tr:last-child td{border-bottom:0}
-.rdr-body tbody tr:hover td{background:rgba(123,45,255,.10);color:#ece8ff}
+.rdr-body tbody tr:hover td{background:rgba(123,45,255,.10);color:#eeffe8}
 
 /* quotes — and the CONTRADICTION callout the corpus actually uses */
 .rdr-body blockquote{margin:0 0 24px;padding:15px 22px;max-width:72ch;
   border-left:2px solid var(--d);background:linear-gradient(90deg,color-mix(in srgb,var(--d) 11%,transparent),transparent);
-  font-size:15.4px;line-height:1.82;color:#cbc4e8}
-.rdr-body blockquote.contra{border-left-color:#ff2d95;background:linear-gradient(90deg,rgba(255,45,149,.16),transparent);
-  color:#ffd9ec;box-shadow:inset 0 0 44px rgba(255,45,149,.10)}
+  font-size:15.4px;line-height:1.82;color:#cbe8c4}
+.rdr-body blockquote.contra{border-left-color:#b026ff;background:linear-gradient(90deg,rgba(176,38,255,.16),transparent);
+  color:#f0d9ff;box-shadow:inset 0 0 44px rgba(176,38,255,.10)}
 .rdr-body blockquote.contra::before{content:'⚠ CONTRADICTION';display:block;margin-bottom:9px;
-  font-family:'IBM Plex Mono',monospace;font-size:8.5px;letter-spacing:.3em;color:#ff2d95;
-  text-shadow:0 0 14px #ff2d95;animation:rdrBlink 2.4s steps(1) infinite}
+  font-family:'IBM Plex Mono',monospace;font-size:8.5px;letter-spacing:.3em;color:#b026ff;
+  text-shadow:0 0 14px #b026ff;animation:rdrBlink 2.4s steps(1) infinite}
 @keyframes rdrBlink{0%,72%,100%{opacity:1}80%{opacity:.35}}
 
 /* wikilinks — the signature interaction, 2,723 of them */
@@ -292,26 +324,26 @@
   border-bottom:1px solid color-mix(in srgb,var(--d) 45%,transparent);
   transition:text-shadow .12s,background .12s}
 .rdr-wl:hover{color:#fff;background:color-mix(in srgb,var(--d) 20%,transparent);
-  text-shadow:2px 0 #ff2d95,-2px 0 #00f0ff;border-bottom-color:#fff}
-.rdr-wl.dead{color:#5d5578;border-bottom:1px dotted #3d3554;cursor:not-allowed}
+  text-shadow:2px 0 #b026ff,-2px 0 #39ff14;border-bottom-color:#fff}
+.rdr-wl.dead{color:#5d7a4a;border-bottom:1px dotted #3d5230;cursor:not-allowed}
 .rdr-wl.dead:hover{background:none;text-shadow:none;color:#7d7398}
-.rdr-body a[href]{color:#00f0ff;text-decoration:none;border-bottom:1px solid rgba(0,240,255,.4)}
-.rdr-body a[href]:hover{color:#fff;text-shadow:2px 0 #ff2d95,-2px 0 #00f0ff}
+.rdr-body a[href]{color:#39ff14;text-decoration:none;border-bottom:1px solid rgba(57,255,20,.4)}
+.rdr-body a[href]:hover{color:#fff;text-shadow:2px 0 #b026ff,-2px 0 #39ff14}
 
 /* ── dossier (infobox) ── */
 .rdr-dossier{float:right;width:298px;margin:6px 0 24px 30px;border:1px solid color-mix(in srgb,var(--d) 45%,transparent);
   background:linear-gradient(180deg,rgba(8,4,20,.96),rgba(4,2,12,.96));
   box-shadow:0 0 40px -12px color-mix(in srgb,var(--d) 70%,transparent)}
 .rdr-dossier h4{margin:0;padding:9px 13px;font-family:'IBM Plex Mono',monospace;font-size:8.5px;
-  letter-spacing:.3em;color:#020008;background:var(--d);text-transform:none}
+  letter-spacing:.3em;color:#040010;background:var(--d);text-transform:none}
 .rdr-dl{display:flex;gap:10px;padding:8px 13px;border-top:1px solid rgba(123,45,255,.16)}
-.rdr-dl dt{flex:0 0 88px;font-size:8.5px;letter-spacing:.12em;color:#6f6796;padding-top:2px;text-transform:uppercase}
-.rdr-dl dd{margin:0;flex:1;font-size:11px;line-height:1.6;color:#ded9f5;font-family:'IBM Plex Mono',monospace}
+.rdr-dl dt{flex:0 0 88px;font-size:8.5px;letter-spacing:.12em;color:#6f8a5e;padding-top:2px;text-transform:uppercase}
+.rdr-dl dd{margin:0;flex:1;font-size:11px;line-height:1.6;color:#dcf5d4;font-family:'IBM Plex Mono',monospace}
 
 /* ── signal manifest (typed connections) ── */
 .rdr-manifest{margin:0 0 30px;border:1px solid rgba(123,45,255,.32);background:rgba(6,3,16,.6)}
 .rdr-mhead{display:flex;align-items:center;gap:10px;padding:10px 16px;
-  border-bottom:1px solid rgba(123,45,255,.28);font-size:8.5px;letter-spacing:.3em;color:#b9aef5}
+  border-bottom:1px solid rgba(123,45,255,.28);font-size:8.5px;letter-spacing:.3em;color:#c9a8ff}
 .rdr-mhead b{flex:1;height:1px;background:linear-gradient(90deg,#7b2dff,transparent);opacity:.6}
 .rdr-edge{display:grid;grid-template-columns:132px 1fr;gap:0;border-top:1px solid rgba(123,45,255,.14)}
 .rdr-edge:first-of-type{border-top:0}
@@ -320,19 +352,19 @@
   border-right:1px solid color-mix(in srgb,var(--e) 30%,transparent);text-align:right;line-height:1.5}
 .rdr-ebody{padding:11px 16px}
 .rdr-ebody .t{display:block;font-family:'IBM Plex Mono',monospace;font-size:11.5px;margin-bottom:5px}
-.rdr-ebody .c{font-family:'Space Grotesk',sans-serif;font-size:13.2px;line-height:1.7;color:#a99fd0;font-style:italic}
+.rdr-ebody .c{font-family:'Space Grotesk',sans-serif;font-size:13.2px;line-height:1.7;color:#a9c98f;font-style:italic}
 
 /* ── inbound / footer ── */
 .rdr-foot{max-width:1080px;margin:66px auto 0;padding:26px 56px 0;border-top:1px solid rgba(123,45,255,.45);
   position:relative;z-index:2}
-.rdr-flabel{font-size:8.5px;letter-spacing:.3em;color:#6f6796;margin-bottom:13px}
+.rdr-flabel{font-size:8.5px;letter-spacing:.3em;color:#6f8a5e;margin-bottom:13px}
 .rdr-back{display:flex;flex-wrap:wrap;gap:7px}
 .rdr-bl{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.05em;color:var(--d);
   border:1px solid color-mix(in srgb,var(--d) 40%,transparent);padding:5px 11px;cursor:pointer;
   background:none;transition:all .12s}
-.rdr-bl:hover{background:var(--d);color:#020008;box-shadow:0 0 22px -4px var(--d)}
+.rdr-bl:hover{background:var(--d);color:#040010;box-shadow:0 0 22px -4px var(--d)}
 .rdr-src{margin-top:26px}
-.rdr-src div{font-size:9.5px;line-height:1.9;color:#5f5880;font-family:'IBM Plex Mono',monospace;
+.rdr-src div{font-size:9.5px;line-height:1.9;color:#5f7a4e;font-family:'IBM Plex Mono',monospace;
   overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .rdr-src div::before{content:'▸ ';color:#7b2dff}
 
@@ -341,16 +373,16 @@
   border:1px solid var(--d);background:rgba(5,2,14,.98);
   box-shadow:0 0 50px -10px var(--d),0 18px 50px rgba(0,0,0,.75);transition:opacity .11s}
 .rdr-pv.on{opacity:1}
-.rdr-pv .h{padding:8px 12px;font-size:8.5px;letter-spacing:.26em;color:#020008;background:var(--d)}
+.rdr-pv .h{padding:8px 12px;font-size:8.5px;letter-spacing:.26em;color:#040010;background:var(--d)}
 .rdr-pv .t{padding:11px 12px 4px;font-family:'Unbounded',sans-serif;font-weight:700;font-size:14px;color:#fff;line-height:1.25}
-.rdr-pv .s{padding:0 12px 12px;font-family:'Space Grotesk',sans-serif;font-size:12px;line-height:1.62;color:#a99fd0}
-.rdr-pv .m{padding:7px 12px;border-top:1px solid rgba(123,45,255,.28);font-size:8.5px;letter-spacing:.16em;color:#6f6796}
+.rdr-pv .s{padding:0 12px 12px;font-family:'Space Grotesk',sans-serif;font-size:12px;line-height:1.62;color:#a9c98f}
+.rdr-pv .m{padding:7px 12px;border-top:1px solid rgba(123,45,255,.28);font-size:8.5px;letter-spacing:.16em;color:#6f8a5e}
 
 /* ── 404 ── */
 .rdr-404{padding:120px 56px;text-align:center}
-.rdr-404 div:first-child{font-family:'Unbounded',sans-serif;font-weight:900;font-size:54px;color:#ff2d95;
-  text-shadow:3px 0 #00f0ff,-3px 0 #7b2dff;animation:rdrGa 3s steps(1) infinite}
-.rdr-404 div:last-child{margin-top:18px;font-size:10px;letter-spacing:.3em;color:#4d4774}
+.rdr-404 div:first-child{font-family:'Unbounded',sans-serif;font-weight:900;font-size:54px;color:#b026ff;
+  text-shadow:3px 0 #39ff14,-3px 0 #7b2dff;animation:rdrGa 3s steps(1) infinite}
+.rdr-404 div:last-child{margin-top:18px;font-size:10px;letter-spacing:.3em;color:#4d6a3c}
 
 @media (max-width:1100px){
   .rdr-dossier{float:none;width:auto;margin:0 0 24px}
@@ -392,6 +424,7 @@
         + '</div>'
         + '<div class="rdr-scroll"><div class="rdr-rail"><i></i></div><div class="rdr-art"></div></div>'
         + '<div class="rdr-grain"></div><div class="rdr-mesh"></div><div class="rdr-vig"></div>'
+        + this.rdrDrips('l') + this.rdrDrips('r')
         + '<div class="rdr-veil"></div><div class="rdr-track"></div>'
         + '<div class="rdr-pv"></div>';
 
@@ -439,6 +472,23 @@
         const max = s.scrollHeight - s.clientHeight;
         this._rdrRail.style.width = (max > 20 ? (s.scrollTop / max) * 100 : 0) + '%';
       });
+    },
+
+    // one edge's worth of ooze; irregular by construction so the two sides
+    // never look like a matched pair
+    rdrDrips(side) {
+      const seed = side === 'l' ? 7 : 23;
+      let s = '<div class="rdr-drips ' + side + '">';
+      for (let i = 0; i < 7; i++) {
+        const r = (n) => ((Math.sin(seed * (i + 1) * n) + 1) / 2);
+        const x = Math.round(2 + r(1.7) * 24);
+        const h = Math.round(90 + r(2.3) * 260);
+        const dur = (11 + r(3.1) * 16).toFixed(1);
+        const del = (r(4.7) * 22).toFixed(1);
+        const w = (4 + r(5.3) * 4).toFixed(1);
+        s += '<i style="left:' + x + 'px;width:' + w + 'px;--h:' + h + 'px;--dur:' + dur + 's;--del:' + del + 's"></i>';
+      }
+      return s + '</div>';
     },
 
     rdrGo(id) {
@@ -504,7 +554,7 @@
 
       let html = '';
       for (const node of this.rdrTree()) {
-        const d = DOM_NEON[node.key] || '#9aa4b8';
+        const d = DOM_NEON[node.key] || '#8fa878';
         const open = this._rdrOpen.has(node.key);
         const has = active && active.split('/')[1] === node.key;
         html += '<div class="rdr-grp" style="--d:' + d + '">'
@@ -558,7 +608,7 @@
     },
 
     rdrNavItem(p, active, d, mark) {
-      const col = d || DOM_NEON[p.domain] || '#9aa4b8';
+      const col = d || DOM_NEON[p.domain] || '#8fa878';
       const idx = /\/index$/.test(p.id);
       let label = esc(p.title);
       if (mark) {
@@ -616,7 +666,7 @@
     rdrPreview(a) {
       const p = this.WK && this.WK.byId[a.getAttribute('data-go')];
       if (!p) return;
-      const d = DOM_NEON[p.domain] || '#9aa4b8';
+      const d = DOM_NEON[p.domain] || '#8fa878';
       const pv = this._rdrPv;
       pv.style.setProperty('--d', d);
       pv.innerHTML =
@@ -658,7 +708,7 @@
       const txt = esc(label || (p ? p.title : path.split('/').pop().replace(/-/g, ' ')));
       if (!p) return '<span class="rdr-wl dead" title="not in the record">' + txt + '</span>';
       return '<a class="rdr-wl" data-go="' + esc(id) + '" style="--d:'
-        + (DOM_NEON[p.domain] || '#9aa4b8') + '">' + txt + '</a>';
+        + (DOM_NEON[p.domain] || '#8fa878') + '">' + txt + '</a>';
     },
 
     rdrMarkdown(src, opts) {
@@ -760,7 +810,7 @@
         art.innerHTML = '<div class="rdr-404"><div>404</div><div>NO SUCH PAGE IN THE RECORD · ' + esc(id || '') + '</div></div>';
         return;
       }
-      const d = DOM_NEON[p.domain] || '#9aa4b8';
+      const d = DOM_NEON[p.domain] || '#8fa878';
       let h = '';
 
       // ── masthead ──
@@ -776,9 +826,9 @@
       const chips = [];
       if (p.drs) chips.push([(p.drs + (p.dre ? ' → ' + p.dre : '')), d]);
       chips.push([(p.words || 0).toLocaleString() + ' WORDS', '#7b2dff']);
-      if (p.connections && p.connections.length) chips.push([p.connections.length + ' TYPED EDGES', '#00f0ff']);
-      if (p.sources && p.sources.length) chips.push([p.sources.length + ' SOURCES', '#00ff9d']);
-      if (p.aliases && p.aliases.length) chips.push(['AKA ' + p.aliases.join(' · '), '#ffd84d']);
+      if (p.connections && p.connections.length) chips.push([p.connections.length + ' TYPED EDGES', '#39ff14']);
+      if (p.sources && p.sources.length) chips.push([p.sources.length + ' SOURCES', '#00ffa3']);
+      if (p.aliases && p.aliases.length) chips.push(['AKA ' + p.aliases.join(' · '), '#ccff00']);
       h += '<div class="rdr-meta">' + chips.map(([t, c]) =>
         '<span class="rdr-chip" style="--c:' + c + '">' + esc(t) + '</span>').join('') + '</div>';
       if (p.tags && p.tags.length) {
@@ -810,12 +860,12 @@
         h += '<div class="rdr-manifest"><div class="rdr-mhead">▚ SIGNAL MANIFEST <b></b>'
           + p.connections.length + ' TYPED</div>';
         for (const c of p.connections) {
-          const ec = EDGE_NEON[c.type] || '#9aa4b8';
+          const ec = EDGE_NEON[c.type] || '#8fa878';
           const tgt = this.WK.byId[c.page];
           h += '<div class="rdr-edge" style="--e:' + ec + '">';
           h += '<div class="rdr-etype">' + esc(c.type.toUpperCase()) + '</div><div class="rdr-ebody">';
           h += '<span class="t">' + (tgt
-            ? '<a class="rdr-wl" data-go="' + esc(c.page) + '" style="--d:' + (DOM_NEON[tgt.domain] || '#9aa4b8') + '">' + esc(tgt.title) + '</a>'
+            ? '<a class="rdr-wl" data-go="' + esc(c.page) + '" style="--d:' + (DOM_NEON[tgt.domain] || '#8fa878') + '">' + esc(tgt.title) + '</a>'
             : '<span class="rdr-wl dead">' + esc(c.page) + '</span>') + '</span>';
           if (c.claim) h += '<span class="c">' + this.rdrInline(c.claim) + '</span>';
           h += '</div></div>';
@@ -839,7 +889,7 @@
           for (const b of back) {
             const bp = this.WK.byId[b];
             h += '<button class="rdr-bl" data-go="' + esc(b) + '" style="--d:'
-              + (DOM_NEON[bp.domain] || '#9aa4b8') + '">' + esc(bp.title) + '</button>';
+              + (DOM_NEON[bp.domain] || '#8fa878') + '">' + esc(bp.title) + '</button>';
           }
           h += '</div>';
         }

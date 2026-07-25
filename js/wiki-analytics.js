@@ -56,13 +56,13 @@
       const cs = (on, tone) => this.chipStyle(on, tone);
       if (s.tab === 'episteme') {
         return [
-          { label: s.epistemePlay ? '❚❚ PAUSE' : '▶ PLAY', onClick: () => this.setState(st => ({ epistemePlay: !st.epistemePlay })), style: cs(s.epistemePlay, '#9b8cf2') },
+          { label: s.epistemePlay ? '❚❚ PAUSE' : '▶ PLAY', onClick: () => this.setState(st => ({ epistemePlay: !st.epistemePlay })), style: cs(s.epistemePlay, '#7b2dff') },
           { label: '↺ RESTART', onClick: () => this.epistemeRestart(), style: cs(false) },
           ...[[1.5, 'SLOW'], [5, 'NORMAL'], [16, 'FAST']].map(([v, l]) => ({
-            label: l, onClick: () => this.setState({ epistemeSpeed: v }), style: cs(s.epistemeSpeed === v, '#9b8cf2')
+            label: l, onClick: () => this.setState({ epistemeSpeed: v }), style: cs(s.epistemeSpeed === v, '#7b2dff')
           })),
           ...[['certainty', 'BY CERTAINTY'], ['domain', 'BY DOMAIN'], ['size', 'BY SIZE']].map(([id, l]) => ({
-            label: l, onClick: () => { this.setState({ epistemeOrder: id }); this.M.episteme = null; }, style: cs(s.epistemeOrder === id, '#4fc3e8')
+            label: l, onClick: () => { this.setState({ epistemeOrder: id }); this.M.episteme = null; }, style: cs(s.epistemeOrder === id, '#b026ff')
           }))
         ];
       }
@@ -78,12 +78,12 @@
       }
       if (s.tab === 'schema') {
         return [['core', 'CORE FIELDS'], ['box', 'INFOBOX FIELDS'], ['all', 'ALL']].map(([id, l]) => ({
-          label: l, onClick: () => { this.setState({ schemaMode: id }); if (this.M.schema) this.M.schema.pinned = null; }, style: cs(s.schemaMode === id, '#7fd486')
+          label: l, onClick: () => { this.setState({ schemaMode: id }); if (this.M.schema) this.M.schema.pinned = null; }, style: cs(s.schemaMode === id, '#00ffa3')
         }));
       }
       if (s.tab === 'echo') {
         return [[0.12, 'FAINT ≥ .12'], [0.25, 'CLEAR ≥ .25'], [0.45, 'LOUD ≥ .45']].map(([v, l]) => ({
-          label: l, onClick: () => { this.setState({ echoMin: v }); if (this.M.echo) this.M.echo.bmpFor = -1; }, style: cs(s.echoMin === v, '#e8a33d')
+          label: l, onClick: () => { this.setState({ echoMin: v }); if (this.M.echo) this.M.echo.bmpFor = -1; }, style: cs(s.echoMin === v, '#39ff14')
         }));
       }
       return null;
@@ -128,10 +128,10 @@
     // the playhead crosses pages, not months.
     // ============================================================
     EP_PENS: [
-      ['hedge', 'HEDGING', '#4fc3e8'],
-      ['cert', 'ASSERTION', '#7fd486'],
-      ['neg', 'NEGATION', '#e85d4f'],
-      ['quer', 'OPEN QUESTION', '#e8a33d']
+      ['hedge', 'HEDGING', '#b026ff'],
+      ['cert', 'ASSERTION', '#00ffa3'],
+      ['neg', 'NEGATION', '#e01aff'],
+      ['quer', 'OPEN QUESTION', '#39ff14']
     ],
     initEpisteme() {
       const WK = this.WK, order = this.state.epistemeOrder || 'certainty';
@@ -217,12 +217,12 @@
       // domain ribbon — which part of the wiki the needle is over
       const ribY = padT - 16;
       for (let i = 0; i < E.nP; i++) {
-        ctx.fillStyle = hx(this.WCOL[E.rows[i].p.domain] || '#8b94a4', i <= E.play ? 0.85 : 0.22);
+        ctx.fillStyle = hx(this.WCOL[E.rows[i].p.domain] || '#8fa878', i <= E.play ? 0.85 : 0.22);
         ctx.fillRect(xOf(i), ribY, Math.max(1.2, (chartR - padL - 20) / E.nP + 0.6), 8);
       }
 
       ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
-      ctx.font = '700 17px ' + this.GROT; ctx.fillStyle = '#cfc4ff';
+      ctx.font = '700 17px ' + this.GROT; ctx.fillStyle = '#cfa8ff';
       ctx.fillText('EPISTEME', 18, 32);
       ctx.font = '9px ' + this.MONO; ctx.fillStyle = C.dim;
       const ordLabel = E.order === 'certainty' ? 'RANKED HEDGED → ASSERTED' : E.order === 'size' ? 'RANKED LARGEST → SMALLEST' : 'GROUPED BY DOMAIN';
@@ -232,7 +232,7 @@
       ctx.font = '600 12px ' + this.MONO; ctx.fillStyle = C.txt; ctx.textAlign = 'right';
       ctx.fillText(cur.p.title.slice(0, 34).toUpperCase(), chartR - 20, 30);
       ctx.font = '9px ' + this.MONO;
-      ctx.fillStyle = cur.idx >= 0 ? '#7fd486' : '#4fc3e8';
+      ctx.fillStyle = cur.idx >= 0 ? '#00ffa3' : '#b026ff';
       ctx.fillText((cur.idx >= 0 ? 'ASSERTS +' : 'HEDGES ') + cur.idx.toFixed(1) + '  ·  ' + this.fmt(cur.w) + ' WORDS', chartR - 20, 46);
       ctx.textAlign = 'left';
 
@@ -240,7 +240,7 @@
         data: E.series[k], label, unit: '/1K WORDS', color: col, max: E.maxRate[k]
       }));
       this.drawPenLanes(ctx, geo, lanes, E.play, st.epistemePlay);
-      this.drawVolumeLane(ctx, geo, vy0, E.vol, E.maxVol, E.play, '#9b8cf2');
+      this.drawVolumeLane(ctx, geo, vy0, E.vol, E.maxVol, E.play, '#7b2dff');
 
       // needle
       ctx.strokeStyle = 'rgba(232,230,225,0.5)'; ctx.lineWidth = 1;
@@ -277,16 +277,16 @@
         this.card(ctx, mx, my, [
           [r.p.title.slice(0, 40), C.txt, '600 12px ' + this.GROT],
           [r.p.domain.toUpperCase() + ' · #' + (E.hover + 1) + ' OF ' + E.nP + ' · ' + this.fmt(r.w) + ' WORDS', this.WCOL[r.p.domain] || C.dim],
-          ['HEDGE ' + r.hedge.toFixed(1) + '  ·  ASSERT ' + r.cert.toFixed(1), '#4fc3e8'],
-          ['NEGATE ' + r.neg.toFixed(1) + '  ·  QUESTIONS ' + r.quer.toFixed(1), '#e85d4f'],
-          [r.idx >= 0 ? '▲ ASSERTS MORE THAN IT HEDGES' : '▼ HEDGES MORE THAN IT ASSERTS', r.idx >= 0 ? '#7fd486' : '#4fc3e8', '9px ' + this.MONO],
+          ['HEDGE ' + r.hedge.toFixed(1) + '  ·  ASSERT ' + r.cert.toFixed(1), '#b026ff'],
+          ['NEGATE ' + r.neg.toFixed(1) + '  ·  QUESTIONS ' + r.quer.toFixed(1), '#e01aff'],
+          [r.idx >= 0 ? '▲ ASSERTS MORE THAN IT HEDGES' : '▼ HEDGES MORE THAN IT ASSERTS', r.idx >= 0 ? '#00ffa3' : '#b026ff', '9px ' + this.MONO],
           ['CLICK TO READ THE PAGE', C.dim, '8.5px ' + this.MONO]
         ]);
       }
       if (this.cv) this.cv.style.cursor = E.hover >= 0 ? 'pointer' : 'crosshair';
 
       this.drawFragmentFeed(ctx, { fx, fy: padT - 30, fw, fh: H - padT - 28 }, E.frags, E.play,
-        'THE RECORD HEDGING AND ASSERTING · VERBATIM', '#cfc4ff');
+        'THE RECORD HEDGING AND ASSERTING · VERBATIM', '#cfa8ff');
     },
     pt_episteme(type, p) {
       const E = this.M.episteme; if (!E || !E.scrubGeo) return;
@@ -399,9 +399,9 @@
       ctx.fillText('PROPORTIONAL COVERAGE', 0, -7);
       ctx.restore();
       ctx.font = '9.5px ' + this.MONO; ctx.textBaseline = 'alphabetic';
-      ctx.fillStyle = 'rgba(232,93,79,0.6)'; ctx.textAlign = 'left';
+      ctx.fillStyle = 'rgba(224,26,255,0.6)'; ctx.textAlign = 'left';
       ctx.fillText('DEBT — TALKED ABOUT FAR MORE THAN DOCUMENTED', padL + 10, padT + 18);
-      ctx.fillStyle = 'rgba(127,212,134,0.55)'; ctx.textAlign = 'right';
+      ctx.fillStyle = 'rgba(0,255,163,0.55)'; ctx.textAlign = 'right';
       ctx.fillText('MASS WITHOUT PULL — BIG PAGE, RARELY NAMED', padL + pw - 8, padT + ph - 12);
 
       // axis titles
@@ -428,7 +428,7 @@
         ctx.beginPath(); ctx.arc(it._x, it._y, lit ? r + 2.5 : r, 0, Math.PI * 2);
         if (!it._on) ctx.fillStyle = 'rgba(60,68,82,0.22)';
         else if (lit) ctx.fillStyle = '#ffffff';
-        else ctx.fillStyle = hx(this.WCOL[it.p.domain] || '#8b94a4', 0.4 + Math.min(0.5, it.docs / 60));
+        else ctx.fillStyle = hx(this.WCOL[it.p.domain] || '#8fa878', 0.4 + Math.min(0.5, it.docs / 60));
         ctx.fill();
         if (lit) {
           ctx.strokeStyle = this.WCOL[it.p.domain] || C.amber; ctx.lineWidth = 1.6;
@@ -443,7 +443,7 @@
       }
 
       ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
-      ctx.font = '700 17px ' + this.GROT; ctx.fillStyle = '#e8a33d';
+      ctx.font = '700 17px ' + this.GROT; ctx.fillStyle = '#39ff14';
       ctx.fillText('ATTENTION', 18, 32);
       ctx.font = '9px ' + this.MONO; ctx.fillStyle = C.dim;
       const shown = A.items.filter(i => i._on).length;
@@ -455,7 +455,7 @@
       const panelH = H - py - 34;
       ctx.fillStyle = 'rgba(11,15,21,0.9)'; ctx.fillRect(px, py, panelW, panelH);
       ctx.strokeStyle = C.line; ctx.strokeRect(px + 0.5, py + 0.5, panelW, panelH);
-      ctx.font = '9px ' + this.MONO; ctx.fillStyle = '#e85d4f';
+      ctx.font = '9px ' + this.MONO; ctx.fillStyle = '#e01aff';
       ctx.fillText('DOCUMENTATION DEBT · MOST DISCUSSED, LEAST WRITTEN', px + 12, py + 18);
       A.rowHits = [];
       const rowH = Math.min(26, (panelH - 40) / Math.max(1, A.debts.length));
@@ -463,16 +463,16 @@
         const ry = py + 32 + i * rowH;
         if (ry + rowH > py + panelH - 4) return;
         const hov = mx >= px && mx <= px + panelW && my >= ry && my < ry + rowH;
-        if (hov) { ctx.fillStyle = 'rgba(232,93,79,0.1)'; ctx.fillRect(px + 1, ry, panelW - 2, rowH); A.hover = it; }
+        if (hov) { ctx.fillStyle = 'rgba(224,26,255,0.1)'; ctx.fillRect(px + 1, ry, panelW - 2, rowH); A.hover = it; }
         ctx.font = (hov ? '600 ' : '') + '9.5px ' + this.MONO;
-        ctx.fillStyle = hov ? '#e8e6e1' : (this.WCOL[it.p.domain] || '#8b94a4');
+        ctx.fillStyle = hov ? '#e9ffe6' : (this.WCOL[it.p.domain] || '#8fa878');
         ctx.fillText(it.p.title.slice(0, 28), px + 12, ry + rowH * 0.5);
-        ctx.font = '8.5px ' + this.MONO; ctx.fillStyle = hov ? '#e8a33d' : '#5b6472'; ctx.textAlign = 'right';
+        ctx.font = '8.5px ' + this.MONO; ctx.fillStyle = hov ? '#39ff14' : '#6f8a5e'; ctx.textAlign = 'right';
         ctx.fillText(it.mentions + '× / ' + this.fmt(it.own) + 'w', px + panelW - 12, ry + rowH * 0.5);
         ctx.textAlign = 'left';
         // debt bar
         const bw = (panelW - 24) * Math.min(1, it.debt / (A.debts[0].debt || 1));
-        ctx.fillStyle = hx('#e85d4f', hov ? 0.75 : 0.35);
+        ctx.fillStyle = hx('#e01aff', hov ? 0.75 : 0.35);
         ctx.fillRect(px + 12, ry + rowH - 5, bw, 2);
         A.rowHits.push({ x: px, y: ry, w: panelW, h: rowH, it });
       });
@@ -483,11 +483,11 @@
         const lines = [
           [show.p.title.slice(0, 40), C.txt, '700 12.5px ' + this.GROT],
           [show.p.domain.toUpperCase() + ' · ' + this.fmt(show.own) + ' WORDS ON ITS OWN PAGE', this.WCOL[show.p.domain] || C.dim],
-          ['NAMED ' + show.mentions + ' TIMES ACROSS ' + show.docs + ' PAGES', '#e8a33d'],
+          ['NAMED ' + show.mentions + ' TIMES ACROSS ' + show.docs + ' PAGES', '#39ff14'],
           [ratio.toFixed(1) + ' MENTIONS PER 1,000 OWN WORDS', C.dim, '9px ' + this.MONO]
         ];
         for (const f of show.from.slice(0, 3)) lines.push(['← ' + f.c + '× in ' + f.p.title.slice(0, 30), this.WCOL[f.p.domain] || C.faint, '9px ' + this.MONO]);
-        if (!show.from.length) lines.push(['NOTHING ELSE NAMES THIS SUBJECT', '#5b6472', '9px ' + this.MONO]);
+        if (!show.from.length) lines.push(['NOTHING ELSE NAMES THIS SUBJECT', '#6f8a5e', '9px ' + this.MONO]);
         lines.push(['CLICK TO READ THE PAGE', C.dim, '8.5px ' + this.MONO]);
         this.card(ctx, mx >= 0 ? mx : show._x, my >= 0 ? my : show._y, lines, { border: show === A.pinned ? C.amber : C.line });
       }
@@ -559,7 +559,7 @@
       if (!this.WK) return this.wkStandby(ctx, W, H);
       if (!this.M.diction) this.initDiction();
       const C = this.COL, D = this.M.diction, st = this.state;
-      const dom = st.dictionDom, col = this.WCOL[dom] || '#8b94a4';
+      const dom = st.dictionDom, col = this.WCOL[dom] || '#8fa878';
       const list = D.terms[dom] || [];
       const agg = D.byDom[dom] || { total: 0, pages: 0 };
 
@@ -595,11 +595,11 @@
         ctx.fillStyle = hx(col, hov ? 0.95 : 0.3 + excl * 0.45);
         ctx.fillRect(gx0, y + rowH * 0.22, bw, Math.max(3, rowH * 0.5));
         ctx.font = (hov ? '600 ' : '') + Math.min(11, rowH - 4) + 'px ' + this.MONO;
-        ctx.fillStyle = hov ? '#e8e6e1' : '#a9a49a';
+        ctx.fillStyle = hov ? '#e9ffe6' : '#a9a49a';
         ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
         ctx.fillText(t.w.slice(0, 20), gx0 - 10, y + rowH / 2);
         ctx.textAlign = 'left';
-        ctx.font = '8.5px ' + this.MONO; ctx.fillStyle = hov ? col : '#5b6472';
+        ctx.font = '8.5px ' + this.MONO; ctx.fillStyle = hov ? col : '#6f8a5e';
         ctx.fillText(t.c + '×  ·  ' + (t.doms === 1 ? 'ONLY HERE' : t.doms + ' DOMAINS'), gx0 + bw + 8, y + rowH / 2);
         D.rowHits.push({ x: 18, y, w: gx1 - 18, h: rowH, t });
       });
@@ -631,9 +631,9 @@
           if (hov) { ctx.fillStyle = hx(col, 0.12); ctx.fillRect(px + 1, ry - 10, panelW - 2, 18); }
           ctx.fillStyle = hx(col, 0.3); ctx.fillRect(px + 12, ry + 4, (panelW - 90) * (h.c / maxC), 2);
           ctx.font = (hov ? '600 ' : '') + '9.5px ' + this.MONO;
-          ctx.fillStyle = hov ? '#e8e6e1' : '#a9a49a';
+          ctx.fillStyle = hov ? '#e9ffe6' : '#a9a49a';
           ctx.fillText(h.p.title.slice(0, 30), px + 12, ry);
-          ctx.font = '8.5px ' + this.MONO; ctx.fillStyle = '#5b6472'; ctx.textAlign = 'right';
+          ctx.font = '8.5px ' + this.MONO; ctx.fillStyle = '#6f8a5e'; ctx.textAlign = 'right';
           ctx.fillText(h.c + '×', px + panelW - 12, ry); ctx.textAlign = 'left';
           D.rowHits.push({ x: px, y: ry - 10, w: panelW, h: 18, open: h.p.id });
           ry += 19;
@@ -696,7 +696,7 @@
       S.hover = null; S.cellHits = []; S.rowHits = [];
 
       ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
-      ctx.font = '700 17px ' + this.GROT; ctx.fillStyle = '#7fd486';
+      ctx.font = '700 17px ' + this.GROT; ctx.fillStyle = '#00ffa3';
       ctx.fillText('SCHEMA', 18, 32);
       ctx.font = '9px ' + this.MONO; ctx.fillStyle = C.dim;
       ctx.fillText(S.rows.length + ' PAGE TYPES × ' + cols.length + ' FIELDS · CELL = SHARE OF THAT TYPE CARRYING THE FIELD', 18, 48);
@@ -719,7 +719,7 @@
         if (y + rh > gy1 + 1) return;
         ctx.font = '9.5px ' + this.MONO; ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
         const rowHov = my >= y && my < y + rh && mx >= 18 && mx <= gx1;
-        ctx.fillStyle = rowHov ? '#e8e6e1' : '#8b94a4';
+        ctx.fillStyle = rowHov ? '#e9ffe6' : '#8fa878';
         ctx.fillText(r.t.toUpperCase().slice(0, 14), gx0 - 12, y + rh / 2 - 5);
         ctx.font = '8px ' + this.MONO; ctx.fillStyle = C.faint;
         ctx.fillText(r.ps.length + ' PAGES', gx0 - 12, y + rh / 2 + 7);
@@ -731,7 +731,7 @@
           const hov = mx >= x && mx < x + cw && my >= y && my < y + rh;
           if (hov) S.hover = { r, k, label, frac, have: have.length, miss: r.ps.filter(p => !test(p)), test };
           // coverage → green, gap → red; full coverage reads as a solid block
-          const colr = frac >= 0.999 ? '#7fd486' : frac >= 0.6 ? '#e8a33d' : '#e85d4f';
+          const colr = frac >= 0.999 ? '#00ffa3' : frac >= 0.6 ? '#39ff14' : '#e01aff';
           ctx.fillStyle = hx(colr, 0.1 + frac * 0.72);
           ctx.fillRect(x + 1, y + 1, cw - 2, rh - 2);
           if (hov) { ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 1.4; ctx.strokeRect(x + 1, y + 1, cw - 2, rh - 2); }
@@ -751,7 +751,7 @@
       cols.forEach(([k, label], ci) => {
         const x = gx0 + ci * cw, frac = totals[ci] / this.WK.pages.length;
         ctx.fillStyle = 'rgba(29,36,48,0.9)'; ctx.fillRect(x + 1, gy1 + 10, cw - 2, 5);
-        ctx.fillStyle = hx(frac >= 0.6 ? '#7fd486' : '#e8a33d', 0.85);
+        ctx.fillStyle = hx(frac >= 0.6 ? '#00ffa3' : '#39ff14', 0.85);
         ctx.fillRect(x + 1, gy1 + 10, (cw - 2) * frac, 5);
       });
       ctx.font = '8px ' + this.MONO; ctx.fillStyle = C.faint; ctx.textAlign = 'right';
@@ -762,8 +762,8 @@
       if (S.pinned) {
         const px = W - panelW - 14, py = 62, panelH = H - py - 28;
         ctx.fillStyle = 'rgba(11,15,21,0.96)'; ctx.fillRect(px, py, panelW, panelH);
-        ctx.strokeStyle = '#e85d4f'; ctx.strokeRect(px + 0.5, py + 0.5, panelW, panelH);
-        ctx.font = '600 10.5px ' + this.MONO; ctx.fillStyle = '#e85d4f';
+        ctx.strokeStyle = '#e01aff'; ctx.strokeRect(px + 0.5, py + 0.5, panelW, panelH);
+        ctx.font = '600 10.5px ' + this.MONO; ctx.fillStyle = '#e01aff';
         ctx.fillText(S.pinned.r.t.toUpperCase() + ' · NO ' + S.pinned.label, px + 12, py + 20);
         ctx.font = '8.5px ' + this.MONO; ctx.fillStyle = C.dim;
         ctx.fillText(S.pinned.miss.length + ' OF ' + S.pinned.r.ps.length + ' PAGES MISSING THIS FIELD', px + 12, py + 35);
@@ -771,11 +771,11 @@
         for (const p of S.pinned.miss) {
           if (ry > py + panelH - 10) { ctx.fillStyle = C.faint; ctx.font = '8.5px ' + this.MONO; ctx.fillText('… and more', px + 12, ry); break; }
           const hov = mx >= px && mx <= px + panelW && my >= ry - 10 && my < ry + 8;
-          if (hov) { ctx.fillStyle = 'rgba(232,93,79,0.12)'; ctx.fillRect(px + 1, ry - 10, panelW - 2, 18); }
+          if (hov) { ctx.fillStyle = 'rgba(224,26,255,0.12)'; ctx.fillRect(px + 1, ry - 10, panelW - 2, 18); }
           ctx.font = '9px ' + this.MONO;
-          ctx.fillStyle = this.WCOL[p.domain] || '#8b94a4';
+          ctx.fillStyle = this.WCOL[p.domain] || '#8fa878';
           ctx.fillText('▸', px + 12, ry);
-          ctx.fillStyle = hov ? '#e8e6e1' : '#a9a49a';
+          ctx.fillStyle = hov ? '#e9ffe6' : '#a9a49a';
           ctx.fillText(p.title.slice(0, 32), px + 26, ry);
           S.rowHits.push({ x: px, y: ry - 10, w: panelW, h: 18, id: p.id });
           ry += 19;
@@ -785,8 +785,8 @@
       if (S.hover && !S.pinned) {
         this.card(ctx, mx, my, [
           [S.hover.r.t.toUpperCase() + ' × ' + S.hover.label, C.txt, '600 11px ' + this.MONO],
-          [S.hover.have + ' OF ' + S.hover.r.ps.length + ' PAGES CARRY IT (' + Math.round(S.hover.frac * 100) + '%)', S.hover.frac >= 0.999 ? '#7fd486' : '#e8a33d'],
-          [S.hover.miss.length ? S.hover.miss.length + ' MISSING · CLICK TO LIST THEM' : 'COMPLETE COVERAGE', S.hover.miss.length ? '#e85d4f' : '#7fd486', '9px ' + this.MONO]
+          [S.hover.have + ' OF ' + S.hover.r.ps.length + ' PAGES CARRY IT (' + Math.round(S.hover.frac * 100) + '%)', S.hover.frac >= 0.999 ? '#00ffa3' : '#39ff14'],
+          [S.hover.miss.length ? S.hover.miss.length + ' MISSING · CLICK TO LIST THEM' : 'COMPLETE COVERAGE', S.hover.miss.length ? '#e01aff' : '#00ffa3', '9px ' + this.MONO]
         ]);
       }
       if (this.cv) this.cv.style.cursor = (S.hover && S.hover.miss.length) || S.rowHits.some(r => mx >= r.x && mx <= r.x + r.w && my >= r.y && my <= r.y + r.h) ? 'pointer' : 'crosshair';
@@ -914,7 +914,7 @@
       const sc = side / E.N;
       for (const b of E.bands) {
         const a0 = gy0 + b.a * sc, a1 = gy0 + (b.b + 1) * sc;
-        const col = this.WCOL[b.d] || '#8b94a4';
+        const col = this.WCOL[b.d] || '#8fa878';
         ctx.fillStyle = hx(col, 0.75);
         ctx.fillRect(gx0 - 8, a0, 5, Math.max(1, a1 - a0));
         ctx.fillRect(gx0 + (b.a * sc), gy0 - 8, Math.max(1, (b.b + 1 - b.a) * sc), 5);
@@ -929,7 +929,7 @@
       }
 
       ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
-      ctx.font = '700 17px ' + this.GROT; ctx.fillStyle = '#e8a33d';
+      ctx.font = '700 17px ' + this.GROT; ctx.fillStyle = '#39ff14';
       ctx.fillText('ECHO', 18, 32);
       ctx.font = '9px ' + this.MONO; ctx.fillStyle = C.dim;
       const above = E.sims.filter(s => s.s >= st.echoMin).length;
@@ -955,7 +955,7 @@
       const px = W - panelW - 14, py = 62, panelH = H - py - 28;
       ctx.fillStyle = 'rgba(11,15,21,0.9)'; ctx.fillRect(px, py, panelW, panelH);
       ctx.strokeStyle = C.line; ctx.strokeRect(px + 0.5, py + 0.5, panelW, panelH);
-      ctx.font = '9px ' + this.MONO; ctx.fillStyle = '#e8a33d';
+      ctx.font = '9px ' + this.MONO; ctx.fillStyle = '#39ff14';
       ctx.fillText('LOUDEST ECHOES · CLICK TO READ EITHER SIDE', px + 12, py + 18);
       E.rowHits = [];
       let ry = py + 36;
@@ -965,14 +965,14 @@
         const pa = this.WK.pages[s.i], pb = this.WK.pages[s.j];
         const hovA = mx >= px && mx <= px + panelW && my >= ry - 10 && my < ry + 4;
         const hovB = mx >= px && mx <= px + panelW && my >= ry + 4 && my < ry + 18;
-        if (hovA || hovB) { ctx.fillStyle = 'rgba(232,163,61,0.09)'; ctx.fillRect(px + 1, ry - 11, panelW - 2, 29); }
-        ctx.font = '8.5px ' + this.MONO; ctx.fillStyle = s.s > 0.8 ? '#ffffff' : '#e8a33d'; ctx.textAlign = 'right';
+        if (hovA || hovB) { ctx.fillStyle = 'rgba(57,255,20,0.09)'; ctx.fillRect(px + 1, ry - 11, panelW - 2, 29); }
+        ctx.font = '8.5px ' + this.MONO; ctx.fillStyle = s.s > 0.8 ? '#ffffff' : '#39ff14'; ctx.textAlign = 'right';
         ctx.fillText(s.s.toFixed(2), px + panelW - 12, ry + 3); ctx.textAlign = 'left';
         ctx.font = (hovA ? '600 ' : '') + '9px ' + this.MONO;
-        ctx.fillStyle = hovA ? '#e8e6e1' : (this.WCOL[pa.domain] || '#8b94a4');
+        ctx.fillStyle = hovA ? '#e9ffe6' : (this.WCOL[pa.domain] || '#8fa878');
         ctx.fillText(pa.title.slice(0, 30), px + 12, ry);
         ctx.font = (hovB ? '600 ' : '') + '9px ' + this.MONO;
-        ctx.fillStyle = hovB ? '#e8e6e1' : (this.WCOL[pb.domain] || '#8b94a4');
+        ctx.fillStyle = hovB ? '#e9ffe6' : (this.WCOL[pb.domain] || '#8fa878');
         ctx.fillText('↔ ' + pb.title.slice(0, 28), px + 12, ry + 14);
         E.rowHits.push({ x: px, y: ry - 11, w: panelW, h: 15, id: pa.id });
         E.rowHits.push({ x: px, y: ry + 4, w: panelW, h: 14, id: pb.id });
@@ -987,7 +987,7 @@
         this.card(ctx, mx, my, [
           [E.hover.pa.title.slice(0, 36), C.txt, '600 11.5px ' + this.GROT],
           ['↔ ' + E.hover.pb.title.slice(0, 34), C.txt, '600 11.5px ' + this.GROT],
-          ['SIMILARITY ' + E.hover.s.toFixed(3) + (E.hover.s > 0.9 ? ' · NEAR-DUPLICATE' : ''), E.hover.s > 0.9 ? '#ffffff' : '#e8a33d'],
+          ['SIMILARITY ' + E.hover.s.toFixed(3) + (E.hover.s > 0.9 ? ' · NEAR-DUPLICATE' : ''), E.hover.s > 0.9 ? '#ffffff' : '#39ff14'],
           [shared.length ? 'SHARED: ' + shared.join(' · ') : 'DIFFUSE OVERLAP', C.dim, '9px ' + this.MONO],
           ['CLICK TO READ THE ROW PAGE', C.faint, '8.5px ' + this.MONO]
         ]);
