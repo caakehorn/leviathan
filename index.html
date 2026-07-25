@@ -1,27 +1,57 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>@danfrank — Unique AI Solutions · VOID + LEVIATHAN</title>
+<title>VOID + LEVIATHAN — @danfrank</title>
+<meta name="description" content="Recursive self-analysis, adversarial imagination, and bespoke machine builds. @danfrank — Unique AI Solutions.">
+<meta name="theme-color" content="#10001f">
+<link rel="icon" href="data:,">
+
+<meta property="og:type" content="website">
+<meta property="og:title" content="VOID + LEVIATHAN — @danfrank">
+<meta property="og:description" content="Recursive self-analysis, adversarial imagination, and bespoke machine builds.">
+<meta property="og:site_name" content="VOID + LEVIATHAN">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="VOID + LEVIATHAN — @danfrank">
+<meta name="twitter:description" content="Recursive self-analysis, adversarial imagination, and bespoke machine builds.">
+
+<!-- Nothing renders until React lands (support.js ends with loadReactUmd().then(init)),
+     so the handshake to unpkg belongs here rather than in <helmet>, which the runtime
+     only processes once React is already up. Fonts likewise. -->
+<link rel="preconnect" href="https://unpkg.com" crossorigin>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous">
+<link rel="preload" as="script" href="https://unpkg.com/react@18.3.1/umd/react.production.min.js"
+      integrity="sha384-DGyLxAyjq0f9SPpVevD6IgztCFlnMF6oW/XQGmfe+IsZ8TqEiDrcHkMLKI6fiB/Z" crossorigin="anonymous">
+<link rel="preload" as="script" href="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"
+      integrity="sha384-gTGxhz21lVGYNMcdJOyq01Edg0jhn/c22nsx0kyqP0TxaV5WVdsSH1fSDUf5YJj1" crossorigin="anonymous">
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@700;900&amp;family=Space+Grotesk:wght@400;500;700&amp;family=IBM+Plex+Mono:wght@400;600;700&amp;display=swap" rel="stylesheet">
+
+<!-- support.js boots the runtime and must run first; the rest only register custom
+     elements or hang a namespace on window, all consumed from componentDidMount. -->
 <script src="./js/support.js"></script>
-<script src="./js/galaxy-cluster.js"></script>
-<script src="./js/void-engine.js"></script>
-<script src="./js/wiki-modules.js"></script>
-<script src="./js/wiki-analytics.js"></script>
-<script src="./js/wiki-reader.js"></script>
+<script defer src="./js/galaxy-cluster.js"></script>
+<script defer src="./js/void-engine.js"></script>
+<script defer src="./js/wiki-modules.js"></script>
+<script defer src="./js/wiki-analytics.js"></script>
+<script defer src="./js/wiki-reader.js"></script>
 </head>
 <body>
 <x-dc>
 <helmet>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous">
-  <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;700;900&amp;family=Space+Grotesk:wght@400;500;700&amp;family=IBM+Plex+Mono:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+  <!-- Font preconnects and the stylesheet itself now live in the real <head>:
+       <helmet> is only processed once the runtime is up, which is far too late
+       for a render-blocking stylesheet. -->
   <meta name="ext-resource-dependency" content="data/leviathan.enc" data-resource-id="leviathan">
   <meta name="ext-resource-dependency" content="data/wiki-data.json" data-resource-id="wikidata">
   <style>
     html { scroll-behavior: smooth; }
-    html, body { margin: 0; padding: 0; background: #39ff14; color: #0d0018; }
+    /* The runtime hides <x-dc> until React boots, so this background is what a
+       visitor stares at for the whole unpkg round-trip. It must match the
+       #static-void backdrop, not the neon accent — otherwise cold loads flash
+       full-viewport #39ff14 and then hard-cut to the dark palette. */
+    html, body { margin: 0; padding: 0; background: #10001f; color: #e9ffe6; }
     body { overflow-x: hidden; font-family: 'IBM Plex Mono', monospace; }
     * { box-sizing: border-box; }
     ::selection { background: #b026ff; color: #10001f; }
@@ -46,6 +76,22 @@
     @keyframes ticker { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
     @keyframes lvShimmer { 0% { transform: translateX(-100%); } 100% { transform: translateX(340px); } }
     @keyframes lvBlink { 0%, 100% { opacity: 1; } 50% { opacity: 0.25; } }
+
+    /* enterflash cycles white->black five times in 0.9s (~5.5Hz) across the full
+       viewport, and _setPhase fires it on first paint. That is over the 3Hz
+       general-flash threshold — WCAG 2.3.1 (Level A). Honour the OS setting.
+       Every animation here is applied via an inline style, so each keyframe is
+       targeted by name: `animation: none` leaves all of them on their correct
+       resting state (opacity 1 / untransformed), which a blanket
+       `animation-duration: 1ms` would not — it would strand the ticker at
+       translateX(-50%) and hold enterflash's white overlay mid-cycle. */
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      [style*="enterflash"] { animation: none !important; opacity: 0 !important; }
+      [style*="glitch1"], [style*="pulseglow"], [style*="ticker"],
+      [style*="lvShimmer"], [style*="lvBlink"], [style*="blink"],
+      [style*="floaty"] { animation: none !important; }
+    }
   </style>
 </helmet>
 
@@ -116,7 +162,7 @@
     <main style="position: relative; z-index: 10;">
 
       <section data-screen-label="Hero" style="min-height: 100vh; position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 90px 24px 70px; pointer-events: none;">
-        <x-import component-from-global-scope="particle-type" from="./js/void-engine.js" text="@danfrank" style="width: min(94vw, 1320px); height: clamp(150px, 32vh, 340px); pointer-events: auto;" hint-size="100%,300px"></x-import>
+        <x-import component-from-global-scope="particle-type" text="@danfrank" style="width: min(94vw, 1320px); height: clamp(150px, 32vh, 340px); pointer-events: auto;" hint-size="100%,300px"></x-import>
         <div style="margin-top: 8px; font-size: clamp(11px, 1.4vw, 15px); letter-spacing: 0.46em; color: #ffffff; text-transform: uppercase; text-shadow: 0 0 22px rgba(123,45,255,1), 0 0 60px rgba(176,38,255,0.7);">unique · ai · solutions</div>
         <div style="margin-top: 22px; font-size: 11px; letter-spacing: 0.3em; color: #39ff14; text-shadow: 0 0 12px rgba(57,255,20,0.8);">◉ CLICK IT — SHOCKWAVE · HOLD IT — VORTEX · IT'S ALIVE</div>
         <div style="margin-top: 18px; max-width: 700px; text-align: center; font-size: 13px; line-height: 2.1; color: #b3abdd;">recursive self-analysis · adversarial imagination · bespoke machine builds<br>a consultancy for weirdos, by a weirdo.</div>
@@ -225,7 +271,7 @@
               <div style="font-size: 11px; letter-spacing: 0.3em; color: #4d8fa0;">── TRANSMISSION COMPOSER ──</div>
               <div style="font-size: 11px; letter-spacing: 0.2em; color: #10001f; background: #39ff14; padding: 4px 10px; font-weight: 700;">TO: @danfrank</div>
             </div>
-            <textarea value="{{ msg }}" onChange="{{ setMsg }}" placeholder="describe the weird thing you want built / broken / understood…" style="width: 100%; min-height: 130px; background: transparent; border: 1px dashed rgba(57,255,20,0.5); color: #d9f6ff; font-family: 'IBM Plex Mono', monospace; font-size: 13px; line-height: 1.9; padding: 14px; resize: vertical;"></textarea>
+            <textarea value="{{ msg }}" onChange="{{ setMsg }}" aria-label="Describe what you want built, broken, or understood" placeholder="describe the weird thing you want built / broken / understood…" style="width: 100%; min-height: 130px; background: transparent; border: 1px dashed rgba(57,255,20,0.5); color: #d9f6ff; font-family: 'IBM Plex Mono', monospace; font-size: 13px; line-height: 1.9; padding: 14px; resize: vertical;"></textarea>
             <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
               <div style="font-size: 11px; letter-spacing: 0.15em; color: {{ charColor }};">{{ charsLeft }} CHARS REMAIN</div>
               <button onClick="{{ transmit }}" style="cursor: pointer; font-family: 'IBM Plex Mono', monospace; font-size: 13px; font-weight: 700; letter-spacing: 0.18em; padding: 14px 24px; color: #10001f; background: #39ff14; border: 1px solid #39ff14; animation: pulseglow 3s ease-in-out infinite;" style-hover="background: #b026ff; border-color: #b026ff;">TRANSMIT VIA X ►</button>
@@ -314,7 +360,7 @@
 
   <!-- ======== STAGE ======== -->
   <div style="flex: 1; position: relative; min-height: 0;" data-screen-label="{{ stageLabel }}">
-    <canvas ref="{{ canvasRef }}" style="position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; cursor: crosshair;"></canvas>
+    <canvas ref="{{ canvasRef }}" role="img" aria-label="{{ stageLabel }}" style="position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; cursor: crosshair;"></canvas>
 
     <!-- module chips -->
     <div style="position: absolute; top: 12px; right: 16px; display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; max-width: 70%;">
@@ -588,8 +634,10 @@ class Component extends DCLogic {
     box.innerHTML =
       '<div style="font-size:11px;letter-spacing:0.3em;color:#39ff14;margin-bottom:6px;">⬢ LEVIATHAN ARCHIVE</div>'
       + '<div style="font-size:12px;line-height:1.7;color:#a89fd0;margin-bottom:18px;">This archive is encrypted. Enter the passphrase to decrypt and view the data.</div>'
-      + '<input type="password" autocomplete="off" placeholder="passphrase" style="width:100%;box-sizing:border-box;background:rgba(0,0,0,0.5);border:1px solid rgba(57,255,20,0.4);color:#b6ff8f;font-family:inherit;font-size:13px;padding:11px 12px;letter-spacing:0.05em;outline:none;">'
-      + '<div data-err style="min-height:16px;font-size:10px;letter-spacing:0.1em;color:#b026ff;margin:8px 2px 0;"></div>'
+      + '<input type="password" autocomplete="off" aria-label="Archive passphrase" placeholder="passphrase" style="width:100%;box-sizing:border-box;background:rgba(0,0,0,0.5);border:1px solid rgba(57,255,20,0.4);color:#b6ff8f;font-family:inherit;font-size:13px;padding:11px 12px;letter-spacing:0.05em;outline:none;">'
+      // role=alert so the failure is announced; without it a screen reader user
+      // gets no feedback at all on a wrong passphrase.
+      + '<div data-err role="alert" style="min-height:16px;font-size:10px;letter-spacing:0.1em;color:#b026ff;margin:8px 2px 0;"></div>'
       + '<button data-go style="width:100%;margin-top:10px;cursor:pointer;background:#39ff14;border:1px solid #39ff14;color:#10001f;font-family:inherit;font-weight:700;font-size:11px;letter-spacing:0.22em;padding:12px;">DECRYPT ►</button>'
       + '<button data-cancel style="width:100%;margin-top:8px;cursor:pointer;background:none;border:1px solid rgba(160,200,140,0.3);color:#a89fd0;font-family:inherit;font-size:10px;letter-spacing:0.2em;padding:9px;">CANCEL</button>';
     ov.appendChild(box);
@@ -2517,10 +2565,12 @@ class Component extends DCLogic {
       const d = Math.hypot(mxm - it._x, mym - it._y);
       if (d < best) { best = d; Mi.hover = it; }
     }
-    const annieId = '+17244346811';
+    // Matched by name, not by raw thread id: `it.name` already resolves through
+    // D.nameOf (built from the decrypted bundle), so the identifier stays inside
+    // leviathan.enc instead of shipping in cleartext to every visitor.
     for (const it of Mi.items) {
       const lit = it === Mi.hover || it === Mi.pinned;
-      const isAnnie = it.t.id === annieId;
+      const isAnnie = (it.name || '').toLowerCase() === 'annie';
       const r = (3 + Math.sqrt(it.t.total / Mi.maxTot) * 14) * Math.min(1, Mi.reveal * 2);
       ctx.beginPath(); ctx.arc(it._x, it._y, lit ? r + 2.5 : r, 0, Math.PI * 2);
       if (lit) ctx.fillStyle = '#ffffff';
@@ -4597,7 +4647,6 @@ class Component extends DCLogic {
       tabs, chips,
       hint: s.section === 'wiki' ? ((this.WHINTS && this.WHINTS[s.tab]) || '') : (hints[s.tab] || ''),
       stageLabel: 'module ' + s.tab,
-      isWikiSection: s.section === 'wiki',
       toCorpus: () => this.setState({ section: 'corpus', tab: 'pulse' }),
       toWiki: () => this.setState({ section: 'wiki', tab: 'reader' }),
       corpusBtnStyle: this.sectionBtnStyle ? this.sectionBtnStyle(s.section !== 'wiki', C.amber) : {},

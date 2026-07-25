@@ -105,7 +105,11 @@
       }
       if (s.tab === 'schema') {
         return [['core', 'CORE FIELDS'], ['box', 'INFOBOX FIELDS'], ['all', 'ALL']].map(([id, l]) => ({
-          label: l, onClick: () => { this.setState({ schemaMode: id }); if (this.M.schema) this.M.schema.pinned = null; }, style: cs(s.schemaMode === id, '#00ffa3')
+          // Drop the whole module, not just the pin: initSchema sorts rows by
+          // coverage computed from the columns of the mode that was active when
+          // it ran, so keeping it across a mode change left the rows ordered by
+          // the old mode while the header still claimed "WORST COVERAGE FIRST".
+          label: l, onClick: () => { this.setState({ schemaMode: id }); this.M.schema = null; }, style: cs(s.schemaMode === id, '#00ffa3')
         }));
       }
       if (s.tab === 'crucible') {
@@ -729,8 +733,11 @@
       });
       hits.sort((a, b) => b.c - a.c);
       let quote = '';
+      // Hoisted out of the .find callback, which was compiling a fresh RegExp
+      // for every sentence tested — hundreds per call, on a hover path.
+      const termRe = new RegExp('\\b' + term.replace(/[^a-z']/g, '') + '\\b', 'i');
       for (const h of hits.slice(0, 6)) {
-        const s = this.wkSentences(h.p.id).find(x => new RegExp('\\b' + term.replace(/[^a-z']/g, '') + '\\b', 'i').test(x));
+        const s = this.wkSentences(h.p.id).find(x => termRe.test(x));
         if (s) { quote = s; break; }
       }
       D.usageFor = key;

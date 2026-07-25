@@ -25,10 +25,10 @@ on:
         type: boolean
         default: false
 
-permissions:
-  contents: write
-  pages: write
-  id-token: write
+# Granted per job instead of workflow-wide: the sync job runs a third-party
+# checkout and a pip install, and has no business holding the OIDC token-minting
+# permission that only the Pages deploy needs.
+permissions: {}
 
 concurrency:
   group: sync-wiki
@@ -37,6 +37,9 @@ concurrency:
 jobs:
   sync:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
     outputs:
       changed: ${{ steps.commit.outputs.changed }}
     steps:
@@ -53,13 +56,15 @@ jobs:
 
       - name: Has wiki-brain moved?
         id: check
+        env:
+          FORCE: ${{ inputs.force }}
         run: |
           upstream="$(git -C .wiki-brain rev-parse HEAD)"
           current="$(python3 -c "import json;print(json.load(open('data/wiki-data.json')).get('source_commit',''))" 2>/dev/null || echo '')"
           echo "upstream=$upstream" >> "$GITHUB_OUTPUT"
           echo "wiki-brain HEAD : $upstream"
           echo "built from      : ${current:-<none>}"
-          if [ "$upstream" = "$current" ] && [ "${{ inputs.force }}" != "true" ]; then
+          if [ "$upstream" = "$current" ] && [ "$FORCE" != "true" ]; then
             echo "stale=false" >> "$GITHUB_OUTPUT"
             echo "already up to date — nothing to do"
           else
@@ -82,49 +87,40 @@ jobs:
         if: steps.check.outputs.stale == 'true'
         run: python3 tools/build-wiki-data.py --wiki-brain .wiki-brain
 
-      # A rebuild always rewrites the "generated" date, so a forced re-run on an
-      # unchanged source would otherwise produce a date-only commit.
-      - name: Discard a date-only rebuild
-        if: steps.check.outputs.stale == 'true'
-        run: |
-          python3 - <<'PY'
-          import json, subprocess, sys
-          new = json.load(open('data/wiki-data.json'))
-          try:
-              old = json.loads(subprocess.check_output(
-                  ['git', 'show', 'HEAD:data/wiki-data.json'], text=True))
-          except Exception:
-              sys.exit(0)
-          if {k: v for k, v in new.items() if k != 'generated'} == \
-             {k: v for k, v in old.items() if k != 'generated'}:
-              subprocess.check_call(['git', 'checkout', '--', 'data/wiki-data.json'])
-              print('only the generated date changed — reverted')
-          PY
+      # The "Discard a date-only rebuild" step that used to sit here is gone:
+      # the dataset no longer carries a "generated" timestamp, so an unchanged
+      # source now produces a byte-identical file and the `git diff --quiet`
+      # below is sufficient on its own.
 
       - name: Commit and push
         id: commit
         if: steps.check.outputs.stale == 'true'
+        env:
+          UPSTREAM: ${{ steps.check.outputs.upstream }}
         run: |
           if git diff --quiet -- data/wiki-data.json; then
             echo "changed=false" >> "$GITHUB_OUTPUT"
             echo "wiki-data.json is unchanged"
             exit 0
           fi
+          # Counts resolved, non-self edges — the same definition build-wiki-data.py
+          # reports and guards on, so the commit message and the build log agree.
           stats="$(python3 -c "
           import json
           d = json.load(open('data/wiki-data.json'))
           p = d['wikiPages']['pages']
+          known = {x['id'] for x in p}
           print('%d pages, %d typed edges, %s words, %d log ops' % (
               len(p),
-              sum(len(x.get('connections', [])) for x in p),
+              sum(1 for x in p for c in x.get('connections', [])
+                  if c.get('page') in known and c.get('page') != x['id']),
               format(sum(x.get('words', 0) for x in p), ','),
               len(d['wikiLog']['ops'])))
           ")"
           git config user.name  'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add data/wiki-data.json
-          git commit -m "Sync wiki data from wiki-brain@${{ steps.check.outputs.upstream }}" \
-                     -m "$stats"
+          git commit -m "Sync wiki data from wiki-brain@$UPSTREAM" -m "$stats"
           git push
           echo "changed=true" >> "$GITHUB_OUTPUT"
           echo "$stats" >> "$GITHUB_STEP_SUMMARY"

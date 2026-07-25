@@ -1,0 +1,117 @@
+name: Validate
+
+# The site has no build step, so nothing here compiles anything — it only checks
+# that every file still parses and that the wiki dataset holds its shape. That is
+# the whole safety net for a repo where a stray comma in index.html or a bad key
+# in wiki-data.json would otherwise only surface on the live site.
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: validate-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Parse every JavaScript module
+        run: |
+          fail=0
+          for f in js/*.js; do
+            if node --check "$f"; then
+              echo "ok   $f"
+            else
+              echo "FAIL $f"; fail=1
+            fi
+          done
+          exit $fail
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Compile the build tool
+        run: python3 -m py_compile tools/build-wiki-data.py
+
+      - name: Parse workflows
+        run: |
+          pip install --quiet 'pyyaml==6.*'
+          python3 - <<'PY'
+          import glob, sys, yaml
+          bad = 0
+          for f in sorted(glob.glob('.github/workflows/*.yml')) + ['.github/dependabot.yml']:
+              try:
+                  yaml.safe_load(open(f))
+                  print('ok   ' + f)
+              except Exception as e:
+                  print(f'FAIL {f}: {e}'); bad = 1
+          sys.exit(bad)
+          PY
+
+      - name: Check the wiki dataset
+        run: |
+          python3 - <<'PY'
+          import json, sys
+          d = json.load(open('data/wiki-data.json', encoding='utf-8'))
+
+          missing = {'source', 'source_commit', 'wikiPages', 'wikiText', 'wikiLog'} - set(d)
+          if missing:
+              sys.exit(f'error: wiki-data.json is missing top-level keys: {sorted(missing)}')
+
+          pages = d['wikiPages']['pages']
+          text = d['wikiText']
+          if not pages:
+              sys.exit('error: no pages')
+
+          # Every page must have the fields the JS reads unconditionally.
+          for p in pages[:]:
+              for k in ('id', 'title', 'domain', 'words'):
+                  if k not in p:
+                      sys.exit(f'error: page {p.get("id", "?")} is missing "{k}"')
+
+          orphans = [p['id'] for p in pages if p['id'] not in text]
+          if orphans:
+              sys.exit(f'error: {len(orphans)} pages have no text: {orphans[:5]}')
+
+          # Frontmatter is stripped at build time; if it reappears the payload has
+          # regressed and EPISTEME/ECHO start measuring YAML as if it were prose.
+          fm = [k for k, v in text.items() if v.lstrip().startswith('---')]
+          if fm:
+              sys.exit(f'error: {len(fm)} pages still carry frontmatter: {fm[:5]}')
+
+          if 'generated' in d:
+              sys.exit('error: "generated" is back; it makes every rebuild look '
+                       'like a change (see sync-wiki.yml)')
+
+          known = {p['id'] for p in pages}
+          typed = sum(1 for p in pages for c in p.get('connections', [])
+                      if c.get('page') in known and c.get('page') != p['id'])
+          print(f'{len(pages)} pages, {typed} typed edges, '
+                f'{sum(p["words"] for p in pages):,} words, '
+                f'{len(d["wikiLog"]["ops"])} log ops')
+          PY
+
+      - name: Check index.html references files that exist
+        run: |
+          python3 - <<'PY'
+          import re, sys, pathlib
+          html = pathlib.Path('index.html').read_text(encoding='utf-8')
+          bad = [s for s in re.findall(r'(?:src|href)="(\./[^"]+)"', html)
+                 if not pathlib.Path(s).exists()]
+          if bad:
+              sys.exit(f'error: index.html references missing files: {bad}')
+          print('all local src/href targets exist')
+          PY

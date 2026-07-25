@@ -714,6 +714,13 @@
     }
 
     _pmove(e) {
+      /* The listener is on window and stays attached while paused, but the
+         element is paused and display:none everywhere except the splash. Every
+         handler call ran _world(), whose getBoundingClientRect forces a
+         synchronous style+layout flush — at pointer-event rate (120Hz+ on a
+         high-refresh display), site-wide, to feed a simulation that is not
+         running. Nothing below has any effect until the sim resumes. */
+      if (this._paused) return;
       var p = this._world(e);
       var now = performance.now();
       var dts = Math.max((now - this._lastMove) / 1000, 0.008);
@@ -889,7 +896,7 @@
       /* hue-shift on CPU = palette rebuild; quantized so it only happens on real mood changes */
       if (Math.abs(this._hueShift - (this._colHue || 0)) > 0.02) this._buildCPUColors();
       var dampDisc = Math.exp(-1.6 * dtE), dampText = Math.exp(-5.2 * dtE), dampStream = Math.exp(-3.2 * dtE);
-      var flickK = Math.exp(0) * (dtE * 60) * 0.09;
+      var flickK = (dtE * 60) * 0.09;
       var I = this._intensity;
       var glowCols = this._colGlow, coreCols = this._colCore;
 

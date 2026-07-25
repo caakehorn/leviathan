@@ -6,11 +6,13 @@ A self-contained static site — the combined **VOID + LEVIATHAN** project — s
 
 ```
 index.html            # entry point + inline styles and template markup
+404.html              # static not-found page (deep links into wiki page ids can go stale)
 js/
   support.js          # runtime: custom <x-dc> template engine, resource loading
   galaxy-cluster.js   # particle background simulation
   void-engine.js      # VOID visual layer
-  wiki-modules.js     # wiki reader + first-wave wiki visualizers
+  wiki-reader.js      # WIKI reader: markdown rendering, search, page navigation
+  wiki-modules.js     # first-wave wiki visualizers (WEB, CLAIMS, MASS, …)
   wiki-analytics.js   # second-wave wiki instruments computed from page prose
 data/
   leviathan.enc       # AES-256-GCM encrypted content bundle (decrypted in-browser)
@@ -18,13 +20,26 @@ data/
 tools/
   build-wiki-data.py  # regenerates data/wiki-data.json from a wiki-brain checkout
 .nojekyll             # disables GitHub's Jekyll build (see below)
-.github/workflows/
-  pages.yml           # GitHub Actions workflow that deploys to Pages
+.gitignore            # ignores the transient .wiki-brain/ checkout
+.gitattributes        # LF endings; marks the data files binary / generated
+.editorconfig         # 4-space Python, 2-space everything else
+robots.txt            # advisory: keeps crawlers off the bulk data/ blobs
+.github/
+  dependabot.yml      # weekly bumps for the Actions used below
+  workflows/
+    pages.yml         # GitHub Actions workflow that deploys to Pages
+    sync-wiki.yml     # hourly rebuild of wiki-data.json from wiki-brain
 ```
 
 The page renders through a small client-side template engine (the `<x-dc>` element
-and `{{ ... }}` bindings). React and Babel are loaded at runtime from the unpkg CDN,
-so viewers need an internet connection but the repo needs no install step.
+and `{{ ... }}` bindings). React and ReactDOM are loaded at runtime from the unpkg
+CDN (SRI-pinned, see `REACT_URL` in `js/support.js`), so viewers need an internet
+connection but the repo needs no install step. Nothing renders until they land,
+which is why `index.html` preconnects and preloads them from the real `<head>`.
+
+`@babel/standalone` is also wired up, but only ever fetched for an `<x-import>`
+pointing at a `.jsx`/`.tsx` file. There are none, so no in-browser transpilation
+happens on this site.
 
 The `data/leviathan.enc` bundle is encrypted; the site prompts for a passphrase and
 decrypts it in the browser using the Web Crypto API. The plaintext only ever exists
@@ -65,8 +80,8 @@ not start another workflow run, so the deploy would otherwise never fire.
 
 You can also run it from **Actions → Sync wiki data from wiki-brain → Run
 workflow**, which takes a *force* option to rebuild even when the source hasn't
-moved. A forced rebuild that changes nothing but the `generated` date is
-discarded rather than committed.
+moved. The dataset carries no build timestamp, so a rebuild from an unchanged
+source is byte-identical and simply produces no commit.
 
 ### Optional: update within seconds instead of within the hour
 
@@ -116,7 +131,12 @@ page. The included `.nojekyll` file and the Actions-based workflow both avoid th
    manually from the **Actions** tab). When it finishes, the live URL appears in the
    workflow summary and under Settings → Pages.
 
-### Option B — Deploy from a branch
+### Option B — Deploy from a branch (not recommended)
+
+This publishes the repo root as-is, including `tools/` and `.github/`, and it
+bypasses `pages.yml` — which `sync-wiki.yml` calls directly, so the wiki sync
+would stop deploying.
+
 
 1. **Settings → Pages → Source → Deploy from a branch**.
 2. Pick the branch (e.g. `main`) and folder `/ (root)`, then **Save**.

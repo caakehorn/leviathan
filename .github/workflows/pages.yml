@@ -13,10 +13,14 @@ permissions:
   pages: write
   id-token: write
 
-# Allow one concurrent deployment, cancelling in-progress runs.
+# One deployment at a time, but let an in-flight one finish. Cancelling is wrong
+# here: sync-wiki.yml commits the new data and *then* calls this workflow, so a
+# cancelled deploy leaves source_commit already matching upstream — the next
+# hourly run sees nothing stale and never retries, stranding committed data
+# unpublished until some unrelated push happens to trigger a deploy.
 concurrency:
   group: pages
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   deploy:
@@ -24,6 +28,7 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - name: Checkout
         uses: actions/checkout@v4
