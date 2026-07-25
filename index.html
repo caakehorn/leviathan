@@ -410,7 +410,16 @@ class Component extends DCLogic {
     attentionDom: 'ALL',
     dictionDom: 'mind',
     schemaMode: 'core',
-    echoMin: 0.25
+    echoMin: 0.25,
+    cruciblePlay: false,
+    crucibleSpeed: 3,
+    crucibleFilter: 'all',
+    attentionView: 'scatter',
+    attentionPlay: false,
+    attentionSpeed: 4,
+    dictionView: 'bars',
+    dictionPlay: false,
+    dictionSpeed: 2
   };
 
   // ---------- constants ----------
@@ -449,7 +458,7 @@ class Component extends DCLogic {
       if (this.state.phase !== 'archive') return;
       if (e.target && (e.target.tagName === 'TEXTAREA' || e.target.tagName === 'INPUT')) return;
       const order = this.state.section === 'wiki'
-        ? ['reader', 'web', 'claims', 'census', 'strata', 'accrete', 'tagmap', 'mass', 'lattice', 'evidence', 'chronicle', 'genesis', 'episteme', 'attention', 'diction', 'schema', 'echo']
+        ? ['reader', 'web', 'claims', 'census', 'strata', 'accrete', 'tagmap', 'mass', 'lattice', 'evidence', 'chronicle', 'genesis', 'episteme', 'crucible', 'attention', 'diction', 'schema', 'echo']
         : ['pulse', 'clock', 'orbits', 'atlas', 'lexicon', 'shelf', 'weather', 'annie', 'signal', 'mirror', 'gravity', 'forensic', 'rings', 'silence', 'psyche', 'sync', 'drift', 'oracle', 'authority'];
       const i = '1234567890-='.indexOf(e.key);
       if (i >= 0 && order[i]) this.setTab(order[i]);
@@ -461,6 +470,9 @@ class Component extends DCLogic {
       if (e.key === ' ' && this.state.tab === 'chronicle') { e.preventDefault(); this.setState(s => ({ chroniclePlay: !s.chroniclePlay })); }
       if (e.key === ' ' && this.state.tab === 'genesis') { e.preventDefault(); this.setState(s => ({ genesisPlay: !s.genesisPlay })); }
       if (e.key === ' ' && this.state.tab === 'episteme') { e.preventDefault(); this.setState(s => ({ epistemePlay: !s.epistemePlay })); }
+      if (e.key === ' ' && this.state.tab === 'crucible') { e.preventDefault(); this.setState(s => ({ cruciblePlay: !s.cruciblePlay })); }
+      if (e.key === ' ' && this.state.tab === 'attention' && this.state.attentionView === 'pen') { e.preventDefault(); this.setState(s => ({ attentionPlay: !s.attentionPlay })); }
+      if (e.key === ' ' && this.state.tab === 'diction' && this.state.dictionView === 'pen') { e.preventDefault(); this.setState(s => ({ dictionPlay: !s.dictionPlay })); }
     };
     window.addEventListener('keydown', this.onKey);
     if (this.state.phase !== 'splash') setTimeout(() => this._setPhase(this.state.phase), 30);
@@ -2169,6 +2181,7 @@ class Component extends DCLogic {
       tag: f.day,
       shownAt: 0
     })).filter(f => f.pos >= 0 && f.pos < nM).sort((a, b) => a.pos - b.pos);
+    this.penAttributeFrags(frags, this.APENS, rates, maxRate);
     const monthLabel = (i) => {
       const y = Math.floor((m0 + i) / 12), mo = (m0 + i) % 12;
       return y + '-' + String(mo + 1).padStart(2, '0');
@@ -3631,7 +3644,10 @@ class Component extends DCLogic {
     }
   }
 
-  // frags: [{ pos, text, tag, shownAt }] sorted by pos · returns surfaced count
+  // frags: [{ pos, text, tag, shownAt, pen, id }] sorted by pos.
+  // `pen` is the colour of the lane this record registered on, so the reader
+  // can see which frequency a given sentence is what spiked; `id` is the page
+  // it came from. Returns hit-rects so the owning pt_ handler can open them.
   drawFragmentFeed(ctx, geo, frags, playPos, title, accent) {
     const C = this.COL;
     ctx.fillStyle = 'rgba(11,15,21,0.85)';
@@ -3646,16 +3662,23 @@ class Component extends DCLogic {
       else f.shownAt = 0;
     }
     const feed = visible.slice(-5).reverse();
+    const rects = [];
+    const mx = this.mouse ? this.mouse.x : -1, my = this.mouse ? this.mouse.y : -1;
     let fy = geo.fy + 40;
     const yMax = geo.fy + geo.fh - 26;
     for (let i = 0; i < feed.length; i++) {
       const f = feed[i];
+      const rowTop = fy - 11;
       const age = (now - f.shownAt) / 1000;
       const chars = Math.floor(age * 60);
       const txt = f.text.slice(0, chars);
       const alpha = i === 0 ? 1 : Math.max(0.25, 0.8 - i * 0.18);
-      ctx.font = '9px ' + this.MONO; ctx.fillStyle = accent + Math.round(alpha * 230).toString(16).padStart(2, '0');
-      ctx.fillText(f.tag, geo.fx + 14, fy);
+      // the tag carries the pen colour — this is the attribution
+      const tagCol = f.pen || accent;
+      const hot = f.id && mx >= geo.fx && mx <= geo.fx + geo.fw && my >= rowTop && my <= rowTop + 16;
+      ctx.font = '9px ' + this.MONO;
+      ctx.fillStyle = tagCol + Math.round((hot ? 1 : alpha) * 230).toString(16).padStart(2, '0');
+      ctx.fillText((f.id ? (hot ? '▸ ' : '') : '') + f.tag, geo.fx + 14, fy);
       fy += 14;
       ctx.font = (i === 0 ? '500 12.5px ' : '11px ') + this.GROT;
       ctx.fillStyle = 'rgba(232,230,225,' + alpha + ')';
@@ -3667,6 +3690,7 @@ class Component extends DCLogic {
         if (fy > yMax) break;
       }
       if (fy <= yMax) { ctx.fillText(line + (i === 0 && chars < f.text.length ? '▌' : ''), geo.fx + 14, fy); fy += lh + 12; }
+      if (f.id) rects.push({ x: geo.fx, y: rowTop, w: geo.fw, h: Math.min(fy, yMax) - rowTop, id: f.id });
       if (fy > yMax) break;
     }
     if (!visible.length) {
@@ -3675,7 +3699,7 @@ class Component extends DCLogic {
     }
     ctx.font = '8px ' + this.MONO; ctx.fillStyle = C.faint;
     ctx.fillText(visible.length + ' / ' + frags.length + ' FRAGMENTS SURFACED', geo.fx + 14, geo.fy + geo.fh - 10);
-    return visible.length;
+    return rects;
   }
 
   drawEraBands(ctx, xOf, toPos, y0, y1) {
@@ -3689,6 +3713,141 @@ class Component extends DCLogic {
       ctx.fillStyle = e.tone === 'amber' ? 'rgba(57,255,20,0.55)' : 'rgba(176,38,255,0.5)';
       ctx.fillText(e.label, Math.max(xa + 6, 6), y0 + 4);
     }
+  }
+
+  // ============================================================
+  // THE PEN SCAFFOLD
+  // The canonical shape of an analytic view: several pens tracing
+  // frequencies over an ORDERING of the corpus (not necessarily time),
+  // a volume lane grounding them in raw mass, a playable/scrubbable
+  // playhead, and a verbatim feed of the records registering on each
+  // frequency. POLYGRAPH, WEATHER and EPISTEME all reduce to this.
+  //
+  // The hook callbacks (readout/marker/overlay) fire at exact points in
+  // the paint order so an instrument's bespoke furniture lands in the
+  // same layer it did when each of these was hand-rolled.
+  // ============================================================
+  penInstrument(ctx, W, H, dt, cfg) {
+    const C = this.COL, st = this.state, M = this.M[cfg.id];
+    const nP = cfg.nP;
+    // the cache key (this.M[id]) and the state key need not match: a view-mode
+    // pen caches under its own id but shares the tab's play/speed state
+    const sk = cfg.stateKey || cfg.id;
+
+    // ---- advance the playhead (scrubbing takes precedence) ----
+    if (st[sk + 'Play'] && !M.scrub) {
+      M.play += (st[sk + 'Speed'] || 1) * dt;
+      if (M.play >= nP - 0.01) { M.play = nP - 0.01; this.setState({ [sk + 'Play']: false }); }
+    }
+
+    // ---- layout ----
+    const chartR = W * (cfg.chartFrac || 0.62);
+    const padL = cfg.padL, padT = cfg.padT, padB = cfg.padB, laneGap = cfg.laneGap;
+    const nLanes = cfg.lanes.length + (cfg.volume ? 1 : 0);
+    const laneH = (H - padT - padB - laneGap * (nLanes - 1)) / nLanes;
+    const xOf = (i) => padL + (i / Math.max(1, nP - 1)) * (chartR - padL - 20);
+    const geo = { padL, padT, laneH, laneGap, x0: padL, x1: chartR - 20, xOf };
+    const vy0 = padT + cfg.lanes.length * (laneH + laneGap);
+    const playX = xOf(M.play);
+    const ribY = padT - 16;
+    const botY = vy0 + (cfg.volume ? laneH : 0);
+    const g = { geo, xOf, playX, vy0, laneH, chartR, padL, padT, padB, ribY, botY, nP, play: M.play, M };
+
+    // ---- ribbon: a per-position colour strip above the lanes ----
+    if (cfg.ribbon) {
+      const bw = Math.max(1.2, (chartR - padL - 20) / nP + 0.6);
+      for (let i = 0; i < nP; i++) {
+        const col = cfg.ribbon(i, i <= M.play);
+        if (!col) continue;
+        ctx.fillStyle = col;
+        ctx.fillRect(xOf(i), ribY, bw, 8);
+      }
+    }
+
+    // ---- house header ----
+    ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+    ctx.font = '700 17px ' + this.GROT; ctx.fillStyle = cfg.accent;
+    ctx.fillText(cfg.title, 18, 32);
+    ctx.font = '9px ' + this.MONO; ctx.fillStyle = C.dim;
+    ctx.fillText(cfg.sub, 18, 48);
+
+    if (cfg.readout) cfg.readout(g);
+
+    // ---- the pens, and the mass under them ----
+    this.drawPenLanes(ctx, geo, cfg.lanes, M.play, st[sk + 'Play']);
+    if (cfg.volume) this.drawVolumeLane(ctx, geo, vy0, cfg.volume.data, cfg.volume.max, M.play, cfg.volume.color);
+
+    // ---- needle ----
+    ctx.strokeStyle = 'rgba(232,230,225,0.5)'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(playX, (cfg.ribbon ? ribY - 4 : padT - 6)); ctx.lineTo(playX, botY + 8); ctx.stroke();
+
+    if (cfg.marker) cfg.marker(g);
+
+    // ---- position ticks along the axis ----
+    if (cfg.tickLabel) {
+      ctx.font = '9px ' + this.MONO; ctx.fillStyle = C.faint;
+      ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+      const step = Math.max(1, cfg.tickStep || 1);
+      for (let i = 0; i < nP; i += step) {
+        const lab = cfg.tickLabel(i);
+        if (lab != null) ctx.fillText(lab, xOf(i), botY + 12);
+      }
+      ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+    }
+
+    M.scrubGeo = { x0: padL, x1: chartR - 20, y0: (cfg.ribbon ? ribY - 6 : padT - 6), y1: botY };
+
+    if (cfg.overlay) cfg.overlay(g);
+
+    // ---- the verbatim feed: what actually registered on those pens ----
+    const fd = cfg.feed || {};
+    const fx = chartR + 8, fw = W - fx - 16;
+    M.fragRects = this.drawFragmentFeed(ctx,
+      { fx, fy: padT + (fd.dy != null ? fd.dy : -30), fw, fh: H - padT + (fd.dh != null ? fd.dh : -28) },
+      cfg.frags, M.play, cfg.feedTitle, cfg.accent);
+    return g;
+  }
+
+  // Tag each fragment with the colour of the pen that was loudest at its
+  // position, so the feed attributes the record to a frequency rather than
+  // colouring everything with the instrument accent.
+  penAttributeFrags(frags, pens, rates, maxRate) {
+    for (const f of frags) {
+      const i = Math.max(0, Math.round(f.pos));
+      let best = null, bv = -1;
+      for (const pen of pens) {
+        const k = pen[0], col = pen[2];
+        const arr = rates[k];
+        if (!arr || i >= arr.length) continue;
+        const v = arr[i] / (maxRate[k] || 1);
+        if (v > bv) { bv = v; best = col; }
+      }
+      if (best) f.pen = best;
+    }
+    return frags;
+  }
+
+  // Shared scrub/click handling for pen instruments. Returns 'click' when the
+  // pointer went down and up in the same spot, so the caller can decide what
+  // that means (which page to open); scrubbing is handled here outright.
+  penScrub(id, type, p) {
+    const M = this.M[id];
+    if (!M || !M.scrubGeo) return null;
+    const g = M.scrubGeo;
+    const at = (x) => Math.max(0.001, Math.min(M.nP - 0.01, ((x - g.x0) / (g.x1 - g.x0)) * (M.nP - 1)));
+    const inChart = p.x >= g.x0 - 20 && p.x <= g.x1 + 20 && p.y >= g.y0 && p.y <= g.y1;
+    if (type === 'down' && inChart) {
+      M.downPos = { x: p.x, y: p.y };
+      M.scrub = true;
+      M.play = at(p.x);
+    } else if (type === 'move' && M.scrub && this.mouse.down) {
+      M.play = at(p.x);
+    } else if (type === 'up' || type === 'leave') {
+      const moved = M.downPos ? Math.hypot(p.x - M.downPos.x, p.y - M.downPos.y) : 99;
+      M.scrub = false; M.downPos = null;
+      if (type === 'up' && moved < 4) return 'click';
+    }
+    return null;
   }
 
   // ============================================================
@@ -3746,6 +3905,7 @@ class Component extends DCLogic {
       tag: f.week + (f.type === 'high_signal' ? ' · HIGH SIGNAL' : ''),
       shownAt: 0
     })).filter(f => f.pos >= 0 && f.pos < nW + 1).sort((a, b) => a.pos - b.pos);
+    this.penAttributeFrags(frags, this.WPENS, rate, maxRate);
     // high-volatility days → lightning markers
     const an = wx.analysis || {};
     const bolts = (an.high_volatility_weather_days || []).map(d => ({
@@ -3993,6 +4153,7 @@ class Component extends DCLogic {
       pos: (mIdx(f.day.slice(0, 7)) - m0) + (+f.day.slice(8, 10) - 1) / 30.5,
       text: f.text, tag: f.day, shownAt: 0
     })).filter(f => f.pos >= 0 && f.pos < nM).sort((a, b) => a.pos - b.pos);
+    this.penAttributeFrags(frags, this.OPENS, rates, maxRate);
     const monthLabel = (i) => { const y = Math.floor((m0 + i) / 12), mo = (m0 + i) % 12; return y + '-' + String(mo + 1).padStart(2, '0'); };
     this.M.oracle = { nM, m0, rates, maxRate, vol, maxVol, frags, monthLabel, play: 0.001, scrub: false, scrubGeo: null };
   }
@@ -4152,6 +4313,7 @@ class Component extends DCLogic {
       pos: (mIdx(f.day.slice(0, 7)) - m0) + (+f.day.slice(8, 10) - 1) / 30.5,
       text: f.text, tag: f.day, shownAt: 0
     })).filter(f => f.pos >= 0 && f.pos < nM).sort((a, b) => a.pos - b.pos);
+    this.penAttributeFrags(frags, [['imp', 'COMMAND', this.COL.amber], ['qual', 'HEDGE', this.COL.cyan]], rates, maxRate);
     const monthLabel = (i) => { const y = Math.floor((m0 + i) / 12), mo = (m0 + i) % 12; return y + '-' + String(mo + 1).padStart(2, '0'); };
     this.M.authority = { nM, m0, rates, maxRate, bal, maxBal, vol, maxVol, frags, monthLabel, play: 0.001, scrub: false, scrubGeo: null };
   }
@@ -4250,7 +4412,7 @@ class Component extends DCLogic {
   renderVals() {
     const s = this.state, C = this.COL;
     const tabDefs = s.section === 'wiki'
-      ? [['reader', 'READER'], ['web', 'WEB'], ['claims', 'CLAIMS'], ['census', 'CENSUS'], ['strata', 'STRATA'], ['accrete', 'ACCRETION'], ['tagmap', 'TAGS'], ['mass', 'MASS'], ['lattice', 'HEALTH'], ['evidence', 'EVIDENCE'], ['chronicle', 'CHRONICLE'], ['genesis', 'GENESIS'], ['episteme', 'EPISTEME'], ['attention', 'ATTENTION'], ['diction', 'DICTION'], ['schema', 'SCHEMA'], ['echo', 'ECHO']]
+      ? [['reader', 'READER'], ['web', 'WEB'], ['claims', 'CLAIMS'], ['census', 'CENSUS'], ['strata', 'STRATA'], ['accrete', 'ACCRETION'], ['tagmap', 'TAGS'], ['mass', 'MASS'], ['lattice', 'HEALTH'], ['evidence', 'EVIDENCE'], ['chronicle', 'CHRONICLE'], ['genesis', 'GENESIS'], ['episteme', 'EPISTEME'], ['crucible', 'CRUCIBLE'], ['attention', 'ATTENTION'], ['diction', 'DICTION'], ['schema', 'SCHEMA'], ['echo', 'ECHO']]
       : [['pulse', 'PULSE'], ['clock', 'CLOCK'], ['orbits', 'ORBITS'], ['atlas', 'ATLAS'], ['lexicon', 'LEXICON'], ['shelf', 'SHELF'], ['weather', 'WEATHER'], ['annie', 'POLYGRAPH'], ['signal', 'SIGNAL'], ['mirror', 'MIRROR'], ['gravity', 'GRAVITY'], ['forensic', 'FORENSIC'], ['rings', 'RINGS'], ['silence', 'SILENCE'], ['psyche', 'PSYCHE'], ['sync', 'SYNC'], ['drift', 'DRIFT'], ['oracle', 'ORACLE'], ['authority', 'AUTHORITY']];
     const ACC = s.section === 'wiki' ? C.violet : C.amber;
     const tabs = tabDefs.map(([id, label], i) => ({

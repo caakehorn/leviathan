@@ -48,7 +48,8 @@
       attention: 'WORDS WRITTEN ABOUT A SUBJECT vs. THE SIZE OF ITS OWN PAGE · ABOVE THE LINE = DOCUMENTATION DEBT · CLICK ANY DOT OR DEBT ROW TO READ',
       diction: 'EACH DOMAIN’S PRIVATE VOCABULARY, BY TF-IDF · HOVER A TERM FOR THE PAGES THAT CONCENTRATE IT · CLICK A PAGE TO READ',
       schema: 'METADATA CONFORMANCE · PAGE TYPE × FIELD COVERAGE · HOVER A CELL · CLICK IT TO LIST THE PAGES MISSING THAT FIELD',
-      echo: 'WHERE THE WIKI REPEATS ITSELF · EVERY PAGE AGAINST EVERY OTHER, BY PROSE SIMILARITY · HOVER A CELL · CLICK AN ECHO TO READ'
+      echo: 'WHERE THE WIKI REPEATS ITSELF · EVERY PAGE AGAINST EVERY OTHER, BY PROSE SIMILARITY · HOVER A CELL · CLICK AN ECHO TO READ',
+      crucible: 'WHERE THE RECORD DISAGREES WITH ITSELF · EVERY CONTRADICTS EDGE, VERBATIM · GREEN = LATER RESOLVED · PRESS ▶ · CLICK EITHER SIDE TO READ'
     },
 
     // chips for the second-wave tabs · returns null when the tab isn't ours
@@ -67,24 +68,73 @@
         ];
       }
       if (s.tab === 'attention') {
-        return [{ label: 'ALL', onClick: () => this.setState({ attentionDom: 'ALL' }), style: cs(s.attentionDom === 'ALL') },
-          ...this.WDOMS.map(d => ({ label: d.toUpperCase(), onClick: () => this.setState({ attentionDom: d }), style: cs(s.attentionDom === d, this.WCOL[d]) }))];
+        const pen = s.attentionView === 'pen';
+        return [
+          ...[['scatter', '\u25cc SCATTER'], ['pen', '\u2712 PENS']].map(([id, l]) => ({
+            label: l, onClick: () => this.setState({ attentionView: id }), style: cs(s.attentionView === id, '#e0aaff')
+          })),
+          ...(pen ? [
+            { label: s.attentionPlay ? '\u275a\u275a PAUSE' : '\u25b6 PLAY', onClick: () => this.setState(st => ({ attentionPlay: !st.attentionPlay })), style: cs(s.attentionPlay, '#39ff14') },
+            { label: '\u21ba RESTART', onClick: () => this.attentionRestart(), style: cs(false) },
+            ...[[1, 'SLOW'], [4, 'NORMAL'], [12, 'FAST']].map(([v, l]) => ({
+              label: l, onClick: () => this.setState({ attentionSpeed: v }), style: cs(s.attentionSpeed === v, '#39ff14')
+            }))
+          ] : []),
+          { label: 'ALL', onClick: () => { this.setState({ attentionDom: 'ALL' }); this.M.attentionPen = null; }, style: cs(s.attentionDom === 'ALL') },
+          ...this.WDOMS.map(d => ({ label: d.toUpperCase(), onClick: () => { this.setState({ attentionDom: d }); this.M.attentionPen = null; }, style: cs(s.attentionDom === d, this.WCOL[d]) }))
+        ];
       }
       if (s.tab === 'diction') {
-        return this.WDOMS.map(d => ({
-          label: d.toUpperCase(), onClick: () => { this.setState({ dictionDom: d }); if (this.M.diction) this.M.diction.hover = null; },
-          style: cs(s.dictionDom === d, this.WCOL[d])
-        }));
+        const pen = s.dictionView === 'pen';
+        return [
+          ...[['bars', '\u2261 BARS'], ['pen', '\u2712 PENS']].map(([id, l]) => ({
+            label: l, onClick: () => { this.setState({ dictionView: id }); this.M.dictionPen = null; }, style: cs(s.dictionView === id, '#e0aaff')
+          })),
+          ...(pen ? [
+            { label: s.dictionPlay ? '\u275a\u275a PAUSE' : '\u25b6 PLAY', onClick: () => this.setState(st => ({ dictionPlay: !st.dictionPlay })), style: cs(s.dictionPlay, '#39ff14') },
+            { label: '\u21ba RESTART', onClick: () => this.dictionRestart(), style: cs(false) },
+            ...[[0.6, 'SLOW'], [2, 'NORMAL'], [6, 'FAST']].map(([v, l]) => ({
+              label: l, onClick: () => this.setState({ dictionSpeed: v }), style: cs(s.dictionSpeed === v, '#39ff14')
+            }))
+          ] : []),
+          ...this.WDOMS.map(d => ({
+            label: d.toUpperCase(), onClick: () => { this.setState({ dictionDom: d }); if (this.M.diction) this.M.diction.hover = null; this.M.dictionPen = null; },
+            style: cs(s.dictionDom === d, this.WCOL[d])
+          }))
+        ];
       }
       if (s.tab === 'schema') {
         return [['core', 'CORE FIELDS'], ['box', 'INFOBOX FIELDS'], ['all', 'ALL']].map(([id, l]) => ({
           label: l, onClick: () => { this.setState({ schemaMode: id }); if (this.M.schema) this.M.schema.pinned = null; }, style: cs(s.schemaMode === id, '#00ffa3')
         }));
       }
+      if (s.tab === 'crucible') {
+        return [
+          { label: s.cruciblePlay ? '❚❚ PAUSE' : '▶ PLAY', onClick: () => this.setState(st => ({ cruciblePlay: !st.cruciblePlay })), style: cs(s.cruciblePlay, this.WTCOL.contradicts) },
+          { label: '↺ RESTART', onClick: () => this.crucibleRestart(), style: cs(false) },
+          ...[[1, 'SLOW'], [3, 'NORMAL'], [8, 'FAST']].map(([v, l]) => ({
+            label: l, onClick: () => this.setState({ crucibleSpeed: v }), style: cs(s.crucibleSpeed === v, this.WTCOL.contradicts)
+          })),
+          ...[['all', 'ALL'], ['unresolved', 'UNRESOLVED'], ['healed', 'HEALED']].map(([id, l]) => ({
+            label: l,
+            onClick: () => { this.setState({ crucibleFilter: id }); this.M.crucible = null; },
+            style: cs(s.crucibleFilter === id, id === 'healed' ? this.WTCOL.resolves : this.WTCOL.contradicts)
+          }))
+        ];
+      }
       if (s.tab === 'echo') {
-        return [[0.12, 'FAINT ≥ .12'], [0.25, 'CLEAR ≥ .25'], [0.45, 'LOUD ≥ .45']].map(([v, l]) => ({
+        const chips = [[0.12, 'FAINT ≥ .12'], [0.25, 'CLEAR ≥ .25'], [0.45, 'LOUD ≥ .45']].map(([v, l]) => ({
           label: l, onClick: () => { this.setState({ echoMin: v }); if (this.M.echo) this.M.echo.bmpFor = -1; }, style: cs(s.echoMin === v, '#39ff14')
         }));
+        // duplicate detection is a maintenance superpower on a 343-page corpus,
+        // and it was one line of data away — promote it to a standing alert
+        const n = this.M.echo ? this.M.echo.dupes.length : 0;
+        if (n) chips.push({
+          label: '⚠ ' + n + ' NEAR-DUPLICATE' + (n === 1 ? '' : 'S'),
+          onClick: () => { this.echoJumpDupe(); },
+          style: cs(true, this.WTCOL.contradicts)
+        });
+        return chips;
       }
       return null;
     },
@@ -144,10 +194,19 @@
         const c = (t.match(CERT_RE) || []).length;
         const n = (t.match(NEG_RE) || []).length;
         const q = (t.match(/\?/g) || []).length;
+        // volatility: how much the page swings between asserting and hedging
+        // from sentence to sentence, rather than its net position
+        const sents = this.wkSentences(p.id);
+        let vol = 0;
+        if (sents.length > 2) {
+          const sw = sents.map(sn => (sn.match(CERT_RE) || []).length - (sn.match(HEDGE_RE) || []).length);
+          const mean = sw.reduce((x, y) => x + y, 0) / sw.length;
+          vol = Math.sqrt(sw.reduce((x, y) => x + (y - mean) * (y - mean), 0) / sw.length);
+        }
         rows.push({
           p, w,
           hedge: h / w * 1000, cert: c / w * 1000, neg: n / w * 1000, quer: q / w * 1000,
-          rawH: h, rawC: c,
+          rawH: h, rawC: c, vol,
           idx: (c - h) / w * 1000 // + = asserts, − = hedges
         });
       }
@@ -169,24 +228,48 @@
       for (let i = 0; i < nP; i++) { vol[i] = rows[i].w; maxVol = Math.max(maxVol, rows[i].w); }
 
       // fragment feed — the single most epistemically loaded sentence per page,
-      // with declared CONTRADICTION callouts winning outright
+      // with declared CONTRADICTION callouts winning outright. Each fragment
+      // records WHICH pen it lit, so the feed can colour the attribution and
+      // the reader can see that this sentence is what spiked that frequency.
+      const PEN_COL = {};
+      for (const [k, , col] of this.EP_PENS) PEN_COL[k] = col;
       const frags = [];
       rows.forEach((r, i) => {
         const sents = this.wkSentences(r.p.id);
         if (!sents.length) return;
-        let best = null, bestScore = 0;
+        let best = null, bestScore = 0, bestPen = 'cert';
         for (const s of sents) {
+          const h = (s.match(HEDGE_RE) || []).length;
+          const c = (s.match(CERT_RE) || []).length;
+          const n = (s.match(NEG_RE) || []).length;
+          const q = (s.match(/\?/g) || []).length;
           const contra = /CONTRADICTION/i.test(s) ? 6 : 0;
-          const sc = contra + (s.match(HEDGE_RE) || []).length * 2 + (s.match(CERT_RE) || []).length * 2 + (s.match(/\?/g) || []).length;
-          if (sc > bestScore) { bestScore = sc; best = s; }
+          const sc = contra + h * 2 + c * 2 + q;
+          if (sc > bestScore) {
+            bestScore = sc; best = s;
+            // attribute to the strongest signal in the winning sentence
+            const rank = [['hedge', h * 2], ['cert', c * 2], ['neg', n], ['quer', q * 2 + contra]];
+            rank.sort((a, b) => b[1] - a[1]);
+            bestPen = rank[0][1] > 0 ? rank[0][0] : 'cert';
+          }
         }
-        if (best && bestScore >= 2) frags.push({ pos: i, text: best, tag: r.p.title.slice(0, 38), shownAt: 0, id: r.p.id });
+        if (best && bestScore >= 2) {
+          frags.push({
+            pos: i, text: best, tag: r.p.title.slice(0, 38), shownAt: 0,
+            id: r.p.id, pen: PEN_COL[bestPen]
+          });
+        }
       });
+
+      const volSeries = new Float32Array(nP);
+      let maxVolat = 0.001;
+      rows.forEach((r, i) => { volSeries[i] = r.vol || 0; if (volSeries[i] > maxVolat) maxVolat = volSeries[i]; });
 
       const hedged = rows.filter(r => r.idx < 0).length;
       const asserted = rows.filter(r => r.idx > 0).length;
       this.M.episteme = {
         rows, nP, series, maxRate, vol, maxVol, frags, order, hedged, asserted,
+        volSeries, maxVolat,
         play: 0.001, scrub: false, scrubGeo: null, hover: -1
       };
     },
@@ -198,111 +281,92 @@
     draw_episteme(ctx, W, H, dt) {
       if (!this.WK) return this.wkStandby(ctx, W, H);
       if (!this.M.episteme || this.M.episteme.order !== this.state.epistemeOrder) this.initEpisteme();
-      const C = this.COL, E = this.M.episteme, st = this.state;
+      const C = this.COL, E = this.M.episteme;
       if (!E.nP) { ctx.font = '11px ' + this.MONO; ctx.fillStyle = C.dim; ctx.textAlign = 'center'; ctx.fillText('NOT ENOUGH PROSE', W / 2, H / 2); return; }
-      if (st.epistemePlay && !E.scrub) {
-        E.play += st.epistemeSpeed * dt;
-        if (E.play >= E.nP - 0.01) { E.play = E.nP - 0.01; this.setState({ epistemePlay: false }); }
-      }
-      const chartR = W * 0.62, fx = chartR + 8, fw = W - fx - 16;
-      const padL = 118, padT = 74, padB = 66;
-      const laneGap = 9;
-      const nLanes = this.EP_PENS.length + 1;
-      const laneH = (H - padT - padB - laneGap * (nLanes - 1)) / nLanes;
-      const xOf = (i) => padL + (i / Math.max(1, E.nP - 1)) * (chartR - padL - 20);
-      const geo = { padL, padT, laneH, laneGap, x0: padL, x1: chartR - 20, xOf };
-      const vy0 = padT + this.EP_PENS.length * (laneH + laneGap);
-      const playX = xOf(E.play);
+      const ordLabel = E.order === 'certainty' ? 'RANKED HEDGED \u2192 ASSERTED' : E.order === 'size' ? 'RANKED LARGEST \u2192 SMALLEST' : 'GROUPED BY DOMAIN';
 
-      // domain ribbon — which part of the wiki the needle is over
-      const ribY = padT - 16;
-      for (let i = 0; i < E.nP; i++) {
-        ctx.fillStyle = hx(this.WCOL[E.rows[i].p.domain] || '#8fa878', i <= E.play ? 0.85 : 0.22);
-        ctx.fillRect(xOf(i), ribY, Math.max(1.2, (chartR - padL - 20) / E.nP + 0.6), 8);
-      }
+      this.penInstrument(ctx, W, H, dt, {
+        id: 'episteme', accent: '#cfa8ff', title: 'EPISTEME',
+        sub: E.nP + ' PAGES \u00b7 ' + E.hedged + ' HEDGE MORE THAN THEY ASSERT, ' + E.asserted + ' THE REVERSE \u00b7 ' + ordLabel,
+        nP: E.nP, padL: 118, padT: 74, padB: 66, laneGap: 9,
+        lanes: this.EP_PENS.map(([k, label, col]) => ({
+          data: E.series[k], label, unit: '/1K WORDS', color: col, max: E.maxRate[k]
+        })),
+        volume: { data: E.vol, max: E.maxVol, color: '#7b2dff' },
+        frags: E.frags,
+        feedTitle: 'THE RECORD HEDGING AND ASSERTING \u00b7 VERBATIM',
+        feed: { dy: -30, dh: -28 },
+        // which region of the wiki the needle is over
+        ribbon: (i, past) => hx(this.WCOL[E.rows[i].p.domain] || '#8fa878', past ? 0.85 : 0.22),
+        tickStep: Math.max(1, Math.ceil(E.nP / 8)),
+        tickLabel: (i) => '#' + (i + 1),
 
-      ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
-      ctx.font = '700 17px ' + this.GROT; ctx.fillStyle = '#cfa8ff';
-      ctx.fillText('EPISTEME', 18, 32);
-      ctx.font = '9px ' + this.MONO; ctx.fillStyle = C.dim;
-      const ordLabel = E.order === 'certainty' ? 'RANKED HEDGED → ASSERTED' : E.order === 'size' ? 'RANKED LARGEST → SMALLEST' : 'GROUPED BY DOMAIN';
-      ctx.fillText(E.nP + ' PAGES · ' + E.hedged + ' HEDGE MORE THAN THEY ASSERT, ' + E.asserted + ' THE REVERSE · ' + ordLabel, 18, 48);
+        readout: (g) => {
+          const cur = E.rows[Math.min(E.nP - 1, Math.floor(E.play))];
+          ctx.font = '600 12px ' + this.MONO; ctx.fillStyle = C.txt; ctx.textAlign = 'right';
+          ctx.fillText(cur.p.title.slice(0, 34).toUpperCase(), g.chartR - 20, 30);
+          ctx.font = '9px ' + this.MONO;
+          ctx.fillStyle = cur.idx >= 0 ? '#00ffa3' : '#b026ff';
+          ctx.fillText((cur.idx >= 0 ? 'ASSERTS +' : 'HEDGES ') + cur.idx.toFixed(1) + '  \u00b7  ' + this.fmt(cur.w) + ' WORDS', g.chartR - 20, 46);
+          ctx.textAlign = 'left';
+        },
 
-      const cur = E.rows[Math.min(E.nP - 1, Math.floor(E.play))];
-      ctx.font = '600 12px ' + this.MONO; ctx.fillStyle = C.txt; ctx.textAlign = 'right';
-      ctx.fillText(cur.p.title.slice(0, 34).toUpperCase(), chartR - 20, 30);
-      ctx.font = '9px ' + this.MONO;
-      ctx.fillStyle = cur.idx >= 0 ? '#00ffa3' : '#b026ff';
-      ctx.fillText((cur.idx >= 0 ? 'ASSERTS +' : 'HEDGES ') + cur.idx.toFixed(1) + '  ·  ' + this.fmt(cur.w) + ' WORDS', chartR - 20, 46);
-      ctx.textAlign = 'left';
-
-      const lanes = this.EP_PENS.map(([k, label, col]) => ({
-        data: E.series[k], label, unit: '/1K WORDS', color: col, max: E.maxRate[k]
-      }));
-      this.drawPenLanes(ctx, geo, lanes, E.play, st.epistemePlay);
-      this.drawVolumeLane(ctx, geo, vy0, E.vol, E.maxVol, E.play, '#7b2dff');
-
-      // needle
-      ctx.strokeStyle = 'rgba(232,230,225,0.5)'; ctx.lineWidth = 1;
-      ctx.beginPath(); ctx.moveTo(playX, ribY - 4); ctx.lineTo(playX, vy0 + laneH + 8); ctx.stroke();
-
-      // the zero-crossing — where the corpus stops hedging and starts asserting
-      if (E.order === 'certainty') {
-        let zi = E.rows.findIndex(r => r.idx >= 0);
-        if (zi > 0) {
-          const zx = xOf(zi);
+        // volatility band: pages that oscillate between certainty and doubt
+        // glow behind the pens, ahead of the zero-crossing marker
+        marker: (g) => {
+          const bw = Math.max(1.2, (g.chartR - g.padL - 20) / E.nP + 0.6);
+          for (let i = 0; i < E.nP; i++) {
+            const t = E.volSeries[i] / E.maxVolat;
+            if (t < 0.12) continue;
+            ctx.fillStyle = hx('#e0aaff', 0.05 + t * 0.16);
+            ctx.fillRect(g.xOf(i), g.padT, bw, g.botY - g.padT);
+          }
+          if (E.order !== 'certainty') return;
+          const zi = E.rows.findIndex(r => r.idx >= 0);
+          if (zi <= 0) return;
+          const zx = g.xOf(zi);
           ctx.strokeStyle = 'rgba(232,230,225,0.28)'; ctx.setLineDash([3, 4]);
-          ctx.beginPath(); ctx.moveTo(zx, padT); ctx.lineTo(zx, vy0 + laneH); ctx.stroke();
+          ctx.beginPath(); ctx.moveTo(zx, g.padT); ctx.lineTo(zx, g.botY); ctx.stroke();
           ctx.setLineDash([]);
           ctx.font = '8px ' + this.MONO; ctx.fillStyle = 'rgba(232,230,225,0.45)';
-          ctx.textAlign = 'center'; ctx.fillText('HEDGES ← | → ASSERTS', zx, vy0 + laneH + 24);
+          ctx.textAlign = 'center'; ctx.fillText('HEDGES \u2190 | \u2192 ASSERTS', zx, g.botY + 24);
           ctx.textAlign = 'left';
+        },
+
+        overlay: (g) => {
+          E.hover = -1;
+          const mx = this.mouse.x, my = this.mouse.y;
+          if (mx >= g.padL - 6 && mx <= g.chartR - 14 && my >= g.ribY - 6 && my <= g.botY + 6) {
+            E.hover = Math.max(0, Math.min(E.nP - 1, Math.round(((mx - g.padL) / (g.chartR - g.padL - 20)) * (E.nP - 1))));
+          }
+          if (E.hover >= 0) {
+            const r = E.rows[E.hover];
+            ctx.strokeStyle = 'rgba(232,230,225,0.22)'; ctx.setLineDash([2, 4]);
+            ctx.beginPath(); ctx.moveTo(g.xOf(E.hover), g.padT); ctx.lineTo(g.xOf(E.hover), g.botY); ctx.stroke();
+            ctx.setLineDash([]);
+            this.card(ctx, mx, my, [
+              [r.p.title.slice(0, 40), C.txt, '600 12px ' + this.GROT],
+              [r.p.domain.toUpperCase() + ' \u00b7 #' + (E.hover + 1) + ' OF ' + E.nP + ' \u00b7 ' + this.fmt(r.w) + ' WORDS', this.WCOL[r.p.domain] || C.dim],
+              ['HEDGE ' + r.hedge.toFixed(1) + '  \u00b7  ASSERT ' + r.cert.toFixed(1), '#b026ff'],
+              ['NEGATE ' + r.neg.toFixed(1) + '  \u00b7  QUESTIONS ' + r.quer.toFixed(1), '#e01aff'],
+              ['VOLATILITY ' + (r.vol || 0).toFixed(2) + ' \u00b7 ' + ((r.vol || 0) > E.maxVolat * 0.5 ? 'SWINGS' : 'STEADY'), '#e0aaff', '9px ' + this.MONO],
+              [r.idx >= 0 ? '\u25b2 ASSERTS MORE THAN IT HEDGES' : '\u25bc HEDGES MORE THAN IT ASSERTS', r.idx >= 0 ? '#00ffa3' : '#b026ff', '9px ' + this.MONO],
+              ['CLICK TO READ THE PAGE', C.dim, '8.5px ' + this.MONO]
+            ]);
+          }
+          if (this.cv) this.cv.style.cursor = E.hover >= 0 ? 'pointer' : 'crosshair';
         }
-      }
-      ctx.font = '9px ' + this.MONO; ctx.fillStyle = C.faint; ctx.textAlign = 'center'; ctx.textBaseline = 'top';
-      for (let i = 0; i < E.nP; i += Math.max(1, Math.ceil(E.nP / 8))) ctx.fillText('#' + (i + 1), xOf(i), vy0 + laneH + 12);
-      E.scrubGeo = { x0: padL, x1: chartR - 20, y0: ribY - 6, y1: vy0 + laneH };
-
-      // hover a page column
-      E.hover = -1;
-      const mx = this.mouse.x, my = this.mouse.y;
-      if (mx >= padL - 6 && mx <= chartR - 14 && my >= ribY - 6 && my <= vy0 + laneH + 6) {
-        E.hover = Math.max(0, Math.min(E.nP - 1, Math.round(((mx - padL) / (chartR - padL - 20)) * (E.nP - 1))));
-      }
-      if (E.hover >= 0) {
-        const r = E.rows[E.hover];
-        ctx.strokeStyle = 'rgba(232,230,225,0.22)'; ctx.setLineDash([2, 4]);
-        ctx.beginPath(); ctx.moveTo(xOf(E.hover), padT); ctx.lineTo(xOf(E.hover), vy0 + laneH); ctx.stroke();
-        ctx.setLineDash([]);
-        this.card(ctx, mx, my, [
-          [r.p.title.slice(0, 40), C.txt, '600 12px ' + this.GROT],
-          [r.p.domain.toUpperCase() + ' · #' + (E.hover + 1) + ' OF ' + E.nP + ' · ' + this.fmt(r.w) + ' WORDS', this.WCOL[r.p.domain] || C.dim],
-          ['HEDGE ' + r.hedge.toFixed(1) + '  ·  ASSERT ' + r.cert.toFixed(1), '#b026ff'],
-          ['NEGATE ' + r.neg.toFixed(1) + '  ·  QUESTIONS ' + r.quer.toFixed(1), '#e01aff'],
-          [r.idx >= 0 ? '▲ ASSERTS MORE THAN IT HEDGES' : '▼ HEDGES MORE THAN IT ASSERTS', r.idx >= 0 ? '#00ffa3' : '#b026ff', '9px ' + this.MONO],
-          ['CLICK TO READ THE PAGE', C.dim, '8.5px ' + this.MONO]
-        ]);
-      }
-      if (this.cv) this.cv.style.cursor = E.hover >= 0 ? 'pointer' : 'crosshair';
-
-      this.drawFragmentFeed(ctx, { fx, fy: padT - 30, fw, fh: H - padT - 28 }, E.frags, E.play,
-        'THE RECORD HEDGING AND ASSERTING · VERBATIM', '#cfa8ff');
+      });
     },
     pt_episteme(type, p) {
-      const E = this.M.episteme; if (!E || !E.scrubGeo) return;
-      const g = E.scrubGeo;
-      const inChart = p.x >= g.x0 - 20 && p.x <= g.x1 + 20 && p.y >= g.y0 && p.y <= g.y1;
-      if (type === 'down' && inChart) {
-        E.downPos = { x: p.x, y: p.y };
-        E.scrub = true;
-        E.play = Math.max(0.001, Math.min(E.nP - 0.01, ((p.x - g.x0) / (g.x1 - g.x0)) * (E.nP - 1)));
-      } else if (type === 'move' && E.scrub && this.mouse.down) {
-        E.play = Math.max(0.001, Math.min(E.nP - 0.01, ((p.x - g.x0) / (g.x1 - g.x0)) * (E.nP - 1)));
-      } else if (type === 'up' || type === 'leave') {
-        const moved = E.downPos ? Math.hypot(p.x - E.downPos.x, p.y - E.downPos.y) : 99;
-        if (type === 'up' && moved < 4 && E.hover >= 0) this.wikiOpen(E.rows[E.hover].p.id);
-        E.scrub = false; E.downPos = null;
+      const E = this.M.episteme; if (!E) return;
+      // a fragment row is the most compelling thing on screen — let it be the
+      // thing you click, ahead of the column underneath the cursor
+      if (type === 'down') {
+        const hit = (E.fragRects || []).find(r => p.x >= r.x && p.x <= r.x + r.w && p.y >= r.y && p.y <= r.y + r.h);
+        if (hit) { this.wikiOpen(hit.id); return; }
       }
+      if (this.penScrub('episteme', type, p) === 'click' && E.hover >= 0) this.wikiOpen(E.rows[E.hover].p.id);
     },
 
     // ============================================================
@@ -355,8 +419,117 @@
       const debts = items.filter(i => i.mentions >= 20).sort((a, b) => b.debt - a.debt).slice(0, 14);
       this.M.attention = { items, maxOwn, maxMen, maxDocs, debts, hover: null, pinned: null, rowHits: [], reveal: 0 };
     },
+    // PEN MODE — the playhead sweeps subjects ranked by documentation debt and
+    // the sidebar surfaces the actual sentences in which other pages name them.
+    initAttentionPen() {
+      if (!this.M.attention) this.initAttention();
+      const A = this.M.attention, dom = this.state.attentionDom;
+      const rows = A.items
+        .filter(it => (dom === 'ALL' || it.p.domain === dom) && it.mentions > 0)
+        .sort((x, y) => y.debt - x.debt);
+      const nP = rows.length;
+      const mentions = new Float32Array(nP), own = new Float32Array(nP), docs = new Float32Array(nP);
+      const vol = new Float32Array(nP);
+      let mMax = 0.001, oMax = 0.001, dMax = 0.001, vMax = 1;
+      rows.forEach((it, i) => {
+        // rate, not raw count: mentions per 1,000 words the page itself carries
+        mentions[i] = it.mentions / Math.max(1, it.own) * 1000;
+        own[i] = it.own;
+        docs[i] = it.docs;
+        vol[i] = it.mentions;
+        if (mentions[i] > mMax) mMax = mentions[i];
+        if (own[i] > oMax) oMax = own[i];
+        if (docs[i] > dMax) dMax = docs[i];
+        if (vol[i] > vMax) vMax = vol[i];
+      });
+      // the naming sentences themselves — one per documenting page, in order
+      const frags = [];
+      rows.forEach((it, i) => {
+        const keys = [it.p.title, ...(it.p.aliases || [])]
+          .filter(k => k && k.length >= 4).map(k => k.toLowerCase());
+        let taken = 0;
+        for (const f of it.from.slice(0, 3)) {
+          const sent = this.wkSentences(f.p.id)
+            .find(sn => keys.some(k => sn.toLowerCase().includes(k)));
+          if (!sent) continue;
+          frags.push({
+            pos: i + Math.min(0.9, taken * 0.2), text: sent,
+            tag: '\u2190 ' + f.c + '\u00d7 in ' + f.p.title.slice(0, 30),
+            shownAt: 0, pen: this.WCOL[f.p.domain] || '#e0aaff', id: f.p.id
+          });
+          taken++;
+        }
+      });
+      frags.sort((x, y) => x.pos - y.pos);
+      this.M.attentionPen = {
+        rows, nP, mentions, own, docs, vol, mMax, oMax, dMax, vMax, frags, dom,
+        play: 0.001, scrub: false, scrubGeo: null, hover: -1
+      };
+    },
+    attentionRestart() {
+      const P = this.M.attentionPen; if (!P) return;
+      P.play = 0.001; for (const f of P.frags) f.shownAt = 0;
+      this.setState({ attentionPlay: true });
+    },
+    draw_attentionPen(ctx, W, H, dt) {
+      if (!this.M.attentionPen || this.M.attentionPen.dom !== this.state.attentionDom) this.initAttentionPen();
+      const C = this.COL, P = this.M.attentionPen;
+      if (!P.nP) {
+        ctx.font = '11px ' + this.MONO; ctx.fillStyle = C.dim; ctx.textAlign = 'center';
+        ctx.fillText('NOTHING IS NAMED IN THIS DOMAIN', W / 2, H / 2); ctx.textAlign = 'left'; return;
+      }
+      this.penInstrument(ctx, W, H, dt, {
+        id: 'attentionPen', stateKey: 'attention', accent: '#39ff14', title: 'ATTENTION',
+        sub: P.nP + ' NAMED SUBJECTS \u00b7 RANKED BY DOCUMENTATION DEBT \u00b7 MOST DISCUSSED PER OWN WORD FIRST',
+        nP: P.nP, padL: 118, padT: 74, padB: 66, laneGap: 9,
+        lanes: [
+          { data: P.mentions, label: 'NAMED', unit: '/1K OWN WORDS', color: '#39ff14', max: P.mMax },
+          { data: P.own, label: 'OWN SIZE', unit: 'WORDS', color: '#b026ff', max: P.oMax },
+          { data: P.docs, label: 'DOCUMENTERS', unit: 'PAGES', color: '#ccff00', max: P.dMax }
+        ],
+        volume: { data: P.vol, max: P.vMax, color: '#7b2dff' },
+        frags: P.frags,
+        feedTitle: 'THE SENTENCES THAT NAME THEM \u00b7 VERBATIM',
+        feed: { dy: -30, dh: -28 },
+        ribbon: (i, past) => hx(this.WCOL[P.rows[i].p.domain] || '#8fa878', past ? 0.85 : 0.22),
+        tickStep: Math.max(1, Math.ceil(P.nP / 8)),
+        tickLabel: (i) => '#' + (i + 1),
+        readout: (g) => {
+          const it = P.rows[Math.min(P.nP - 1, Math.floor(P.play))];
+          ctx.font = '600 12px ' + this.MONO; ctx.fillStyle = C.txt; ctx.textAlign = 'right';
+          ctx.fillText(it.p.title.slice(0, 34).toUpperCase(), g.chartR - 20, 30);
+          ctx.font = '9px ' + this.MONO; ctx.fillStyle = '#39ff14';
+          ctx.fillText(it.mentions + ' MENTIONS \u00b7 ' + this.fmt(it.own) + ' OWN WORDS \u00b7 ' + it.docs + ' PAGES', g.chartR - 20, 46);
+          ctx.textAlign = 'left';
+        },
+        overlay: (g) => {
+          P.hover = -1;
+          const mx = this.mouse.x, my = this.mouse.y;
+          if (mx >= g.padL - 6 && mx <= g.chartR - 14 && my >= g.ribY - 6 && my <= g.botY + 6) {
+            P.hover = Math.max(0, Math.min(P.nP - 1, Math.round(((mx - g.padL) / (g.chartR - g.padL - 20)) * (P.nP - 1))));
+          }
+          if (P.hover >= 0) {
+            const it = P.rows[P.hover];
+            ctx.strokeStyle = 'rgba(232,230,225,0.22)'; ctx.setLineDash([2, 4]);
+            ctx.beginPath(); ctx.moveTo(g.xOf(P.hover), g.padT); ctx.lineTo(g.xOf(P.hover), g.botY); ctx.stroke();
+            ctx.setLineDash([]);
+            const lines = [
+              [it.p.title.slice(0, 40), C.txt, '600 12px ' + this.GROT],
+              [it.p.domain.toUpperCase() + ' \u00b7 #' + (P.hover + 1) + ' OF ' + P.nP, this.WCOL[it.p.domain] || C.dim],
+              [it.mentions + ' MENTIONS ACROSS ' + it.docs + ' PAGES', '#39ff14'],
+              [this.fmt(it.own) + ' WORDS ON ITS OWN PAGE', '#b026ff']
+            ];
+            for (const f of it.from.slice(0, 3)) lines.push(['\u2190 ' + f.c + '\u00d7 in ' + f.p.title.slice(0, 30), this.WCOL[f.p.domain] || C.faint, '9px ' + this.MONO]);
+            lines.push(['CLICK TO READ THE PAGE', C.dim, '8.5px ' + this.MONO]);
+            this.card(ctx, mx, my, lines);
+          }
+          if (this.cv) this.cv.style.cursor = P.hover >= 0 ? 'pointer' : 'crosshair';
+        }
+      });
+    },
     draw_attention(ctx, W, H, dt) {
       if (!this.WK) return this.wkStandby(ctx, W, H);
+      if (this.state.attentionView === 'pen') return this.draw_attentionPen(ctx, W, H, dt);
       if (!this.M.attention) this.initAttention();
       const C = this.COL, A = this.M.attention, st = this.state;
       A.reveal = Math.min(1, A.reveal + dt * 0.9);
@@ -494,6 +667,15 @@
       if (this.cv) this.cv.style.cursor = A.hover ? 'pointer' : 'crosshair';
     },
     pt_attention(type, p) {
+      if (this.state.attentionView === 'pen') {
+        const P = this.M.attentionPen; if (!P) return;
+        if (type === 'down') {
+          const hit = (P.fragRects || []).find(r => p.x >= r.x && p.x <= r.x + r.w && p.y >= r.y && p.y <= r.y + r.h);
+          if (hit) { this.wikiOpen(hit.id); return; }
+        }
+        if (this.penScrub('attentionPen', type, p) === 'click' && P.hover >= 0) this.wikiOpen(P.rows[P.hover].p.id);
+        return;
+      }
       const A = this.M.attention; if (!A) return;
       if (type === 'down') {
         const row = (A.rowHits || []).find(r => p.x >= r.x && p.x <= r.x + r.w && p.y >= r.y && p.y <= r.y + r.h);
@@ -555,8 +737,102 @@
       D.usage = { hits: hits.slice(0, 8), quote };
       return D.usage;
     },
+    // PEN MODE — the playhead sweeps a domain's signature terms by TF-IDF and the
+    // sidebar shows the in-context line dictionUsage already resolves.
+    initDictionPen() {
+      if (!this.M.diction) this.initDiction();
+      const dom = this.state.dictionDom;
+      const terms = (this.M.diction.terms[dom] || []).slice();
+      const nP = terms.length;
+      const score = new Float32Array(nP), uses = new Float32Array(nP), reach = new Float32Array(nP);
+      let sMax = 0.001, uMax = 0.001, rMax = 0.001;
+      terms.forEach((t, i) => {
+        score[i] = t.score;
+        uses[i] = t.c;
+        // exclusivity: 1 when only this domain uses the word, 0 when all do
+        reach[i] = 1 - (t.doms - 1) / Math.max(1, this.WDOMS.length - 1);
+        if (score[i] > sMax) sMax = score[i];
+        if (uses[i] > uMax) uMax = uses[i];
+        if (reach[i] > rMax) rMax = reach[i];
+      });
+      const col = this.WCOL[dom] || '#e0aaff';
+      const frags = [];
+      terms.forEach((t, i) => {
+        const u = this.dictionUsage(t.w, dom);
+        if (u && u.quote) {
+          frags.push({
+            pos: i, text: u.quote,
+            tag: t.w.toUpperCase() + ' \u00b7 ' + (u.hits[0] ? u.hits[0].p.title.slice(0, 30) : dom),
+            shownAt: 0, pen: col, id: u.hits[0] ? u.hits[0].p.id : null
+          });
+        }
+      });
+      this.M.dictionPen = {
+        terms, nP, score, uses, reach, sMax, uMax, rMax, frags, dom, col,
+        play: 0.001, scrub: false, scrubGeo: null, hover: -1
+      };
+    },
+    dictionRestart() {
+      const P = this.M.dictionPen; if (!P) return;
+      P.play = 0.001; for (const f of P.frags) f.shownAt = 0;
+      this.setState({ dictionPlay: true });
+    },
+    draw_dictionPen(ctx, W, H, dt) {
+      if (!this.M.dictionPen || this.M.dictionPen.dom !== this.state.dictionDom) this.initDictionPen();
+      const C = this.COL, P = this.M.dictionPen;
+      if (!P.nP) {
+        ctx.font = '11px ' + this.MONO; ctx.fillStyle = C.dim; ctx.textAlign = 'center';
+        ctx.fillText('NO DISTINCTIVE VOCABULARY IN THIS DOMAIN', W / 2, H / 2); ctx.textAlign = 'left'; return;
+      }
+      this.penInstrument(ctx, W, H, dt, {
+        id: 'dictionPen', stateKey: 'diction', accent: P.col, title: 'DICTION \u00b7 ' + P.dom.toUpperCase(),
+        sub: P.nP + ' SIGNATURE TERMS \u00b7 RANKED BY TF-IDF AGAINST THE OTHER ' + (this.WDOMS.length - 1) + ' DOMAINS',
+        nP: P.nP, padL: 118, padT: 74, padB: 66, laneGap: 9,
+        lanes: [
+          { data: P.score, label: 'TF-IDF', unit: 'WEIGHT', color: P.col, max: P.sMax },
+          { data: P.uses, label: 'USES', unit: 'IN DOMAIN', color: '#39ff14', max: P.uMax },
+          { data: P.reach, label: 'EXCLUSIVITY', unit: '1 = ONLY HERE', color: '#b026ff', max: P.rMax }
+        ],
+        frags: P.frags,
+        feedTitle: 'THE TERM IN CONTEXT \u00b7 VERBATIM',
+        feed: { dy: -30, dh: -28 },
+        tickStep: Math.max(1, Math.ceil(P.nP / 8)),
+        tickLabel: (i) => P.terms[i] ? P.terms[i].w.slice(0, 9) : null,
+        readout: (g) => {
+          const t = P.terms[Math.min(P.nP - 1, Math.floor(P.play))];
+          ctx.font = '600 13px ' + this.MONO; ctx.fillStyle = C.txt; ctx.textAlign = 'right';
+          ctx.fillText(t.w.toUpperCase(), g.chartR - 20, 30);
+          ctx.font = '9px ' + this.MONO; ctx.fillStyle = P.col;
+          ctx.fillText(t.c + ' USES \u00b7 ' + t.df + ' PAGES CORPUS-WIDE \u00b7 ' + (t.doms === 1 ? 'ONLY HERE' : t.doms + ' DOMAINS'), g.chartR - 20, 46);
+          ctx.textAlign = 'left';
+        },
+        overlay: (g) => {
+          P.hover = -1;
+          const mx = this.mouse.x, my = this.mouse.y;
+          if (mx >= g.padL - 6 && mx <= g.chartR - 14 && my >= g.ribY - 6 && my <= g.botY + 6) {
+            P.hover = Math.max(0, Math.min(P.nP - 1, Math.round(((mx - g.padL) / (g.chartR - g.padL - 20)) * (P.nP - 1))));
+          }
+          if (P.hover >= 0) {
+            const t = P.terms[P.hover];
+            ctx.strokeStyle = 'rgba(232,230,225,0.22)'; ctx.setLineDash([2, 4]);
+            ctx.beginPath(); ctx.moveTo(g.xOf(P.hover), g.padT); ctx.lineTo(g.xOf(P.hover), g.botY); ctx.stroke();
+            ctx.setLineDash([]);
+            const u = this.dictionUsage(t.w, P.dom);
+            const lines = [
+              [t.w.toUpperCase(), C.txt, '700 14px ' + this.GROT],
+              [t.c + ' USES \u00b7 #' + (P.hover + 1) + ' OF ' + P.nP + ' \u00b7 ' + (t.doms === 1 ? 'USED NOWHERE ELSE' : t.doms + ' DOMAINS'), P.col]
+            ];
+            for (const h of (u ? u.hits.slice(0, 4) : [])) lines.push(['\u25b8 ' + h.p.title.slice(0, 32) + '  ' + h.c + '\u00d7', this.WCOL[h.p.domain] || C.faint, '9px ' + this.MONO]);
+            lines.push(['CLICK TO READ THE TOP PAGE', C.dim, '8.5px ' + this.MONO]);
+            this.card(ctx, mx, my, lines);
+          }
+          if (this.cv) this.cv.style.cursor = P.hover >= 0 ? 'pointer' : 'crosshair';
+        }
+      });
+    },
     draw_diction(ctx, W, H, dt) {
       if (!this.WK) return this.wkStandby(ctx, W, H);
+      if (this.state.dictionView === 'pen') return this.draw_dictionPen(ctx, W, H, dt);
       if (!this.M.diction) this.initDiction();
       const C = this.COL, D = this.M.diction, st = this.state;
       const dom = st.dictionDom, col = this.WCOL[dom] || '#8fa878';
@@ -652,6 +928,18 @@
       if (this.cv) this.cv.style.cursor = (D.hover || (D.rowHits || []).some(r => r.open && mx >= r.x && mx <= r.x + r.w && my >= r.y && my <= r.y + r.h)) ? 'pointer' : 'crosshair';
     },
     pt_diction(type, p) {
+      if (this.state.dictionView === 'pen') {
+        const P = this.M.dictionPen; if (!P) return;
+        if (type === 'down') {
+          const hit = (P.fragRects || []).find(r => p.x >= r.x && p.x <= r.x + r.w && p.y >= r.y && p.y <= r.y + r.h);
+          if (hit) { this.wikiOpen(hit.id); return; }
+        }
+        if (this.penScrub('dictionPen', type, p) === 'click' && P.hover >= 0) {
+          const u = this.dictionUsage(P.terms[P.hover].w, P.dom);
+          if (u && u.hits[0]) this.wikiOpen(u.hits[0].p.id);
+        }
+        return;
+      }
       const D = this.M.diction; if (!D) return;
       if (type === 'down') {
         const hit = (D.rowHits || []).find(r => p.x >= r.x && p.x <= r.x + r.w && p.y >= r.y && p.y <= r.y + r.h);
@@ -672,7 +960,13 @@
         const t = p.page_type || '(untyped)';
         (types[t] = types[t] || []).push(p);
       }
-      const rows = Object.entries(types).map(([t, ps]) => ({ t, ps })).sort((a, b) => b.ps.length - a.ps.length);
+      // float the most-broken page types, not the most populous: the question
+      // is where the record is thin, so the worst average coverage leads
+      const cols0 = this.schemaCols();
+      const rows = Object.entries(types).map(([t, ps]) => {
+        const cov = cols0.reduce((acc, c) => acc + ps.filter(c[2]).length / ps.length, 0) / Math.max(1, cols0.length);
+        return { t, ps, cov };
+      }).sort((a, b) => a.cov - b.cov || b.ps.length - a.ps.length);
       this.M.schema = { rows, hover: null, pinned: null, rowHits: [], cellHits: [] };
     },
     schemaCols() {
@@ -699,7 +993,8 @@
       ctx.font = '700 17px ' + this.GROT; ctx.fillStyle = '#00ffa3';
       ctx.fillText('SCHEMA', 18, 32);
       ctx.font = '9px ' + this.MONO; ctx.fillStyle = C.dim;
-      ctx.fillText(S.rows.length + ' PAGE TYPES × ' + cols.length + ' FIELDS · CELL = SHARE OF THAT TYPE CARRYING THE FIELD', 18, 48);
+      ctx.fillText('WHERE THE RECORD IS THIN · ' + S.rows.length + ' PAGE TYPES × ' + cols.length
+        + ' FIELDS · WORST COVERAGE FIRST · CLICK ANY GAP TO SEE WHICH PAGES', 18, 48);
 
       // column headers (rotated)
       cols.forEach(([k, label], ci) => {
@@ -804,6 +1099,225 @@
     },
 
     // ============================================================
+    // WIKI 18 — CRUCIBLE  (where the record disagrees with itself)
+    //
+    // The corpus ships the ground truth: contradicts / resolves / mirrors /
+    // parallels edges, each carrying an authored `claim`. No NLI, no
+    // embeddings — the disagreements were argued by hand and this instrument
+    // just puts them at the centre instead of buried in a 640-edge feed.
+    //
+    // The axis is the whole TENSION FAMILY of page-pairs, ranked so the
+    // contradictions lead. Sweeping only the contradictions would be a
+    // four-position playhead — the 7 contradicts edges are reciprocal and
+    // collapse to 4 unordered pairs — which is a fact, not an instrument.
+    // The chips filter down to them; the pens show what kind of tension each
+    // pair carries as the needle crosses it.
+    // ============================================================
+    CRUC_FAM: ['contradicts', 'resolves', 'mirrors', 'parallels'],
+    initCrucible() {
+      const WK = this.WK, T = this.WTCOL;
+      const filter = this.state.crucibleFilter || 'all';
+      const fam = new Set(this.CRUC_FAM);
+
+      // endpoint tallies: how much of each relation touches a given page
+      const touch = {};
+      for (const e of WK.typed) {
+        if (!fam.has(e.type)) continue;
+        for (const side of [e.a, e.b]) {
+          (touch[side] = touch[side] || {})[e.type] = ((touch[side] || {})[e.type] || 0) + 1;
+        }
+      }
+      // total typed degree, for the volume lane
+      const deg = {};
+      for (const e of WK.typed) { deg[e.a] = (deg[e.a] || 0) + 1; deg[e.b] = (deg[e.b] || 0) + 1; }
+
+      const pairs = new Map();
+      for (const e of WK.typed) {
+        if (!fam.has(e.type)) continue;
+        const key = e.a < e.b ? e.a + '|' + e.b : e.b + '|' + e.a;
+        if (!pairs.has(key)) {
+          const [x, y] = key.split('|');
+          pairs.set(key, { key, a: WK.byId[x], b: WK.byId[y], edges: [] });
+        }
+        pairs.get(key).edges.push(e);
+      }
+
+      let rows = [...pairs.values()].filter(r => r.a && r.b);
+      for (const r of rows) {
+        const ta = touch[r.a.id] || {}, tb = touch[r.b.id] || {};
+        r.contra = (ta.contradicts || 0) + (tb.contradicts || 0);
+        r.resolv = (ta.resolves || 0) + (tb.resolves || 0);
+        r.mirror = (ta.mirrors || 0) + (tb.mirrors || 0);
+        r.parall = (ta.parallels || 0) + (tb.parallels || 0);
+        r.hasContra = r.edges.some(e => e.type === 'contradicts');
+        // healed = a resolution reaches one of these pages, even if the
+        // resolving edge is not itself on this pair
+        r.healed = r.hasContra && r.resolv > 0;
+        r.deg = (deg[r.a.id] || 0) + (deg[r.b.id] || 0);
+      }
+      if (filter === 'unresolved') rows = rows.filter(r => r.hasContra && !r.healed);
+      else if (filter === 'healed') rows = rows.filter(r => r.healed);
+
+      // contradictions lead, hottest first; the rest fall in behind by tension
+      rows.sort((x, y) =>
+        (y.hasContra ? 1 : 0) - (x.hasContra ? 1 : 0)
+        || y.contra - x.contra
+        || (y.mirror + y.parall) - (x.mirror + x.parall)
+        || x.a.id.localeCompare(y.a.id));
+
+      const nP = rows.length;
+      const series = { contra: new Float32Array(nP), resolv: new Float32Array(nP), mirror: new Float32Array(nP), parall: new Float32Array(nP) };
+      const vol = new Float32Array(nP);
+      let maxVol = 1;
+      const maxRate = { contra: 0.001, resolv: 0.001, mirror: 0.001, parall: 0.001 };
+      rows.forEach((r, i) => {
+        for (const k of ['contra', 'resolv', 'mirror', 'parall']) {
+          series[k][i] = r[k];
+          if (r[k] > maxRate[k]) maxRate[k] = r[k];
+        }
+        vol[i] = r.deg;
+        if (r.deg > maxVol) maxVol = r.deg;
+      });
+
+      // the verbatim payoff: every authored claim on every edge of the pair,
+      // coloured by its relation and clickable through to the page that argues it
+      const frags = [];
+      rows.forEach((r, i) => {
+        const ordered = r.edges.slice().sort((x, y) =>
+          (y.type === 'contradicts' ? 1 : 0) - (x.type === 'contradicts' ? 1 : 0));
+        ordered.forEach((e, j) => {
+          if (!e.claim || e.claim.length < 12) return;
+          const src = WK.byId[e.a], dst = WK.byId[e.b];
+          if (!src || !dst) return;
+          frags.push({
+            pos: i + Math.min(0.9, j * 0.12),
+            text: e.claim,
+            tag: (r.healed && e.type === 'contradicts' ? '✔ HEALED · ' : '')
+              + e.type.toUpperCase() + ' · ' + src.title.slice(0, 22) + ' → ' + dst.title.slice(0, 22),
+            shownAt: 0,
+            pen: r.healed && e.type === 'contradicts' ? T.resolves : (T[e.type] || '#8fa878'),
+            id: e.a
+          });
+        });
+      });
+      frags.sort((a, b) => a.pos - b.pos);
+
+      const nContra = rows.filter(r => r.hasContra).length;
+      const nHealed = rows.filter(r => r.healed).length;
+      this.M.crucible = {
+        rows, nP, series, maxRate, vol, maxVol, frags, filter, nContra, nHealed,
+        play: 0.001, scrub: false, scrubGeo: null, hover: -1
+      };
+    },
+    crucibleRestart() {
+      const K = this.M.crucible; if (!K) return;
+      K.play = 0.001; for (const f of K.frags) f.shownAt = 0;
+      this.setState({ cruciblePlay: true });
+    },
+    draw_crucible(ctx, W, H, dt) {
+      if (!this.WK) return this.wkStandby(ctx, W, H);
+      if (!this.M.crucible || this.M.crucible.filter !== (this.state.crucibleFilter || 'all')) this.initCrucible();
+      const C = this.COL, K = this.M.crucible, T = this.WTCOL;
+      if (!K.nP) {
+        ctx.font = '11px ' + this.MONO; ctx.fillStyle = C.dim; ctx.textAlign = 'center';
+        ctx.fillText('NO PAIRS MATCH THIS FILTER', W / 2, H / 2); ctx.textAlign = 'left';
+        return;
+      }
+      const PENS = [
+        ['contra', 'CONTRADICTION', T.contradicts],
+        ['resolv', 'RESOLUTION', T.resolves],
+        ['mirror', 'TENSION', T.mirrors],
+        ['parall', 'PARALLEL', T.parallels]
+      ];
+      const filtLabel = K.filter === 'unresolved' ? 'UNRESOLVED ONLY' : K.filter === 'healed' ? 'HEALED ONLY' : 'ALL TENSION PAIRS, CONTRADICTIONS FIRST';
+
+      this.penInstrument(ctx, W, H, dt, {
+        id: 'crucible', accent: T.contradicts, title: 'CRUCIBLE',
+        sub: K.nP + ' PAIRS IN TENSION · ' + K.nContra + ' CONTRADICT · ' + K.nHealed + ' LATER RESOLVED · ' + filtLabel,
+        nP: K.nP, padL: 118, padT: 74, padB: 66, laneGap: 9,
+        lanes: PENS.map(([k, label, col]) => ({
+          data: K.series[k], label, unit: 'EDGES', color: col, max: K.maxRate[k]
+        })),
+        volume: { data: K.vol, max: K.maxVol, color: '#7b2dff' },
+        frags: K.frags,
+        feedTitle: 'THE RECORD ARGUING WITH ITSELF · CLAIMS VERBATIM',
+        feed: { dy: -30, dh: -28 },
+        // contradictions burn, healed pairs go green, the rest stay quiet
+        ribbon: (i, past) => {
+          const r = K.rows[i];
+          const col = r.healed ? T.resolves : r.hasContra ? T.contradicts : '#7b2dff';
+          return hx(col, past ? (r.hasContra ? 0.95 : 0.5) : 0.18);
+        },
+        tickStep: Math.max(1, Math.ceil(K.nP / 8)),
+        tickLabel: (i) => '#' + (i + 1),
+
+        readout: (g) => {
+          const r = K.rows[Math.min(K.nP - 1, Math.floor(K.play))];
+          ctx.font = '600 12px ' + this.MONO; ctx.fillStyle = C.txt; ctx.textAlign = 'right';
+          ctx.fillText((r.a.title.slice(0, 22) + ' ⟷ ' + r.b.title.slice(0, 22)).toUpperCase(), g.chartR - 20, 30);
+          ctx.font = '9px ' + this.MONO;
+          ctx.fillStyle = r.healed ? T.resolves : r.hasContra ? T.contradicts : C.dim;
+          ctx.fillText(r.healed ? '✔ CONTRADICTED, THEN RESOLVED'
+            : r.hasContra ? '✖ CONTRADICTION STANDS'
+            : r.edges.length + ' TENSION EDGE' + (r.edges.length === 1 ? '' : 'S'), g.chartR - 20, 46);
+          ctx.textAlign = 'left';
+        },
+
+        // the boundary where authored contradiction gives way to mere tension
+        marker: (g) => {
+          if (K.filter !== 'all') return;
+          const zi = K.rows.findIndex(r => !r.hasContra);
+          if (zi <= 0) return;
+          const zx = g.xOf(zi);
+          ctx.strokeStyle = hx(T.contradicts, 0.5); ctx.setLineDash([3, 4]);
+          ctx.beginPath(); ctx.moveTo(zx, g.padT); ctx.lineTo(zx, g.botY); ctx.stroke();
+          ctx.setLineDash([]);
+          ctx.font = '8px ' + this.MONO; ctx.fillStyle = hx(T.contradicts, 0.7);
+          ctx.textAlign = 'center'; ctx.fillText('CONTRADICTS ← | → MERELY IN TENSION', zx, g.botY + 24);
+          ctx.textAlign = 'left';
+        },
+
+        overlay: (g) => {
+          K.hover = -1;
+          const mx = this.mouse.x, my = this.mouse.y;
+          if (mx >= g.padL - 6 && mx <= g.chartR - 14 && my >= g.ribY - 6 && my <= g.botY + 6) {
+            K.hover = Math.max(0, Math.min(K.nP - 1, Math.round(((mx - g.padL) / (g.chartR - g.padL - 20)) * (K.nP - 1))));
+          }
+          if (K.hover >= 0) {
+            const r = K.rows[K.hover];
+            ctx.strokeStyle = 'rgba(232,230,225,0.22)'; ctx.setLineDash([2, 4]);
+            ctx.beginPath(); ctx.moveTo(g.xOf(K.hover), g.padT); ctx.lineTo(g.xOf(K.hover), g.botY); ctx.stroke();
+            ctx.setLineDash([]);
+            const lines = [
+              [r.a.title.slice(0, 40), this.WCOL[r.a.domain] || C.txt, '600 12px ' + this.GROT],
+              ['⟷ ' + r.b.title.slice(0, 38), this.WCOL[r.b.domain] || C.txt, '600 12px ' + this.GROT],
+              ['#' + (K.hover + 1) + ' OF ' + K.nP + ' · ' + r.deg + ' TYPED EDGES ON THE PAIR', C.dim, '9px ' + this.MONO]
+            ];
+            for (const e of r.edges.slice(0, 3)) {
+              lines.push([e.type.toUpperCase(), T[e.type] || C.dim, '9px ' + this.MONO]);
+              if (e.claim) for (const ln of this.wkWrap(ctx, e.claim.slice(0, 190), 380).slice(0, 3)) {
+                lines.push([ln, C.txt, '11px ' + this.GROT]);
+              }
+            }
+            lines.push([r.healed ? '✔ A RESOLUTION REACHES THIS PAIR' : r.hasContra ? '✖ NOTHING RESOLVES THIS' : 'TENSION WITHOUT CONTRADICTION',
+              r.healed ? T.resolves : r.hasContra ? T.contradicts : C.faint, '9px ' + this.MONO]);
+            lines.push(['CLICK TO READ ' + r.a.title.slice(0, 26), C.dim, '8.5px ' + this.MONO]);
+            this.card(ctx, mx, my, lines);
+          }
+          if (this.cv) this.cv.style.cursor = K.hover >= 0 ? 'pointer' : 'crosshair';
+        }
+      });
+    },
+    pt_crucible(type, p) {
+      const K = this.M.crucible; if (!K) return;
+      if (type === 'down') {
+        const hit = (K.fragRects || []).find(r => p.x >= r.x && p.x <= r.x + r.w && p.y >= r.y && p.y <= r.y + r.h);
+        if (hit) { this.wikiOpen(hit.id); return; }
+      }
+      if (this.penScrub('crucible', type, p) === 'click' && K.hover >= 0) this.wikiOpen(K.rows[K.hover].a.id);
+    },
+
+    // ============================================================
     // WIKI 17 — ECHO  (where the wiki repeats itself)
     // Cosine similarity of TF-IDF prose vectors, every page against every
     // other. Not the link graph — two pages can echo without citing each
@@ -858,7 +1372,8 @@
       });
       this.M.echo = {
         N, vecs, ord, posOf, grid, sims, bands,
-        top: sims.slice(0, 40), hover: null, pinned: null, rowHits: [],
+        top: sims.slice(0, 40), dupes: sims.filter(x => x.s > 0.9),
+        hover: null, pinned: null, rowHits: [],
         bmp: null, bmpFor: -1
       };
     },
@@ -889,6 +1404,14 @@
       c2.putImageData(img, 0, 0);
       E.bmp = cv; E.bmpFor = min;
       return cv;
+    },
+    // jump the matrix to the loudest unexamined duplicate pair
+    echoJumpDupe() {
+      const E = this.M.echo; if (!E || !E.dupes.length) return;
+      E.dupeAt = ((E.dupeAt == null ? -1 : E.dupeAt) + 1) % E.dupes.length;
+      const d = E.dupes[E.dupeAt];
+      E.pinned = { i: d.i, j: d.j, s: d.s };
+      this.wikiOpen(this.WK.pages[d.i].id);
     },
     draw_echo(ctx, W, H, dt) {
       if (!this.WK) return this.wkStandby(ctx, W, H);
