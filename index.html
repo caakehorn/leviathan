@@ -815,6 +815,17 @@ class Component extends DCLogic {
 
   fmt(n) { return Math.round(n).toLocaleString('en-US'); }
 
+  // Pointer-in-rect. Every module that draws clickable rows, cards or cells
+  // stashes them as {x, y, w, h} and tests the pointer against the list; that
+  // test was written out longhand seventeen times.
+  inRect(r, x, y) { return x >= r.x && x <= r.x + r.w && y >= r.y && y <= r.y + r.h; }
+
+  hitRect(rects, x, y) {
+    if (!rects) return null;
+    for (const r of rects) if (this.inRect(r, x, y)) return r;
+    return null;
+  }
+
   maskId(id) {
     if (/^\+\d{11}$/.test(id)) return '+' + id.slice(1, 2) + ' ' + id.slice(2, 5) + ' \u00b7\u00b7\u00b7 ' + id.slice(7);
     if (id.includes('@')) return id.slice(0, 4) + '\u00b7\u00b7\u00b7@';

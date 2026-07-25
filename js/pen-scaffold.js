@@ -275,6 +275,20 @@
       return null;
     },
 
+    // Every pen overlay resolves the hovered column from the same strip
+    // geometry and marks it with the same dashed rule; only the readout card
+    // differs. Returns the hovered index, or -1 when the pointer is off-strip.
+    penHoverColumn(ctx, g, n) {
+      const mx = this.mouse.x, my = this.mouse.y;
+      if (!(mx >= g.padL - 6 && mx <= g.chartR - 14 && my >= g.ribY - 6 && my <= g.botY + 6)) return -1;
+      const i = Math.max(0, Math.min(n - 1, Math.round(((mx - g.padL) / (g.chartR - g.padL - 20)) * (n - 1))));
+      ctx.strokeStyle = 'rgba(232,230,225,0.22)';
+      ctx.setLineDash([2, 4]);
+      ctx.beginPath(); ctx.moveTo(g.xOf(i), g.padT); ctx.lineTo(g.xOf(i), g.botY); ctx.stroke();
+      ctx.setLineDash([]);
+      return i;
+    },
+
     // Every pen instrument restarts the same way: rewind the playhead, forget
     // which fragments have surfaced, and resume. Ten copies of this existed.
     penRestart(key, playKey) {

@@ -119,9 +119,7 @@
       }
       if (s.tab === 'claims') {
         // chip row built from the data: the 8 most common edge types actually in the graph
-        const counts = {};
-        if (WK) for (const e of WK.typed) counts[e.type] = (counts[e.type] || 0) + 1;
-        const types = ['ALL', ...Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 8).map(([t]) => t)];
+        const types = ['ALL', ...this.edgeTypesRanked().slice(0, 8).map(([t]) => t)];
         return types.map(t => ({ label: t.toUpperCase(), onClick: () => { this.setState({ claimType: t }); if (this.M.claims) this.M.claims.scroll = 0; }, style: cs(s.claimType === t, TCOL[t] || '#7b2dff') }));
       }
       if (s.tab === 'census') {
@@ -192,6 +190,22 @@
       ctx.fillStyle = C.dim;
       ctx.fillText('WIKI DATA UNAVAILABLE', W / 2, H / 2);
       return true;
+    },
+
+    // How many typed edges of each relation, ranked. Three modules want this —
+    // the CLAIMS chip row, the CLAIMS type rail and the HEALTH spectrum — and
+    // two of them were recomputing it inside their draw call, so a 651-edge
+    // pass plus an 18-entry sort ran every frame to render a rail that only
+    // changes when the dataset does. Cached on WK, so it dies with the data.
+    edgeTypesRanked() {
+      const WK = this.WK;
+      if (!WK) return [];
+      if (!WK._typesRanked) {
+        const counts = {};
+        for (const e of WK.typed) counts[e.type] = (counts[e.type] || 0) + 1;
+        WK._typesRanked = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+      }
+      return WK._typesRanked;
     },
 
     // ============================================================
@@ -357,9 +371,7 @@
       if (!this.WK) return this.wkStandby(ctx, W, H);
       if (!this.M.claims) this.M.claims = { scroll: 0, rows: [], hover: -1 };
       const C = this.COL, Cl = this.M.claims, WK = this.WK, st = this.state;
-      const counts = {};
-      for (const e of WK.typed) counts[e.type] = (counts[e.type] || 0) + 1;
-      const types = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+      const types = this.edgeTypesRanked();
       // left rail — type spectrum
       const railW = 236;
       ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
@@ -834,7 +846,7 @@
     pt_tagmap(type, p) {
       const T = this.M.tagmap; if (!T) return;
       if (type === 'down') {
-        const hit = (T.pageHits || []).find(r => p.x >= r.x && p.x <= r.x + r.w && p.y >= r.y && p.y <= r.y + r.h);
+        const hit = this.hitRect(T.pageHits, p.x, p.y);
         if (hit) { this.wikiOpen(hit.id); return; }
         if (T.hover) { T.drag = T.hover; T.pinned = T.hover; }
         else T.pinned = null;
@@ -896,7 +908,7 @@
       const mx = this.mouse.x, my = this.mouse.y;
       Ms.hover = null;
       for (const r of Ms.rects) {
-        const hov = mx >= r.x && mx <= r.x + r.w && my >= r.y && my <= r.y + r.h;
+        const hov = this.inRect(r, mx, my);
         if (hov) Ms.hover = r;
         const col = DCOL[r.d];
         ctx.fillStyle = col + (hov ? 'ee' : (r.p.id.endsWith('/index') ? '30' : '66'));
@@ -953,11 +965,9 @@
         if (set.has(e.b + '>' + e.a + '>' + inv)) recip++;
       }
       const orphans = WK.pages.filter(p => !(WK.inDeg[p.id] > 0) && !p.id.endsWith('/index'));
-      const typeCounts = {};
-      for (const e of WK.typed) typeCounts[e.type] = (typeCounts[e.type] || 0) + 1;
       const outHist = new Array(13).fill(0);
       for (const p of WK.pages) outHist[Math.min(12, WK.outDeg[p.id] || 0)]++;
-      this.M.lattice = { recip, recipable, orphans, typeCounts, outHist, hover: null };
+      this.M.lattice = { recip, recipable, orphans, outHist, hover: null };
     },
     draw_lattice(ctx, W, H, dt) {
       if (!this.WK) return this.wkStandby(ctx, W, H);
@@ -983,7 +993,7 @@
         sx += Math.max(110, ctx.measureText(String(v)).width + 60);
       }
       // type spectrum (left)
-      const types = Object.entries(L.typeCounts).sort((a, b) => b[1] - a[1]);
+      const types = this.edgeTypesRanked();
       const tx = 24, ty = 96, maxT = types[0] ? types[0][1] : 1;
       ctx.font = '9px ' + this.MONO; ctx.fillStyle = C.dim;
       ctx.fillText('EDGE-TYPE SPECTRUM', tx, ty - 12);
@@ -1136,7 +1146,7 @@
     pt_evidence(type, p) {
       const E = this.M.evidence; if (!E) return;
       if (type === 'down') {
-        const hit = (E.pageHits || []).find(r => p.x >= r.x && p.x <= r.x + r.w && p.y >= r.y && p.y <= r.y + r.h);
+        const hit = this.hitRect(E.pageHits, p.x, p.y);
         if (hit) { this.wikiOpen(hit.id); return; }
         E.pinned = E.hover && E.pinned !== E.hover ? E.hover : null;
       }
@@ -1272,7 +1282,7 @@
       const Ch = this.M.chronicle; if (!Ch || Ch.empty) return;
       const g = Ch.scrubGeo; if (!g) return;
       if (type === 'down') {
-        const hit = (Ch.fragRects || []).find(r => p.x >= r.x && p.x <= r.x + r.w && p.y >= r.y && p.y <= r.y + r.h);
+        const hit = this.hitRect(Ch.fragRects, p.x, p.y);
         if (hit) { this.wikiOpen(hit.id); return; }
       }
       if (type === 'down' && p.x < g.x1 + 20 && p.x > g.x0 - 20) {
@@ -1450,7 +1460,7 @@
       const g = Ge.scrubGeo;
       const inStrip = g && p.y >= g.y0 && p.y <= g.y1 + 26;
       if (type === 'down') {
-        const fhit = (Ge.fragRects || []).find(r => p.x >= r.x && p.x <= r.x + r.w && p.y >= r.y && p.y <= r.y + r.h);
+        const fhit = this.hitRect(Ge.fragRects, p.x, p.y);
         if (fhit) { this.wikiOpen(fhit.id); return; }
         if (inStrip) {
           Ge.scrub = true;

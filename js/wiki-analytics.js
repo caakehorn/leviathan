@@ -333,16 +333,10 @@
         },
 
         overlay: (g) => {
-          E.hover = -1;
           const mx = this.mouse.x, my = this.mouse.y;
-          if (mx >= g.padL - 6 && mx <= g.chartR - 14 && my >= g.ribY - 6 && my <= g.botY + 6) {
-            E.hover = Math.max(0, Math.min(E.nP - 1, Math.round(((mx - g.padL) / (g.chartR - g.padL - 20)) * (E.nP - 1))));
-          }
+          E.hover = this.penHoverColumn(ctx, g, E.nP);
           if (E.hover >= 0) {
             const r = E.rows[E.hover];
-            ctx.strokeStyle = 'rgba(232,230,225,0.22)'; ctx.setLineDash([2, 4]);
-            ctx.beginPath(); ctx.moveTo(g.xOf(E.hover), g.padT); ctx.lineTo(g.xOf(E.hover), g.botY); ctx.stroke();
-            ctx.setLineDash([]);
             this.card(ctx, mx, my, [
               [r.p.title.slice(0, 40), C.txt, '600 12px ' + this.GROT],
               [r.p.domain.toUpperCase() + ' \u00b7 #' + (E.hover + 1) + ' OF ' + E.nP + ' \u00b7 ' + this.fmt(r.w) + ' WORDS', this.WCOL[r.p.domain] || C.dim],
@@ -362,7 +356,7 @@
       // a fragment row is the most compelling thing on screen — let it be the
       // thing you click, ahead of the column underneath the cursor
       if (type === 'down') {
-        const hit = (E.fragRects || []).find(r => p.x >= r.x && p.x <= r.x + r.w && p.y >= r.y && p.y <= r.y + r.h);
+        const hit = this.hitRect(E.fragRects, p.x, p.y);
         if (hit) { this.wikiOpen(hit.id); return; }
       }
       if (this.penScrub('episteme', type, p) === 'click' && E.hover >= 0) this.wikiOpen(E.rows[E.hover].p.id);
@@ -497,16 +491,10 @@
           ctx.textAlign = 'left';
         },
         overlay: (g) => {
-          P.hover = -1;
           const mx = this.mouse.x, my = this.mouse.y;
-          if (mx >= g.padL - 6 && mx <= g.chartR - 14 && my >= g.ribY - 6 && my <= g.botY + 6) {
-            P.hover = Math.max(0, Math.min(P.nP - 1, Math.round(((mx - g.padL) / (g.chartR - g.padL - 20)) * (P.nP - 1))));
-          }
+          P.hover = this.penHoverColumn(ctx, g, P.nP);
           if (P.hover >= 0) {
             const it = P.rows[P.hover];
-            ctx.strokeStyle = 'rgba(232,230,225,0.22)'; ctx.setLineDash([2, 4]);
-            ctx.beginPath(); ctx.moveTo(g.xOf(P.hover), g.padT); ctx.lineTo(g.xOf(P.hover), g.botY); ctx.stroke();
-            ctx.setLineDash([]);
             const lines = [
               [it.p.title.slice(0, 40), C.txt, '600 12px ' + this.GROT],
               [it.p.domain.toUpperCase() + ' \u00b7 #' + (P.hover + 1) + ' OF ' + P.nP, this.WCOL[it.p.domain] || C.dim],
@@ -664,7 +652,7 @@
       if (this.state.attentionView === 'pen') {
         const P = this.M.attentionPen; if (!P) return;
         if (type === 'down') {
-          const hit = (P.fragRects || []).find(r => p.x >= r.x && p.x <= r.x + r.w && p.y >= r.y && p.y <= r.y + r.h);
+          const hit = this.hitRect(P.fragRects, p.x, p.y);
           if (hit) { this.wikiOpen(hit.id); return; }
         }
         if (this.penScrub('attentionPen', type, p) === 'click' && P.hover >= 0) this.wikiOpen(P.rows[P.hover].p.id);
@@ -672,7 +660,7 @@
       }
       const A = this.M.attention; if (!A) return;
       if (type === 'down') {
-        const row = (A.rowHits || []).find(r => p.x >= r.x && p.x <= r.x + r.w && p.y >= r.y && p.y <= r.y + r.h);
+        const row = this.hitRect(A.rowHits, p.x, p.y);
         if (row) { this.wikiOpen(row.it.p.id); return; }
         if (A.hover) { if (A.pinned === A.hover) { this.wikiOpen(A.hover.p.id); A.pinned = null; } else A.pinned = A.hover; }
         else A.pinned = null;
@@ -799,16 +787,10 @@
           ctx.textAlign = 'left';
         },
         overlay: (g) => {
-          P.hover = -1;
           const mx = this.mouse.x, my = this.mouse.y;
-          if (mx >= g.padL - 6 && mx <= g.chartR - 14 && my >= g.ribY - 6 && my <= g.botY + 6) {
-            P.hover = Math.max(0, Math.min(P.nP - 1, Math.round(((mx - g.padL) / (g.chartR - g.padL - 20)) * (P.nP - 1))));
-          }
+          P.hover = this.penHoverColumn(ctx, g, P.nP);
           if (P.hover >= 0) {
             const t = P.terms[P.hover];
-            ctx.strokeStyle = 'rgba(232,230,225,0.22)'; ctx.setLineDash([2, 4]);
-            ctx.beginPath(); ctx.moveTo(g.xOf(P.hover), g.padT); ctx.lineTo(g.xOf(P.hover), g.botY); ctx.stroke();
-            ctx.setLineDash([]);
             const u = this.dictionUsage(t.w, P.dom);
             const lines = [
               [t.w.toUpperCase(), C.txt, '700 14px ' + this.GROT],
@@ -917,13 +899,13 @@
           }
         }
       }
-      if (this.cv) this.cv.style.cursor = (D.hover || (D.rowHits || []).some(r => r.open && mx >= r.x && mx <= r.x + r.w && my >= r.y && my <= r.y + r.h)) ? 'pointer' : 'crosshair';
+      if (this.cv) this.cv.style.cursor = (D.hover || (D.rowHits || []).some(r => r.open && this.inRect(r, mx, my))) ? 'pointer' : 'crosshair';
     },
     pt_diction(type, p) {
       if (this.state.dictionView === 'pen') {
         const P = this.M.dictionPen; if (!P) return;
         if (type === 'down') {
-          const hit = (P.fragRects || []).find(r => p.x >= r.x && p.x <= r.x + r.w && p.y >= r.y && p.y <= r.y + r.h);
+          const hit = this.hitRect(P.fragRects, p.x, p.y);
           if (hit) { this.wikiOpen(hit.id); return; }
         }
         if (this.penScrub('dictionPen', type, p) === 'click' && P.hover >= 0) {
@@ -934,7 +916,7 @@
       }
       const D = this.M.diction; if (!D) return;
       if (type === 'down') {
-        const hit = (D.rowHits || []).find(r => p.x >= r.x && p.x <= r.x + r.w && p.y >= r.y && p.y <= r.y + r.h);
+        const hit = this.hitRect(D.rowHits, p.x, p.y);
         if (hit && hit.open) { this.wikiOpen(hit.open); return; }
         if (hit && hit.t) { D.pinned = (D.pinned === hit.t ? null : hit.t); return; }
         D.pinned = null;
@@ -1076,14 +1058,14 @@
           [S.hover.miss.length ? S.hover.miss.length + ' MISSING · CLICK TO LIST THEM' : 'COMPLETE COVERAGE', S.hover.miss.length ? '#e01aff' : '#00ffa3', '9px ' + this.MONO]
         ]);
       }
-      if (this.cv) this.cv.style.cursor = (S.hover && S.hover.miss.length) || S.rowHits.some(r => mx >= r.x && mx <= r.x + r.w && my >= r.y && my <= r.y + r.h) ? 'pointer' : 'crosshair';
+      if (this.cv) this.cv.style.cursor = (S.hover && S.hover.miss.length) || this.hitRect(S.rowHits, mx, my) ? 'pointer' : 'crosshair';
     },
     pt_schema(type, p) {
       const S = this.M.schema; if (!S) return;
       if (type === 'down') {
-        const row = (S.rowHits || []).find(r => p.x >= r.x && p.x <= r.x + r.w && p.y >= r.y && p.y <= r.y + r.h);
+        const row = this.hitRect(S.rowHits, p.x, p.y);
         if (row) { this.wikiOpen(row.id); return; }
-        const cell = (S.cellHits || []).find(r => p.x >= r.x && p.x <= r.x + r.w && p.y >= r.y && p.y <= r.y + r.h);
+        const cell = this.hitRect(S.cellHits, p.x, p.y);
         if (cell && cell.cell.miss.length) {
           S.pinned = (S.pinned && S.pinned.r.t === cell.cell.r.t && S.pinned.k === cell.cell.k) ? null : cell.cell;
         } else S.pinned = null;
@@ -1265,16 +1247,10 @@
         },
 
         overlay: (g) => {
-          K.hover = -1;
           const mx = this.mouse.x, my = this.mouse.y;
-          if (mx >= g.padL - 6 && mx <= g.chartR - 14 && my >= g.ribY - 6 && my <= g.botY + 6) {
-            K.hover = Math.max(0, Math.min(K.nP - 1, Math.round(((mx - g.padL) / (g.chartR - g.padL - 20)) * (K.nP - 1))));
-          }
+          K.hover = this.penHoverColumn(ctx, g, K.nP);
           if (K.hover >= 0) {
             const r = K.rows[K.hover];
-            ctx.strokeStyle = 'rgba(232,230,225,0.22)'; ctx.setLineDash([2, 4]);
-            ctx.beginPath(); ctx.moveTo(g.xOf(K.hover), g.padT); ctx.lineTo(g.xOf(K.hover), g.botY); ctx.stroke();
-            ctx.setLineDash([]);
             const lines = [
               [r.a.title.slice(0, 40), this.WCOL[r.a.domain] || C.txt, '600 12px ' + this.GROT],
               ['⟷ ' + r.b.title.slice(0, 38), this.WCOL[r.b.domain] || C.txt, '600 12px ' + this.GROT],
@@ -1298,7 +1274,7 @@
     pt_crucible(type, p) {
       const K = this.M.crucible; if (!K) return;
       if (type === 'down') {
-        const hit = (K.fragRects || []).find(r => p.x >= r.x && p.x <= r.x + r.w && p.y >= r.y && p.y <= r.y + r.h);
+        const hit = this.hitRect(K.fragRects, p.x, p.y);
         if (hit) { this.wikiOpen(hit.id); return; }
       }
       if (this.penScrub('crucible', type, p) === 'click' && K.hover >= 0) this.wikiOpen(K.rows[K.hover].a.id);
@@ -1502,12 +1478,12 @@
           ['CLICK TO READ THE ROW PAGE', C.faint, '8.5px ' + this.MONO]
         ]);
       }
-      if (this.cv) this.cv.style.cursor = (E.hover || E.rowHits.some(r => mx >= r.x && mx <= r.x + r.w && my >= r.y && my <= r.y + r.h)) ? 'pointer' : 'crosshair';
+      if (this.cv) this.cv.style.cursor = (E.hover || this.hitRect(E.rowHits, mx, my)) ? 'pointer' : 'crosshair';
     },
     pt_echo(type, p) {
       const E = this.M.echo; if (!E) return;
       if (type === 'down') {
-        const row = (E.rowHits || []).find(r => p.x >= r.x && p.x <= r.x + r.w && p.y >= r.y && p.y <= r.y + r.h);
+        const row = this.hitRect(E.rowHits, p.x, p.y);
         if (row) { this.wikiOpen(row.id); return; }
         if (E.hover) this.wikiOpen(E.hover.pa.id);
       }
