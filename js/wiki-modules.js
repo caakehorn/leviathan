@@ -39,7 +39,7 @@
       mass: 'THE CORPUS BY WEIGHT \u00b7 234,736 WORDS TILED BY DOMAIN AND PAGE \u00b7 HOVER FOR COUNTS \u00b7 CLICK TO READ',
       lattice: 'GRAPH FORENSICS \u00b7 EDGE-TYPE SPECTRUM \u00b7 RECIPROCITY \u00b7 THE ORPHAN RING = PAGES NOTHING POINTS TO \u00b7 CLICK TO READ',
       evidence: 'WHERE THE KNOWLEDGE COMES FROM \u00b7 EVERY BAR A RAW SOURCE \u00b7 CLICK TO SEE THE PAGES IT FEEDS \u00b7 CLICK A PAGE TO READ',
-      chronicle: 'PRESS PLAY \u00b7 THE WIKI BUILDING ITSELF, WEEK BY WEEK \u00b7 CLAIMS SURFACE AS PAGES ENTER THE RECORD \u00b7 DRAG THE LANES TO SCRUB',
+      chronicle: 'PRESS PLAY · THE WIKI BUILDING ITSELF, DAY BY DAY · GREEN LINE = CUMULATIVE PAGES · CLAIMS SURFACE AS PAGES ENTER · CLICK ONE TO READ',
       genesis: 'PRESS PLAY \u00b7 WATCH THE GRAPH FORM, PAGE BY PAGE \u00b7 GRAB A NODE ONCE IT EXISTS \u00b7 DRAG THE STRIP BELOW TO SCRUB'
     },
 
@@ -1195,8 +1195,19 @@
       }
       frags.sort((a, b) => a.pos - b.pos);
       this.penAttributeFrags(frags, this.CHRON_PENS, rates, maxRate);
+      // ACCRETION's cumulative-pages line, folded in: both instruments animated
+      // the corpus documenting itself, so CHRONICLE now carries the mass curve
+      // and ACCRETION is free to be retired
+      const cum = new Float32Array(nD);
+      let running = 0;
+      for (let i = 0; i < nD; i++) {
+        const ds = this.i2d(d0 + i).toISOString().slice(0, 10);
+        running += WK.pages.filter(p => p.created === ds).length;
+        cum[i] = running;
+      }
+      const maxCum = Math.max(1, running);
       const dayLabel = (i) => this.i2d(d0 + i).toISOString().slice(0, 10);
-      this.M.chronicle = { d0, d1, nD, rates, maxRate, tot, maxVol, frags, dayLabel, play: 0.001, scrub: false, scrubGeo: null };
+      this.M.chronicle = { d0, d1, nD, rates, maxRate, tot, maxVol, cum, maxCum, frags, dayLabel, play: 0.001, scrub: false, scrubGeo: null };
     },
     chronicleRestart() {
       const Ch = this.M.chronicle; if (!Ch || Ch.empty) return;
@@ -1226,7 +1237,7 @@
       ctx.font = '700 17px ' + this.GROT; ctx.fillStyle = '#cfa8ff';
       ctx.fillText('CHRONICLE', 18, 32);
       ctx.font = '9px ' + this.MONO; ctx.fillStyle = C.dim;
-      ctx.fillText(this.WK.log.length + ' LOGGED OPERATIONS \u00b7 THE WIKI BUILDING ITSELF, DAY BY DAY', 18, 48);
+      ctx.fillText(this.WK.log.length + ' LOGGED OPERATIONS \u00b7 THE WIKI BUILDING ITSELF, DAY BY DAY \u00b7 GREEN = CUMULATIVE PAGES', 18, 48);
       const di = Math.min(Ch.nD - 1, Math.floor(Ch.play));
       ctx.font = '600 13px ' + this.MONO; ctx.fillStyle = C.txt; ctx.textAlign = 'right';
       ctx.fillText(Ch.dayLabel(di) + ' \u00b7 ' + Math.round(Ch.tot[di]) + ' OPS THAT DAY', chartR - 20, 32);
@@ -1235,6 +1246,17 @@
       const lanes = this.CHRON_PENS.map(([k, label, col]) => ({ data: Ch.rates[k], label, unit: '% OF DAY', color: col, max: Ch.maxRate[k] }));
       this.drawPenLanes(ctx, geo, lanes, Ch.play, st.chroniclePlay);
       this.drawVolumeLane(ctx, geo, vy0, Ch.tot, Ch.maxVol, Ch.play, '#7b2dff');
+      // cumulative pages, riding the volume lane
+      ctx.strokeStyle = '#39ff14'; ctx.lineWidth = 1.6;
+      ctx.beginPath();
+      for (let i = 0; i <= Ch.play && i < Ch.nD; i++) {
+        const x = xOf(i), y = vy0 + laneH - 4 - (Ch.cum[i] / Ch.maxCum) * (laneH - 8);
+        i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+      }
+      ctx.stroke();
+      ctx.font = '8px ' + this.MONO; ctx.fillStyle = '#39ff14'; ctx.textAlign = 'right';
+      ctx.fillText(Math.round(Ch.cum[Math.min(Ch.nD - 1, Math.floor(Ch.play))]) + ' PAGES TO DATE', chartR - 24, vy0 + 12);
+      ctx.textAlign = 'left';
 
       ctx.strokeStyle = 'rgba(232,230,225,0.5)'; ctx.lineWidth = 1;
       ctx.beginPath(); ctx.moveTo(playX, padT - 6); ctx.lineTo(playX, vy0 + laneH + 8); ctx.stroke();

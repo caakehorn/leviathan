@@ -123,9 +123,18 @@
         ];
       }
       if (s.tab === 'echo') {
-        return [[0.12, 'FAINT ≥ .12'], [0.25, 'CLEAR ≥ .25'], [0.45, 'LOUD ≥ .45']].map(([v, l]) => ({
+        const chips = [[0.12, 'FAINT ≥ .12'], [0.25, 'CLEAR ≥ .25'], [0.45, 'LOUD ≥ .45']].map(([v, l]) => ({
           label: l, onClick: () => { this.setState({ echoMin: v }); if (this.M.echo) this.M.echo.bmpFor = -1; }, style: cs(s.echoMin === v, '#39ff14')
         }));
+        // duplicate detection is a maintenance superpower on a 343-page corpus,
+        // and it was one line of data away — promote it to a standing alert
+        const n = this.M.echo ? this.M.echo.dupes.length : 0;
+        if (n) chips.push({
+          label: '⚠ ' + n + ' NEAR-DUPLICATE' + (n === 1 ? '' : 'S'),
+          onClick: () => { this.echoJumpDupe(); },
+          style: cs(true, this.WTCOL.contradicts)
+        });
+        return chips;
       }
       return null;
     },
@@ -185,10 +194,19 @@
         const c = (t.match(CERT_RE) || []).length;
         const n = (t.match(NEG_RE) || []).length;
         const q = (t.match(/\?/g) || []).length;
+        // volatility: how much the page swings between asserting and hedging
+        // from sentence to sentence, rather than its net position
+        const sents = this.wkSentences(p.id);
+        let vol = 0;
+        if (sents.length > 2) {
+          const sw = sents.map(sn => (sn.match(CERT_RE) || []).length - (sn.match(HEDGE_RE) || []).length);
+          const mean = sw.reduce((x, y) => x + y, 0) / sw.length;
+          vol = Math.sqrt(sw.reduce((x, y) => x + (y - mean) * (y - mean), 0) / sw.length);
+        }
         rows.push({
           p, w,
           hedge: h / w * 1000, cert: c / w * 1000, neg: n / w * 1000, quer: q / w * 1000,
-          rawH: h, rawC: c,
+          rawH: h, rawC: c, vol,
           idx: (c - h) / w * 1000 // + = asserts, − = hedges
         });
       }
@@ -243,10 +261,15 @@
         }
       });
 
+      const volSeries = new Float32Array(nP);
+      let maxVolat = 0.001;
+      rows.forEach((r, i) => { volSeries[i] = r.vol || 0; if (volSeries[i] > maxVolat) maxVolat = volSeries[i]; });
+
       const hedged = rows.filter(r => r.idx < 0).length;
       const asserted = rows.filter(r => r.idx > 0).length;
       this.M.episteme = {
         rows, nP, series, maxRate, vol, maxVol, frags, order, hedged, asserted,
+        volSeries, maxVolat,
         play: 0.001, scrub: false, scrubGeo: null, hover: -1
       };
     },
@@ -288,8 +311,16 @@
           ctx.textAlign = 'left';
         },
 
-        // the zero-crossing — where the corpus stops hedging and starts asserting
+        // volatility band: pages that oscillate between certainty and doubt
+        // glow behind the pens, ahead of the zero-crossing marker
         marker: (g) => {
+          const bw = Math.max(1.2, (g.chartR - g.padL - 20) / E.nP + 0.6);
+          for (let i = 0; i < E.nP; i++) {
+            const t = E.volSeries[i] / E.maxVolat;
+            if (t < 0.12) continue;
+            ctx.fillStyle = hx('#e0aaff', 0.05 + t * 0.16);
+            ctx.fillRect(g.xOf(i), g.padT, bw, g.botY - g.padT);
+          }
           if (E.order !== 'certainty') return;
           const zi = E.rows.findIndex(r => r.idx >= 0);
           if (zi <= 0) return;
@@ -318,6 +349,7 @@
               [r.p.domain.toUpperCase() + ' \u00b7 #' + (E.hover + 1) + ' OF ' + E.nP + ' \u00b7 ' + this.fmt(r.w) + ' WORDS', this.WCOL[r.p.domain] || C.dim],
               ['HEDGE ' + r.hedge.toFixed(1) + '  \u00b7  ASSERT ' + r.cert.toFixed(1), '#b026ff'],
               ['NEGATE ' + r.neg.toFixed(1) + '  \u00b7  QUESTIONS ' + r.quer.toFixed(1), '#e01aff'],
+              ['VOLATILITY ' + (r.vol || 0).toFixed(2) + ' \u00b7 ' + ((r.vol || 0) > E.maxVolat * 0.5 ? 'SWINGS' : 'STEADY'), '#e0aaff', '9px ' + this.MONO],
               [r.idx >= 0 ? '\u25b2 ASSERTS MORE THAN IT HEDGES' : '\u25bc HEDGES MORE THAN IT ASSERTS', r.idx >= 0 ? '#00ffa3' : '#b026ff', '9px ' + this.MONO],
               ['CLICK TO READ THE PAGE', C.dim, '8.5px ' + this.MONO]
             ]);
@@ -928,7 +960,13 @@
         const t = p.page_type || '(untyped)';
         (types[t] = types[t] || []).push(p);
       }
-      const rows = Object.entries(types).map(([t, ps]) => ({ t, ps })).sort((a, b) => b.ps.length - a.ps.length);
+      // float the most-broken page types, not the most populous: the question
+      // is where the record is thin, so the worst average coverage leads
+      const cols0 = this.schemaCols();
+      const rows = Object.entries(types).map(([t, ps]) => {
+        const cov = cols0.reduce((acc, c) => acc + ps.filter(c[2]).length / ps.length, 0) / Math.max(1, cols0.length);
+        return { t, ps, cov };
+      }).sort((a, b) => a.cov - b.cov || b.ps.length - a.ps.length);
       this.M.schema = { rows, hover: null, pinned: null, rowHits: [], cellHits: [] };
     },
     schemaCols() {
@@ -955,7 +993,8 @@
       ctx.font = '700 17px ' + this.GROT; ctx.fillStyle = '#00ffa3';
       ctx.fillText('SCHEMA', 18, 32);
       ctx.font = '9px ' + this.MONO; ctx.fillStyle = C.dim;
-      ctx.fillText(S.rows.length + ' PAGE TYPES × ' + cols.length + ' FIELDS · CELL = SHARE OF THAT TYPE CARRYING THE FIELD', 18, 48);
+      ctx.fillText('WHERE THE RECORD IS THIN · ' + S.rows.length + ' PAGE TYPES × ' + cols.length
+        + ' FIELDS · WORST COVERAGE FIRST · CLICK ANY GAP TO SEE WHICH PAGES', 18, 48);
 
       // column headers (rotated)
       cols.forEach(([k, label], ci) => {
@@ -1333,7 +1372,8 @@
       });
       this.M.echo = {
         N, vecs, ord, posOf, grid, sims, bands,
-        top: sims.slice(0, 40), hover: null, pinned: null, rowHits: [],
+        top: sims.slice(0, 40), dupes: sims.filter(x => x.s > 0.9),
+        hover: null, pinned: null, rowHits: [],
         bmp: null, bmpFor: -1
       };
     },
@@ -1364,6 +1404,14 @@
       c2.putImageData(img, 0, 0);
       E.bmp = cv; E.bmpFor = min;
       return cv;
+    },
+    // jump the matrix to the loudest unexamined duplicate pair
+    echoJumpDupe() {
+      const E = this.M.echo; if (!E || !E.dupes.length) return;
+      E.dupeAt = ((E.dupeAt == null ? -1 : E.dupeAt) + 1) % E.dupes.length;
+      const d = E.dupes[E.dupeAt];
+      E.pinned = { i: d.i, j: d.j, s: d.s };
+      this.wikiOpen(this.WK.pages[d.i].id);
     },
     draw_echo(ctx, W, H, dt) {
       if (!this.WK) return this.wkStandby(ctx, W, H);
