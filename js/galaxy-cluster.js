@@ -300,7 +300,7 @@
       if (!this.style.width && !this.style.inset) this.style.inset = '0';
       this.style.touchAction = 'none';
       this.style.cursor = 'crosshair';
-      this.style.background = '#020008';
+      this.style.background = '#10001f';
 
       var f0 = parseFloat(this.getAttribute('intensity'));
       if (!isNaN(f0)) { this._tintensity = f0; this._intensity = f0; }
@@ -353,7 +353,7 @@
         if (!this._2d) {
           /* no canvas at all — only now do we surrender */
           document.dispatchEvent(new CustomEvent('void:fluid-failed'));
-          this.style.background = 'radial-gradient(circle at 50% 45%, #1a0030 0%, #020008 70%)';
+          this.style.background = 'radial-gradient(circle at 50% 45%, #1a0030 0%, #10001f 70%)';
           return;
         }
       }
@@ -594,7 +594,7 @@
       var o = document.createElement('canvas');
       o.width = w; o.height = h;
       var x = o.getContext('2d');
-      x.fillStyle = '#020008';
+      x.fillStyle = '#10001f';
       x.fillRect(0, 0, w, h);
       var g = x.createRadialGradient(w / 2, h / 2, 0, w / 2, h / 2, Math.max(w, h) * 0.7);
       g.addColorStop(0, 'rgba(34,6,58,0.9)');

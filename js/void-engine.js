@@ -118,7 +118,7 @@
 
       var gl = this._gl = c.getContext('webgl', { antialias: false, preserveDrawingBuffer: true });
       if (!gl) {
-        this.style.background = 'radial-gradient(circle at 50% 45%, #1a0030 0%, #020008 70%)';
+        this.style.background = 'radial-gradient(circle at 50% 45%, #1a0030 0%, #10001f 70%)';
         return;
       }
       var vs = compile(gl, gl.VERTEX_SHADER, VERT);

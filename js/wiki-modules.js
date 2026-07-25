@@ -403,11 +403,11 @@
           ctx.fillStyle = DCOL[a.domain] || '#c9c5bb'; ctx.textAlign = 'left';
           ctx.fillText(a.title.slice(0, 30), fx + 16, y + 20);
           const aw = ctx.measureText(a.title.slice(0, 30)).width;
-          ctx.fillStyle = '#07090d';
+          ctx.fillStyle = '#10001f';
           const tw = ctx.measureText(e.type.toUpperCase()).width + 12;
           ctx.fillStyle = col;
           ctx.fillRect(fx + 16 + aw + 12, y + 12, tw, 15);
-          ctx.fillStyle = '#07090d';
+          ctx.fillStyle = '#10001f';
           ctx.fillText(e.type.toUpperCase(), fx + 16 + aw + 18, y + 20);
           ctx.fillStyle = DCOL[b.domain] || '#c9c5bb';
           ctx.fillText(b.title.slice(0, 30), fx + 16 + aw + tw + 24, y + 20);
@@ -755,7 +755,7 @@
         ctx.strokeStyle = isP ? '#ffffff' : 'rgba(123,45,255,0.6)';
         ctx.stroke();
         ctx.font = (isP ? '600 ' : '') + Math.min(13, 8 + n.n * 0.2) + 'px ' + this.MONO;
-        ctx.fillStyle = isP ? '#07090d' : '#c9c5bb';
+        ctx.fillStyle = isP ? '#10001f' : '#c9c5bb';
         ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
         ctx.fillText('#' + n.t, n.x, n.y);
         if (mx >= 0 && !hover) { const dx = mx - n.x, dy = my - n.y; if (dx * dx + dy * dy < n.r * n.r) hover = n; }
@@ -898,7 +898,7 @@
         ctx.strokeRect(r.x, r.y, r.w, r.h);
         if (r.w > 70 && r.h > 16) {
           ctx.font = '8.5px ' + this.MONO;
-          ctx.fillStyle = hov ? '#07090d' : 'rgba(232,230,225,0.8)';
+          ctx.fillStyle = hov ? '#10001f' : 'rgba(232,230,225,0.8)';
           ctx.textAlign = 'left'; ctx.textBaseline = 'top';
           ctx.fillText(r.p.title.slice(0, Math.floor(r.w / 6)), r.x + 5, r.y + 4);
         }
