@@ -44,10 +44,10 @@ jobs:
       changed: ${{ steps.commit.outputs.changed }}
     steps:
       - name: Checkout leviathan
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Checkout wiki-brain
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           repository: caakehorn/wiki-brain
           path: .wiki-brain
