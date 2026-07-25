@@ -198,111 +198,77 @@
     draw_episteme(ctx, W, H, dt) {
       if (!this.WK) return this.wkStandby(ctx, W, H);
       if (!this.M.episteme || this.M.episteme.order !== this.state.epistemeOrder) this.initEpisteme();
-      const C = this.COL, E = this.M.episteme, st = this.state;
+      const C = this.COL, E = this.M.episteme;
       if (!E.nP) { ctx.font = '11px ' + this.MONO; ctx.fillStyle = C.dim; ctx.textAlign = 'center'; ctx.fillText('NOT ENOUGH PROSE', W / 2, H / 2); return; }
-      if (st.epistemePlay && !E.scrub) {
-        E.play += st.epistemeSpeed * dt;
-        if (E.play >= E.nP - 0.01) { E.play = E.nP - 0.01; this.setState({ epistemePlay: false }); }
-      }
-      const chartR = W * 0.62, fx = chartR + 8, fw = W - fx - 16;
-      const padL = 118, padT = 74, padB = 66;
-      const laneGap = 9;
-      const nLanes = this.EP_PENS.length + 1;
-      const laneH = (H - padT - padB - laneGap * (nLanes - 1)) / nLanes;
-      const xOf = (i) => padL + (i / Math.max(1, E.nP - 1)) * (chartR - padL - 20);
-      const geo = { padL, padT, laneH, laneGap, x0: padL, x1: chartR - 20, xOf };
-      const vy0 = padT + this.EP_PENS.length * (laneH + laneGap);
-      const playX = xOf(E.play);
+      const ordLabel = E.order === 'certainty' ? 'RANKED HEDGED \u2192 ASSERTED' : E.order === 'size' ? 'RANKED LARGEST \u2192 SMALLEST' : 'GROUPED BY DOMAIN';
 
-      // domain ribbon — which part of the wiki the needle is over
-      const ribY = padT - 16;
-      for (let i = 0; i < E.nP; i++) {
-        ctx.fillStyle = hx(this.WCOL[E.rows[i].p.domain] || '#8fa878', i <= E.play ? 0.85 : 0.22);
-        ctx.fillRect(xOf(i), ribY, Math.max(1.2, (chartR - padL - 20) / E.nP + 0.6), 8);
-      }
+      this.penInstrument(ctx, W, H, dt, {
+        id: 'episteme', accent: '#cfa8ff', title: 'EPISTEME',
+        sub: E.nP + ' PAGES \u00b7 ' + E.hedged + ' HEDGE MORE THAN THEY ASSERT, ' + E.asserted + ' THE REVERSE \u00b7 ' + ordLabel,
+        nP: E.nP, padL: 118, padT: 74, padB: 66, laneGap: 9,
+        lanes: this.EP_PENS.map(([k, label, col]) => ({
+          data: E.series[k], label, unit: '/1K WORDS', color: col, max: E.maxRate[k]
+        })),
+        volume: { data: E.vol, max: E.maxVol, color: '#7b2dff' },
+        frags: E.frags,
+        feedTitle: 'THE RECORD HEDGING AND ASSERTING \u00b7 VERBATIM',
+        feed: { dy: -30, dh: -28 },
+        // which region of the wiki the needle is over
+        ribbon: (i, past) => hx(this.WCOL[E.rows[i].p.domain] || '#8fa878', past ? 0.85 : 0.22),
+        tickStep: Math.max(1, Math.ceil(E.nP / 8)),
+        tickLabel: (i) => '#' + (i + 1),
 
-      ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
-      ctx.font = '700 17px ' + this.GROT; ctx.fillStyle = '#cfa8ff';
-      ctx.fillText('EPISTEME', 18, 32);
-      ctx.font = '9px ' + this.MONO; ctx.fillStyle = C.dim;
-      const ordLabel = E.order === 'certainty' ? 'RANKED HEDGED → ASSERTED' : E.order === 'size' ? 'RANKED LARGEST → SMALLEST' : 'GROUPED BY DOMAIN';
-      ctx.fillText(E.nP + ' PAGES · ' + E.hedged + ' HEDGE MORE THAN THEY ASSERT, ' + E.asserted + ' THE REVERSE · ' + ordLabel, 18, 48);
+        readout: (g) => {
+          const cur = E.rows[Math.min(E.nP - 1, Math.floor(E.play))];
+          ctx.font = '600 12px ' + this.MONO; ctx.fillStyle = C.txt; ctx.textAlign = 'right';
+          ctx.fillText(cur.p.title.slice(0, 34).toUpperCase(), g.chartR - 20, 30);
+          ctx.font = '9px ' + this.MONO;
+          ctx.fillStyle = cur.idx >= 0 ? '#00ffa3' : '#b026ff';
+          ctx.fillText((cur.idx >= 0 ? 'ASSERTS +' : 'HEDGES ') + cur.idx.toFixed(1) + '  \u00b7  ' + this.fmt(cur.w) + ' WORDS', g.chartR - 20, 46);
+          ctx.textAlign = 'left';
+        },
 
-      const cur = E.rows[Math.min(E.nP - 1, Math.floor(E.play))];
-      ctx.font = '600 12px ' + this.MONO; ctx.fillStyle = C.txt; ctx.textAlign = 'right';
-      ctx.fillText(cur.p.title.slice(0, 34).toUpperCase(), chartR - 20, 30);
-      ctx.font = '9px ' + this.MONO;
-      ctx.fillStyle = cur.idx >= 0 ? '#00ffa3' : '#b026ff';
-      ctx.fillText((cur.idx >= 0 ? 'ASSERTS +' : 'HEDGES ') + cur.idx.toFixed(1) + '  ·  ' + this.fmt(cur.w) + ' WORDS', chartR - 20, 46);
-      ctx.textAlign = 'left';
-
-      const lanes = this.EP_PENS.map(([k, label, col]) => ({
-        data: E.series[k], label, unit: '/1K WORDS', color: col, max: E.maxRate[k]
-      }));
-      this.drawPenLanes(ctx, geo, lanes, E.play, st.epistemePlay);
-      this.drawVolumeLane(ctx, geo, vy0, E.vol, E.maxVol, E.play, '#7b2dff');
-
-      // needle
-      ctx.strokeStyle = 'rgba(232,230,225,0.5)'; ctx.lineWidth = 1;
-      ctx.beginPath(); ctx.moveTo(playX, ribY - 4); ctx.lineTo(playX, vy0 + laneH + 8); ctx.stroke();
-
-      // the zero-crossing — where the corpus stops hedging and starts asserting
-      if (E.order === 'certainty') {
-        let zi = E.rows.findIndex(r => r.idx >= 0);
-        if (zi > 0) {
-          const zx = xOf(zi);
+        // the zero-crossing — where the corpus stops hedging and starts asserting
+        marker: (g) => {
+          if (E.order !== 'certainty') return;
+          const zi = E.rows.findIndex(r => r.idx >= 0);
+          if (zi <= 0) return;
+          const zx = g.xOf(zi);
           ctx.strokeStyle = 'rgba(232,230,225,0.28)'; ctx.setLineDash([3, 4]);
-          ctx.beginPath(); ctx.moveTo(zx, padT); ctx.lineTo(zx, vy0 + laneH); ctx.stroke();
+          ctx.beginPath(); ctx.moveTo(zx, g.padT); ctx.lineTo(zx, g.botY); ctx.stroke();
           ctx.setLineDash([]);
           ctx.font = '8px ' + this.MONO; ctx.fillStyle = 'rgba(232,230,225,0.45)';
-          ctx.textAlign = 'center'; ctx.fillText('HEDGES ← | → ASSERTS', zx, vy0 + laneH + 24);
+          ctx.textAlign = 'center'; ctx.fillText('HEDGES \u2190 | \u2192 ASSERTS', zx, g.botY + 24);
           ctx.textAlign = 'left';
+        },
+
+        overlay: (g) => {
+          E.hover = -1;
+          const mx = this.mouse.x, my = this.mouse.y;
+          if (mx >= g.padL - 6 && mx <= g.chartR - 14 && my >= g.ribY - 6 && my <= g.botY + 6) {
+            E.hover = Math.max(0, Math.min(E.nP - 1, Math.round(((mx - g.padL) / (g.chartR - g.padL - 20)) * (E.nP - 1))));
+          }
+          if (E.hover >= 0) {
+            const r = E.rows[E.hover];
+            ctx.strokeStyle = 'rgba(232,230,225,0.22)'; ctx.setLineDash([2, 4]);
+            ctx.beginPath(); ctx.moveTo(g.xOf(E.hover), g.padT); ctx.lineTo(g.xOf(E.hover), g.botY); ctx.stroke();
+            ctx.setLineDash([]);
+            this.card(ctx, mx, my, [
+              [r.p.title.slice(0, 40), C.txt, '600 12px ' + this.GROT],
+              [r.p.domain.toUpperCase() + ' \u00b7 #' + (E.hover + 1) + ' OF ' + E.nP + ' \u00b7 ' + this.fmt(r.w) + ' WORDS', this.WCOL[r.p.domain] || C.dim],
+              ['HEDGE ' + r.hedge.toFixed(1) + '  \u00b7  ASSERT ' + r.cert.toFixed(1), '#b026ff'],
+              ['NEGATE ' + r.neg.toFixed(1) + '  \u00b7  QUESTIONS ' + r.quer.toFixed(1), '#e01aff'],
+              [r.idx >= 0 ? '\u25b2 ASSERTS MORE THAN IT HEDGES' : '\u25bc HEDGES MORE THAN IT ASSERTS', r.idx >= 0 ? '#00ffa3' : '#b026ff', '9px ' + this.MONO],
+              ['CLICK TO READ THE PAGE', C.dim, '8.5px ' + this.MONO]
+            ]);
+          }
+          if (this.cv) this.cv.style.cursor = E.hover >= 0 ? 'pointer' : 'crosshair';
         }
-      }
-      ctx.font = '9px ' + this.MONO; ctx.fillStyle = C.faint; ctx.textAlign = 'center'; ctx.textBaseline = 'top';
-      for (let i = 0; i < E.nP; i += Math.max(1, Math.ceil(E.nP / 8))) ctx.fillText('#' + (i + 1), xOf(i), vy0 + laneH + 12);
-      E.scrubGeo = { x0: padL, x1: chartR - 20, y0: ribY - 6, y1: vy0 + laneH };
-
-      // hover a page column
-      E.hover = -1;
-      const mx = this.mouse.x, my = this.mouse.y;
-      if (mx >= padL - 6 && mx <= chartR - 14 && my >= ribY - 6 && my <= vy0 + laneH + 6) {
-        E.hover = Math.max(0, Math.min(E.nP - 1, Math.round(((mx - padL) / (chartR - padL - 20)) * (E.nP - 1))));
-      }
-      if (E.hover >= 0) {
-        const r = E.rows[E.hover];
-        ctx.strokeStyle = 'rgba(232,230,225,0.22)'; ctx.setLineDash([2, 4]);
-        ctx.beginPath(); ctx.moveTo(xOf(E.hover), padT); ctx.lineTo(xOf(E.hover), vy0 + laneH); ctx.stroke();
-        ctx.setLineDash([]);
-        this.card(ctx, mx, my, [
-          [r.p.title.slice(0, 40), C.txt, '600 12px ' + this.GROT],
-          [r.p.domain.toUpperCase() + ' · #' + (E.hover + 1) + ' OF ' + E.nP + ' · ' + this.fmt(r.w) + ' WORDS', this.WCOL[r.p.domain] || C.dim],
-          ['HEDGE ' + r.hedge.toFixed(1) + '  ·  ASSERT ' + r.cert.toFixed(1), '#b026ff'],
-          ['NEGATE ' + r.neg.toFixed(1) + '  ·  QUESTIONS ' + r.quer.toFixed(1), '#e01aff'],
-          [r.idx >= 0 ? '▲ ASSERTS MORE THAN IT HEDGES' : '▼ HEDGES MORE THAN IT ASSERTS', r.idx >= 0 ? '#00ffa3' : '#b026ff', '9px ' + this.MONO],
-          ['CLICK TO READ THE PAGE', C.dim, '8.5px ' + this.MONO]
-        ]);
-      }
-      if (this.cv) this.cv.style.cursor = E.hover >= 0 ? 'pointer' : 'crosshair';
-
-      this.drawFragmentFeed(ctx, { fx, fy: padT - 30, fw, fh: H - padT - 28 }, E.frags, E.play,
-        'THE RECORD HEDGING AND ASSERTING · VERBATIM', '#cfa8ff');
+      });
     },
     pt_episteme(type, p) {
-      const E = this.M.episteme; if (!E || !E.scrubGeo) return;
-      const g = E.scrubGeo;
-      const inChart = p.x >= g.x0 - 20 && p.x <= g.x1 + 20 && p.y >= g.y0 && p.y <= g.y1;
-      if (type === 'down' && inChart) {
-        E.downPos = { x: p.x, y: p.y };
-        E.scrub = true;
-        E.play = Math.max(0.001, Math.min(E.nP - 0.01, ((p.x - g.x0) / (g.x1 - g.x0)) * (E.nP - 1)));
-      } else if (type === 'move' && E.scrub && this.mouse.down) {
-        E.play = Math.max(0.001, Math.min(E.nP - 0.01, ((p.x - g.x0) / (g.x1 - g.x0)) * (E.nP - 1)));
-      } else if (type === 'up' || type === 'leave') {
-        const moved = E.downPos ? Math.hypot(p.x - E.downPos.x, p.y - E.downPos.y) : 99;
-        if (type === 'up' && moved < 4 && E.hover >= 0) this.wikiOpen(E.rows[E.hover].p.id);
-        E.scrub = false; E.downPos = null;
-      }
+      const E = this.M.episteme; if (!E) return;
+      if (this.penScrub('episteme', type, p) === 'click' && E.hover >= 0) this.wikiOpen(E.rows[E.hover].p.id);
     },
 
     // ============================================================

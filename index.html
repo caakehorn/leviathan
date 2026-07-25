@@ -3692,6 +3692,119 @@ class Component extends DCLogic {
   }
 
   // ============================================================
+  // THE PEN SCAFFOLD
+  // The canonical shape of an analytic view: several pens tracing
+  // frequencies over an ORDERING of the corpus (not necessarily time),
+  // a volume lane grounding them in raw mass, a playable/scrubbable
+  // playhead, and a verbatim feed of the records registering on each
+  // frequency. POLYGRAPH, WEATHER and EPISTEME all reduce to this.
+  //
+  // The hook callbacks (readout/marker/overlay) fire at exact points in
+  // the paint order so an instrument's bespoke furniture lands in the
+  // same layer it did when each of these was hand-rolled.
+  // ============================================================
+  penInstrument(ctx, W, H, dt, cfg) {
+    const C = this.COL, st = this.state, M = this.M[cfg.id];
+    const nP = cfg.nP;
+
+    // ---- advance the playhead (scrubbing takes precedence) ----
+    if (st[cfg.id + 'Play'] && !M.scrub) {
+      M.play += (st[cfg.id + 'Speed'] || 1) * dt;
+      if (M.play >= nP - 0.01) { M.play = nP - 0.01; this.setState({ [cfg.id + 'Play']: false }); }
+    }
+
+    // ---- layout ----
+    const chartR = W * (cfg.chartFrac || 0.62);
+    const padL = cfg.padL, padT = cfg.padT, padB = cfg.padB, laneGap = cfg.laneGap;
+    const nLanes = cfg.lanes.length + (cfg.volume ? 1 : 0);
+    const laneH = (H - padT - padB - laneGap * (nLanes - 1)) / nLanes;
+    const xOf = (i) => padL + (i / Math.max(1, nP - 1)) * (chartR - padL - 20);
+    const geo = { padL, padT, laneH, laneGap, x0: padL, x1: chartR - 20, xOf };
+    const vy0 = padT + cfg.lanes.length * (laneH + laneGap);
+    const playX = xOf(M.play);
+    const ribY = padT - 16;
+    const botY = vy0 + (cfg.volume ? laneH : 0);
+    const g = { geo, xOf, playX, vy0, laneH, chartR, padL, padT, padB, ribY, botY, nP, play: M.play, M };
+
+    // ---- ribbon: a per-position colour strip above the lanes ----
+    if (cfg.ribbon) {
+      const bw = Math.max(1.2, (chartR - padL - 20) / nP + 0.6);
+      for (let i = 0; i < nP; i++) {
+        const col = cfg.ribbon(i, i <= M.play);
+        if (!col) continue;
+        ctx.fillStyle = col;
+        ctx.fillRect(xOf(i), ribY, bw, 8);
+      }
+    }
+
+    // ---- house header ----
+    ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+    ctx.font = '700 17px ' + this.GROT; ctx.fillStyle = cfg.accent;
+    ctx.fillText(cfg.title, 18, 32);
+    ctx.font = '9px ' + this.MONO; ctx.fillStyle = C.dim;
+    ctx.fillText(cfg.sub, 18, 48);
+
+    if (cfg.readout) cfg.readout(g);
+
+    // ---- the pens, and the mass under them ----
+    this.drawPenLanes(ctx, geo, cfg.lanes, M.play, st[cfg.id + 'Play']);
+    if (cfg.volume) this.drawVolumeLane(ctx, geo, vy0, cfg.volume.data, cfg.volume.max, M.play, cfg.volume.color);
+
+    // ---- needle ----
+    ctx.strokeStyle = 'rgba(232,230,225,0.5)'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(playX, (cfg.ribbon ? ribY - 4 : padT - 6)); ctx.lineTo(playX, botY + 8); ctx.stroke();
+
+    if (cfg.marker) cfg.marker(g);
+
+    // ---- position ticks along the axis ----
+    if (cfg.tickLabel) {
+      ctx.font = '9px ' + this.MONO; ctx.fillStyle = C.faint;
+      ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+      const step = Math.max(1, cfg.tickStep || 1);
+      for (let i = 0; i < nP; i += step) {
+        const lab = cfg.tickLabel(i);
+        if (lab != null) ctx.fillText(lab, xOf(i), botY + 12);
+      }
+      ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+    }
+
+    M.scrubGeo = { x0: padL, x1: chartR - 20, y0: (cfg.ribbon ? ribY - 6 : padT - 6), y1: botY };
+
+    if (cfg.overlay) cfg.overlay(g);
+
+    // ---- the verbatim feed: what actually registered on those pens ----
+    const fd = cfg.feed || {};
+    const fx = chartR + 8, fw = W - fx - 16;
+    M.fragRects = this.drawFragmentFeed(ctx,
+      { fx, fy: padT + (fd.dy != null ? fd.dy : -30), fw, fh: H - padT + (fd.dh != null ? fd.dh : -28) },
+      cfg.frags, M.play, cfg.feedTitle, cfg.accent);
+    return g;
+  }
+
+  // Shared scrub/click handling for pen instruments. Returns 'click' when the
+  // pointer went down and up in the same spot, so the caller can decide what
+  // that means (which page to open); scrubbing is handled here outright.
+  penScrub(id, type, p) {
+    const M = this.M[id];
+    if (!M || !M.scrubGeo) return null;
+    const g = M.scrubGeo;
+    const at = (x) => Math.max(0.001, Math.min(M.nP - 0.01, ((x - g.x0) / (g.x1 - g.x0)) * (M.nP - 1)));
+    const inChart = p.x >= g.x0 - 20 && p.x <= g.x1 + 20 && p.y >= g.y0 && p.y <= g.y1;
+    if (type === 'down' && inChart) {
+      M.downPos = { x: p.x, y: p.y };
+      M.scrub = true;
+      M.play = at(p.x);
+    } else if (type === 'move' && M.scrub && this.mouse.down) {
+      M.play = at(p.x);
+    } else if (type === 'up' || type === 'leave') {
+      const moved = M.downPos ? Math.hypot(p.x - M.downPos.x, p.y - M.downPos.y) : 99;
+      M.scrub = false; M.downPos = null;
+      if (type === 'up' && moved < 4) return 'click';
+    }
+    return null;
+  }
+
+  // ============================================================
   // MODULE 07 — WEATHER  (real weather · non-Annie corpus ·
   // four pens · needle scrubber · fragment surfacer · void link)
   // ============================================================
