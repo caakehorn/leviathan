@@ -68,14 +68,40 @@
         ];
       }
       if (s.tab === 'attention') {
-        return [{ label: 'ALL', onClick: () => this.setState({ attentionDom: 'ALL' }), style: cs(s.attentionDom === 'ALL') },
-          ...this.WDOMS.map(d => ({ label: d.toUpperCase(), onClick: () => this.setState({ attentionDom: d }), style: cs(s.attentionDom === d, this.WCOL[d]) }))];
+        const pen = s.attentionView === 'pen';
+        return [
+          ...[['scatter', '\u25cc SCATTER'], ['pen', '\u2712 PENS']].map(([id, l]) => ({
+            label: l, onClick: () => this.setState({ attentionView: id }), style: cs(s.attentionView === id, '#e0aaff')
+          })),
+          ...(pen ? [
+            { label: s.attentionPlay ? '\u275a\u275a PAUSE' : '\u25b6 PLAY', onClick: () => this.setState(st => ({ attentionPlay: !st.attentionPlay })), style: cs(s.attentionPlay, '#39ff14') },
+            { label: '\u21ba RESTART', onClick: () => this.attentionRestart(), style: cs(false) },
+            ...[[1, 'SLOW'], [4, 'NORMAL'], [12, 'FAST']].map(([v, l]) => ({
+              label: l, onClick: () => this.setState({ attentionSpeed: v }), style: cs(s.attentionSpeed === v, '#39ff14')
+            }))
+          ] : []),
+          { label: 'ALL', onClick: () => { this.setState({ attentionDom: 'ALL' }); this.M.attentionPen = null; }, style: cs(s.attentionDom === 'ALL') },
+          ...this.WDOMS.map(d => ({ label: d.toUpperCase(), onClick: () => { this.setState({ attentionDom: d }); this.M.attentionPen = null; }, style: cs(s.attentionDom === d, this.WCOL[d]) }))
+        ];
       }
       if (s.tab === 'diction') {
-        return this.WDOMS.map(d => ({
-          label: d.toUpperCase(), onClick: () => { this.setState({ dictionDom: d }); if (this.M.diction) this.M.diction.hover = null; },
-          style: cs(s.dictionDom === d, this.WCOL[d])
-        }));
+        const pen = s.dictionView === 'pen';
+        return [
+          ...[['bars', '\u2261 BARS'], ['pen', '\u2712 PENS']].map(([id, l]) => ({
+            label: l, onClick: () => { this.setState({ dictionView: id }); this.M.dictionPen = null; }, style: cs(s.dictionView === id, '#e0aaff')
+          })),
+          ...(pen ? [
+            { label: s.dictionPlay ? '\u275a\u275a PAUSE' : '\u25b6 PLAY', onClick: () => this.setState(st => ({ dictionPlay: !st.dictionPlay })), style: cs(s.dictionPlay, '#39ff14') },
+            { label: '\u21ba RESTART', onClick: () => this.dictionRestart(), style: cs(false) },
+            ...[[0.6, 'SLOW'], [2, 'NORMAL'], [6, 'FAST']].map(([v, l]) => ({
+              label: l, onClick: () => this.setState({ dictionSpeed: v }), style: cs(s.dictionSpeed === v, '#39ff14')
+            }))
+          ] : []),
+          ...this.WDOMS.map(d => ({
+            label: d.toUpperCase(), onClick: () => { this.setState({ dictionDom: d }); if (this.M.diction) this.M.diction.hover = null; this.M.dictionPen = null; },
+            style: cs(s.dictionDom === d, this.WCOL[d])
+          }))
+        ];
       }
       if (s.tab === 'schema') {
         return [['core', 'CORE FIELDS'], ['box', 'INFOBOX FIELDS'], ['all', 'ALL']].map(([id, l]) => ({
@@ -361,8 +387,117 @@
       const debts = items.filter(i => i.mentions >= 20).sort((a, b) => b.debt - a.debt).slice(0, 14);
       this.M.attention = { items, maxOwn, maxMen, maxDocs, debts, hover: null, pinned: null, rowHits: [], reveal: 0 };
     },
+    // PEN MODE — the playhead sweeps subjects ranked by documentation debt and
+    // the sidebar surfaces the actual sentences in which other pages name them.
+    initAttentionPen() {
+      if (!this.M.attention) this.initAttention();
+      const A = this.M.attention, dom = this.state.attentionDom;
+      const rows = A.items
+        .filter(it => (dom === 'ALL' || it.p.domain === dom) && it.mentions > 0)
+        .sort((x, y) => y.debt - x.debt);
+      const nP = rows.length;
+      const mentions = new Float32Array(nP), own = new Float32Array(nP), docs = new Float32Array(nP);
+      const vol = new Float32Array(nP);
+      let mMax = 0.001, oMax = 0.001, dMax = 0.001, vMax = 1;
+      rows.forEach((it, i) => {
+        // rate, not raw count: mentions per 1,000 words the page itself carries
+        mentions[i] = it.mentions / Math.max(1, it.own) * 1000;
+        own[i] = it.own;
+        docs[i] = it.docs;
+        vol[i] = it.mentions;
+        if (mentions[i] > mMax) mMax = mentions[i];
+        if (own[i] > oMax) oMax = own[i];
+        if (docs[i] > dMax) dMax = docs[i];
+        if (vol[i] > vMax) vMax = vol[i];
+      });
+      // the naming sentences themselves — one per documenting page, in order
+      const frags = [];
+      rows.forEach((it, i) => {
+        const keys = [it.p.title, ...(it.p.aliases || [])]
+          .filter(k => k && k.length >= 4).map(k => k.toLowerCase());
+        let taken = 0;
+        for (const f of it.from.slice(0, 3)) {
+          const sent = this.wkSentences(f.p.id)
+            .find(sn => keys.some(k => sn.toLowerCase().includes(k)));
+          if (!sent) continue;
+          frags.push({
+            pos: i + Math.min(0.9, taken * 0.2), text: sent,
+            tag: '\u2190 ' + f.c + '\u00d7 in ' + f.p.title.slice(0, 30),
+            shownAt: 0, pen: this.WCOL[f.p.domain] || '#e0aaff', id: f.p.id
+          });
+          taken++;
+        }
+      });
+      frags.sort((x, y) => x.pos - y.pos);
+      this.M.attentionPen = {
+        rows, nP, mentions, own, docs, vol, mMax, oMax, dMax, vMax, frags, dom,
+        play: 0.001, scrub: false, scrubGeo: null, hover: -1
+      };
+    },
+    attentionRestart() {
+      const P = this.M.attentionPen; if (!P) return;
+      P.play = 0.001; for (const f of P.frags) f.shownAt = 0;
+      this.setState({ attentionPlay: true });
+    },
+    draw_attentionPen(ctx, W, H, dt) {
+      if (!this.M.attentionPen || this.M.attentionPen.dom !== this.state.attentionDom) this.initAttentionPen();
+      const C = this.COL, P = this.M.attentionPen;
+      if (!P.nP) {
+        ctx.font = '11px ' + this.MONO; ctx.fillStyle = C.dim; ctx.textAlign = 'center';
+        ctx.fillText('NOTHING IS NAMED IN THIS DOMAIN', W / 2, H / 2); ctx.textAlign = 'left'; return;
+      }
+      this.penInstrument(ctx, W, H, dt, {
+        id: 'attentionPen', stateKey: 'attention', accent: '#39ff14', title: 'ATTENTION',
+        sub: P.nP + ' NAMED SUBJECTS \u00b7 RANKED BY DOCUMENTATION DEBT \u00b7 MOST DISCUSSED PER OWN WORD FIRST',
+        nP: P.nP, padL: 118, padT: 74, padB: 66, laneGap: 9,
+        lanes: [
+          { data: P.mentions, label: 'NAMED', unit: '/1K OWN WORDS', color: '#39ff14', max: P.mMax },
+          { data: P.own, label: 'OWN SIZE', unit: 'WORDS', color: '#b026ff', max: P.oMax },
+          { data: P.docs, label: 'DOCUMENTERS', unit: 'PAGES', color: '#ccff00', max: P.dMax }
+        ],
+        volume: { data: P.vol, max: P.vMax, color: '#7b2dff' },
+        frags: P.frags,
+        feedTitle: 'THE SENTENCES THAT NAME THEM \u00b7 VERBATIM',
+        feed: { dy: -30, dh: -28 },
+        ribbon: (i, past) => hx(this.WCOL[P.rows[i].p.domain] || '#8fa878', past ? 0.85 : 0.22),
+        tickStep: Math.max(1, Math.ceil(P.nP / 8)),
+        tickLabel: (i) => '#' + (i + 1),
+        readout: (g) => {
+          const it = P.rows[Math.min(P.nP - 1, Math.floor(P.play))];
+          ctx.font = '600 12px ' + this.MONO; ctx.fillStyle = C.txt; ctx.textAlign = 'right';
+          ctx.fillText(it.p.title.slice(0, 34).toUpperCase(), g.chartR - 20, 30);
+          ctx.font = '9px ' + this.MONO; ctx.fillStyle = '#39ff14';
+          ctx.fillText(it.mentions + ' MENTIONS \u00b7 ' + this.fmt(it.own) + ' OWN WORDS \u00b7 ' + it.docs + ' PAGES', g.chartR - 20, 46);
+          ctx.textAlign = 'left';
+        },
+        overlay: (g) => {
+          P.hover = -1;
+          const mx = this.mouse.x, my = this.mouse.y;
+          if (mx >= g.padL - 6 && mx <= g.chartR - 14 && my >= g.ribY - 6 && my <= g.botY + 6) {
+            P.hover = Math.max(0, Math.min(P.nP - 1, Math.round(((mx - g.padL) / (g.chartR - g.padL - 20)) * (P.nP - 1))));
+          }
+          if (P.hover >= 0) {
+            const it = P.rows[P.hover];
+            ctx.strokeStyle = 'rgba(232,230,225,0.22)'; ctx.setLineDash([2, 4]);
+            ctx.beginPath(); ctx.moveTo(g.xOf(P.hover), g.padT); ctx.lineTo(g.xOf(P.hover), g.botY); ctx.stroke();
+            ctx.setLineDash([]);
+            const lines = [
+              [it.p.title.slice(0, 40), C.txt, '600 12px ' + this.GROT],
+              [it.p.domain.toUpperCase() + ' \u00b7 #' + (P.hover + 1) + ' OF ' + P.nP, this.WCOL[it.p.domain] || C.dim],
+              [it.mentions + ' MENTIONS ACROSS ' + it.docs + ' PAGES', '#39ff14'],
+              [this.fmt(it.own) + ' WORDS ON ITS OWN PAGE', '#b026ff']
+            ];
+            for (const f of it.from.slice(0, 3)) lines.push(['\u2190 ' + f.c + '\u00d7 in ' + f.p.title.slice(0, 30), this.WCOL[f.p.domain] || C.faint, '9px ' + this.MONO]);
+            lines.push(['CLICK TO READ THE PAGE', C.dim, '8.5px ' + this.MONO]);
+            this.card(ctx, mx, my, lines);
+          }
+          if (this.cv) this.cv.style.cursor = P.hover >= 0 ? 'pointer' : 'crosshair';
+        }
+      });
+    },
     draw_attention(ctx, W, H, dt) {
       if (!this.WK) return this.wkStandby(ctx, W, H);
+      if (this.state.attentionView === 'pen') return this.draw_attentionPen(ctx, W, H, dt);
       if (!this.M.attention) this.initAttention();
       const C = this.COL, A = this.M.attention, st = this.state;
       A.reveal = Math.min(1, A.reveal + dt * 0.9);
@@ -500,6 +635,15 @@
       if (this.cv) this.cv.style.cursor = A.hover ? 'pointer' : 'crosshair';
     },
     pt_attention(type, p) {
+      if (this.state.attentionView === 'pen') {
+        const P = this.M.attentionPen; if (!P) return;
+        if (type === 'down') {
+          const hit = (P.fragRects || []).find(r => p.x >= r.x && p.x <= r.x + r.w && p.y >= r.y && p.y <= r.y + r.h);
+          if (hit) { this.wikiOpen(hit.id); return; }
+        }
+        if (this.penScrub('attentionPen', type, p) === 'click' && P.hover >= 0) this.wikiOpen(P.rows[P.hover].p.id);
+        return;
+      }
       const A = this.M.attention; if (!A) return;
       if (type === 'down') {
         const row = (A.rowHits || []).find(r => p.x >= r.x && p.x <= r.x + r.w && p.y >= r.y && p.y <= r.y + r.h);
@@ -561,8 +705,102 @@
       D.usage = { hits: hits.slice(0, 8), quote };
       return D.usage;
     },
+    // PEN MODE — the playhead sweeps a domain's signature terms by TF-IDF and the
+    // sidebar shows the in-context line dictionUsage already resolves.
+    initDictionPen() {
+      if (!this.M.diction) this.initDiction();
+      const dom = this.state.dictionDom;
+      const terms = (this.M.diction.terms[dom] || []).slice();
+      const nP = terms.length;
+      const score = new Float32Array(nP), uses = new Float32Array(nP), reach = new Float32Array(nP);
+      let sMax = 0.001, uMax = 0.001, rMax = 0.001;
+      terms.forEach((t, i) => {
+        score[i] = t.score;
+        uses[i] = t.c;
+        // exclusivity: 1 when only this domain uses the word, 0 when all do
+        reach[i] = 1 - (t.doms - 1) / Math.max(1, this.WDOMS.length - 1);
+        if (score[i] > sMax) sMax = score[i];
+        if (uses[i] > uMax) uMax = uses[i];
+        if (reach[i] > rMax) rMax = reach[i];
+      });
+      const col = this.WCOL[dom] || '#e0aaff';
+      const frags = [];
+      terms.forEach((t, i) => {
+        const u = this.dictionUsage(t.w, dom);
+        if (u && u.quote) {
+          frags.push({
+            pos: i, text: u.quote,
+            tag: t.w.toUpperCase() + ' \u00b7 ' + (u.hits[0] ? u.hits[0].p.title.slice(0, 30) : dom),
+            shownAt: 0, pen: col, id: u.hits[0] ? u.hits[0].p.id : null
+          });
+        }
+      });
+      this.M.dictionPen = {
+        terms, nP, score, uses, reach, sMax, uMax, rMax, frags, dom, col,
+        play: 0.001, scrub: false, scrubGeo: null, hover: -1
+      };
+    },
+    dictionRestart() {
+      const P = this.M.dictionPen; if (!P) return;
+      P.play = 0.001; for (const f of P.frags) f.shownAt = 0;
+      this.setState({ dictionPlay: true });
+    },
+    draw_dictionPen(ctx, W, H, dt) {
+      if (!this.M.dictionPen || this.M.dictionPen.dom !== this.state.dictionDom) this.initDictionPen();
+      const C = this.COL, P = this.M.dictionPen;
+      if (!P.nP) {
+        ctx.font = '11px ' + this.MONO; ctx.fillStyle = C.dim; ctx.textAlign = 'center';
+        ctx.fillText('NO DISTINCTIVE VOCABULARY IN THIS DOMAIN', W / 2, H / 2); ctx.textAlign = 'left'; return;
+      }
+      this.penInstrument(ctx, W, H, dt, {
+        id: 'dictionPen', stateKey: 'diction', accent: P.col, title: 'DICTION \u00b7 ' + P.dom.toUpperCase(),
+        sub: P.nP + ' SIGNATURE TERMS \u00b7 RANKED BY TF-IDF AGAINST THE OTHER ' + (this.WDOMS.length - 1) + ' DOMAINS',
+        nP: P.nP, padL: 118, padT: 74, padB: 66, laneGap: 9,
+        lanes: [
+          { data: P.score, label: 'TF-IDF', unit: 'WEIGHT', color: P.col, max: P.sMax },
+          { data: P.uses, label: 'USES', unit: 'IN DOMAIN', color: '#39ff14', max: P.uMax },
+          { data: P.reach, label: 'EXCLUSIVITY', unit: '1 = ONLY HERE', color: '#b026ff', max: P.rMax }
+        ],
+        frags: P.frags,
+        feedTitle: 'THE TERM IN CONTEXT \u00b7 VERBATIM',
+        feed: { dy: -30, dh: -28 },
+        tickStep: Math.max(1, Math.ceil(P.nP / 8)),
+        tickLabel: (i) => P.terms[i] ? P.terms[i].w.slice(0, 9) : null,
+        readout: (g) => {
+          const t = P.terms[Math.min(P.nP - 1, Math.floor(P.play))];
+          ctx.font = '600 13px ' + this.MONO; ctx.fillStyle = C.txt; ctx.textAlign = 'right';
+          ctx.fillText(t.w.toUpperCase(), g.chartR - 20, 30);
+          ctx.font = '9px ' + this.MONO; ctx.fillStyle = P.col;
+          ctx.fillText(t.c + ' USES \u00b7 ' + t.df + ' PAGES CORPUS-WIDE \u00b7 ' + (t.doms === 1 ? 'ONLY HERE' : t.doms + ' DOMAINS'), g.chartR - 20, 46);
+          ctx.textAlign = 'left';
+        },
+        overlay: (g) => {
+          P.hover = -1;
+          const mx = this.mouse.x, my = this.mouse.y;
+          if (mx >= g.padL - 6 && mx <= g.chartR - 14 && my >= g.ribY - 6 && my <= g.botY + 6) {
+            P.hover = Math.max(0, Math.min(P.nP - 1, Math.round(((mx - g.padL) / (g.chartR - g.padL - 20)) * (P.nP - 1))));
+          }
+          if (P.hover >= 0) {
+            const t = P.terms[P.hover];
+            ctx.strokeStyle = 'rgba(232,230,225,0.22)'; ctx.setLineDash([2, 4]);
+            ctx.beginPath(); ctx.moveTo(g.xOf(P.hover), g.padT); ctx.lineTo(g.xOf(P.hover), g.botY); ctx.stroke();
+            ctx.setLineDash([]);
+            const u = this.dictionUsage(t.w, P.dom);
+            const lines = [
+              [t.w.toUpperCase(), C.txt, '700 14px ' + this.GROT],
+              [t.c + ' USES \u00b7 #' + (P.hover + 1) + ' OF ' + P.nP + ' \u00b7 ' + (t.doms === 1 ? 'USED NOWHERE ELSE' : t.doms + ' DOMAINS'), P.col]
+            ];
+            for (const h of (u ? u.hits.slice(0, 4) : [])) lines.push(['\u25b8 ' + h.p.title.slice(0, 32) + '  ' + h.c + '\u00d7', this.WCOL[h.p.domain] || C.faint, '9px ' + this.MONO]);
+            lines.push(['CLICK TO READ THE TOP PAGE', C.dim, '8.5px ' + this.MONO]);
+            this.card(ctx, mx, my, lines);
+          }
+          if (this.cv) this.cv.style.cursor = P.hover >= 0 ? 'pointer' : 'crosshair';
+        }
+      });
+    },
     draw_diction(ctx, W, H, dt) {
       if (!this.WK) return this.wkStandby(ctx, W, H);
+      if (this.state.dictionView === 'pen') return this.draw_dictionPen(ctx, W, H, dt);
       if (!this.M.diction) this.initDiction();
       const C = this.COL, D = this.M.diction, st = this.state;
       const dom = st.dictionDom, col = this.WCOL[dom] || '#8fa878';
@@ -658,6 +896,18 @@
       if (this.cv) this.cv.style.cursor = (D.hover || (D.rowHits || []).some(r => r.open && mx >= r.x && mx <= r.x + r.w && my >= r.y && my <= r.y + r.h)) ? 'pointer' : 'crosshair';
     },
     pt_diction(type, p) {
+      if (this.state.dictionView === 'pen') {
+        const P = this.M.dictionPen; if (!P) return;
+        if (type === 'down') {
+          const hit = (P.fragRects || []).find(r => p.x >= r.x && p.x <= r.x + r.w && p.y >= r.y && p.y <= r.y + r.h);
+          if (hit) { this.wikiOpen(hit.id); return; }
+        }
+        if (this.penScrub('dictionPen', type, p) === 'click' && P.hover >= 0) {
+          const u = this.dictionUsage(P.terms[P.hover].w, P.dom);
+          if (u && u.hits[0]) this.wikiOpen(u.hits[0].p.id);
+        }
+        return;
+      }
       const D = this.M.diction; if (!D) return;
       if (type === 'down') {
         const hit = (D.rowHits || []).find(r => p.x >= r.x && p.x <= r.x + r.w && p.y >= r.y && p.y <= r.y + r.h);

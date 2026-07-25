@@ -413,7 +413,13 @@ class Component extends DCLogic {
     echoMin: 0.25,
     cruciblePlay: false,
     crucibleSpeed: 3,
-    crucibleFilter: 'all'
+    crucibleFilter: 'all',
+    attentionView: 'scatter',
+    attentionPlay: false,
+    attentionSpeed: 4,
+    dictionView: 'bars',
+    dictionPlay: false,
+    dictionSpeed: 2
   };
 
   // ---------- constants ----------
@@ -465,6 +471,8 @@ class Component extends DCLogic {
       if (e.key === ' ' && this.state.tab === 'genesis') { e.preventDefault(); this.setState(s => ({ genesisPlay: !s.genesisPlay })); }
       if (e.key === ' ' && this.state.tab === 'episteme') { e.preventDefault(); this.setState(s => ({ epistemePlay: !s.epistemePlay })); }
       if (e.key === ' ' && this.state.tab === 'crucible') { e.preventDefault(); this.setState(s => ({ cruciblePlay: !s.cruciblePlay })); }
+      if (e.key === ' ' && this.state.tab === 'attention' && this.state.attentionView === 'pen') { e.preventDefault(); this.setState(s => ({ attentionPlay: !s.attentionPlay })); }
+      if (e.key === ' ' && this.state.tab === 'diction' && this.state.dictionView === 'pen') { e.preventDefault(); this.setState(s => ({ dictionPlay: !s.dictionPlay })); }
     };
     window.addEventListener('keydown', this.onKey);
     if (this.state.phase !== 'splash') setTimeout(() => this._setPhase(this.state.phase), 30);
@@ -3722,11 +3730,14 @@ class Component extends DCLogic {
   penInstrument(ctx, W, H, dt, cfg) {
     const C = this.COL, st = this.state, M = this.M[cfg.id];
     const nP = cfg.nP;
+    // the cache key (this.M[id]) and the state key need not match: a view-mode
+    // pen caches under its own id but shares the tab's play/speed state
+    const sk = cfg.stateKey || cfg.id;
 
     // ---- advance the playhead (scrubbing takes precedence) ----
-    if (st[cfg.id + 'Play'] && !M.scrub) {
-      M.play += (st[cfg.id + 'Speed'] || 1) * dt;
-      if (M.play >= nP - 0.01) { M.play = nP - 0.01; this.setState({ [cfg.id + 'Play']: false }); }
+    if (st[sk + 'Play'] && !M.scrub) {
+      M.play += (st[sk + 'Speed'] || 1) * dt;
+      if (M.play >= nP - 0.01) { M.play = nP - 0.01; this.setState({ [sk + 'Play']: false }); }
     }
 
     // ---- layout ----
@@ -3763,7 +3774,7 @@ class Component extends DCLogic {
     if (cfg.readout) cfg.readout(g);
 
     // ---- the pens, and the mass under them ----
-    this.drawPenLanes(ctx, geo, cfg.lanes, M.play, st[cfg.id + 'Play']);
+    this.drawPenLanes(ctx, geo, cfg.lanes, M.play, st[sk + 'Play']);
     if (cfg.volume) this.drawVolumeLane(ctx, geo, vy0, cfg.volume.data, cfg.volume.max, M.play, cfg.volume.color);
 
     // ---- needle ----
