@@ -384,10 +384,39 @@
         id: p.id, p,
         txt: ' ' + norm((this.WT[p.id] || '').replace(/\[\[[^\]]*\]\]/g, ' ')) + ' '
       }));
+      // Naively this is every page's title scanned against every page's body:
+      // 319 x 319 = ~102k indexOf passes over ~4 KB of prose each, roughly
+      // 400 MB of character scanning on the first open of ATTENTION. Instead
+      // index token -> bodies once, then shortlist each key by its rarest
+      // word. A body containing the phrase must contain every word of it, so
+      // the rarest word's posting list cannot miss a match; the shortlist only
+      // ever over-includes, and those still get the exact scan below.
+      const posting = new Map();
+      bodies.forEach((b, bi) => {
+        for (const w of b.txt.split(' ')) {
+          if (!w) continue;
+          let s = posting.get(w);
+          if (!s) posting.set(w, s = new Set());
+          s.add(bi);
+        }
+      });
+
       const items = [];
       for (const t of targets) {
+        const cand = new Set();
+        for (const k of t.keys) {
+          let rarest = null;
+          for (const w of k.split(' ')) {
+            const s = posting.get(w);
+            if (!s) { rarest = null; break; }   // word absent corpus-wide
+            if (!rarest || s.size < rarest.size) rarest = s;
+          }
+          if (rarest) for (const bi of rarest) cand.add(bi);
+        }
         let n = 0; const from = [];
-        for (const b of bodies) {
+        // corpus order, so `from` ties break exactly as they did before
+        for (const bi of [...cand].sort((a, b) => a - b)) {
+          const b = bodies[bi];
           if (b.id === t.p.id) continue;
           let c = 0;
           for (const k of t.keys) {
@@ -950,11 +979,30 @@
       if (mode === 'box') return box;
       return CORE_FIELDS.concat(box);
     },
+    // The coverage grid is static: it only changes when the field mode changes
+    // or the dataset reloads, and the mode chip nulls M.schema outright. But
+    // draw_schema was rebuilding it on every frame — three passes of
+    // pages x fields predicate calls (the corpus-wide totals, the per-cell
+    // count, and the per-cell miss list pushed into cellHits), plus a freshly
+    // allocated array per cell. In ALL mode that is ~19k predicate calls and
+    // ~400 arrays per frame to paint a heat map that never moves.
+    schemaGrid() {
+      const S = this.M.schema;
+      if (S.grid) return S.grid;
+      const cols = this.schemaCols();
+      const cells = S.rows.map(r => cols.map(([k, label, test]) => {
+        const miss = r.ps.filter(p => !test(p));
+        const have = r.ps.length - miss.length;
+        return { r, k, label, test, miss, have, frac: have / r.ps.length };
+      }));
+      S.grid = { cols, cells, totals: cols.map(([, , test]) => this.WK.pages.filter(test).length) };
+      return S.grid;
+    },
     draw_schema(ctx, W, H, dt) {
       if (!this.WK) return this.wkStandby(ctx, W, H);
       if (!this.M.schema) this.initSchema();
       const C = this.COL, S = this.M.schema;
-      const cols = this.schemaCols();
+      const G = this.schemaGrid(), cols = G.cols;
       const panelW = S.pinned ? 300 : 0;
       const gx0 = 132, gx1 = W - 24 - (panelW ? panelW + 14 : 0);
       const gy0 = 100, gy1 = H - 56;
@@ -980,9 +1028,6 @@
         ctx.restore();
       });
 
-      // overall per-column coverage across the whole corpus
-      const totals = cols.map(([k, l, test]) => this.WK.pages.filter(test).length);
-
       S.rows.forEach((r, ri) => {
         const y = gy0 + ri * rh;
         if (y + rh > gy1 + 1) return;
@@ -993,12 +1038,12 @@
         ctx.font = '8px ' + this.MONO; ctx.fillStyle = C.faint;
         ctx.fillText(r.ps.length + ' PAGES', gx0 - 12, y + rh / 2 + 7);
         ctx.textAlign = 'left';
-        cols.forEach(([k, label, test], ci) => {
-          const have = r.ps.filter(test);
-          const frac = have.length / r.ps.length;
+        cols.forEach(([k, label], ci) => {
+          const cell = G.cells[ri][ci];
+          const frac = cell.frac;
           const x = gx0 + ci * cw;
           const hov = mx >= x && mx < x + cw && my >= y && my < y + rh;
-          if (hov) S.hover = { r, k, label, frac, have: have.length, miss: r.ps.filter(p => !test(p)), test };
+          if (hov) S.hover = cell;
           // coverage → green, gap → red; full coverage reads as a solid block
           const colr = frac >= 0.999 ? '#00ffa3' : frac >= 0.6 ? '#39ff14' : '#e01aff';
           ctx.fillStyle = hx(colr, 0.1 + frac * 0.72);
@@ -1011,14 +1056,14 @@
             ctx.fillText(Math.round(frac * 100) + '%', x + cw / 2, y + rh / 2);
             ctx.textAlign = 'left';
           }
-          S.cellHits.push({ x, y, w: cw, h: rh, cell: { r, k, label, frac, miss: r.ps.filter(p => !test(p)) } });
+          S.cellHits.push({ x, y, w: cw, h: rh, cell });
         });
       });
 
       // corpus-wide footer bar per column
       ctx.textBaseline = 'alphabetic';
       cols.forEach(([k, label], ci) => {
-        const x = gx0 + ci * cw, frac = totals[ci] / this.WK.pages.length;
+        const x = gx0 + ci * cw, frac = G.totals[ci] / this.WK.pages.length;
         ctx.fillStyle = 'rgba(29,36,48,0.9)'; ctx.fillRect(x + 1, gy1 + 10, cw - 2, 5);
         ctx.fillStyle = hx(frac >= 0.6 ? '#00ffa3' : '#39ff14', 0.85);
         ctx.fillRect(x + 1, gy1 + 10, (cw - 2) * frac, 5);
