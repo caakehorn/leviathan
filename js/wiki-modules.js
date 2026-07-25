@@ -150,7 +150,7 @@
       if (s.tab === 'chronicle') {
         return [
           { label: s.chroniclePlay ? '❚❚ PAUSE' : '▶ PLAY', onClick: () => this.setState(st => ({ chroniclePlay: !st.chroniclePlay })), style: cs(s.chroniclePlay, '#7b2dff') },
-          { label: '↺ RESTART', onClick: () => this.chronicleRestart(), style: cs(false) },
+          { label: '↺ RESTART', onClick: () => this.penRestart('chronicle', 'chroniclePlay'), style: cs(false) },
           ...[[0.35, 'SLOW'], [1, 'NORMAL'], [3, 'FAST']].map(([v, l]) => ({
             label: l, onClick: () => this.setState({ chronicleSpeed: v }), style: cs(s.chronicleSpeed === v, '#7b2dff')
           }))
@@ -159,7 +159,7 @@
       if (s.tab === 'genesis') {
         return [
           { label: s.genesisPlay ? '❚❚ PAUSE' : '▶ PLAY', onClick: () => this.setState(st => ({ genesisPlay: !st.genesisPlay })), style: cs(s.genesisPlay, '#7b2dff') },
-          { label: '↺ RESTART', onClick: () => this.genesisRestart(), style: cs(false) },
+          { label: '↺ RESTART', onClick: () => this.penRestart('genesis', 'genesisPlay'), style: cs(false) },
           ...[[0.35, 'SLOW'], [1, 'NORMAL'], [3, 'FAST']].map(([v, l]) => ({
             label: l, onClick: () => this.setState({ genesisSpeed: v }), style: cs(s.genesisSpeed === v, '#7b2dff')
           }))
@@ -1214,11 +1214,6 @@
       const dayLabel = (i) => this.i2d(d0 + i).toISOString().slice(0, 10);
       this.M.chronicle = { d0, d1, nD, rates, maxRate, tot, maxVol, cum, maxCum, frags, dayLabel, play: 0.001, scrub: false, scrubGeo: null };
     },
-    chronicleRestart() {
-      const Ch = this.M.chronicle; if (!Ch || Ch.empty) return;
-      Ch.play = 0.001; for (const f of Ch.frags) f.shownAt = 0;
-      this.setState({ chroniclePlay: true });
-    },
     draw_chronicle(ctx, W, H, dt) {
       if (!this.WK) return this.wkStandby(ctx, W, H);
       if (!this.M.chronicle) this.initChronicle();
@@ -1337,11 +1332,6 @@
         d0, d1, nD, nodes, edges, byId, pagesD, edgesD, maxP, maxE, frags, dayLabel,
         play: 0.001, scrub: false, scrubGeo: null, hover: null, pinned: null, drag: null, downPos: null
       };
-    },
-    genesisRestart() {
-      const Ge = this.M.genesis; if (!Ge) return;
-      Ge.play = 0.001; for (const f of Ge.frags) f.shownAt = 0;
-      this.setState({ genesisPlay: true });
     },
     draw_genesis(ctx, W, H, dt) {
       if (!this.WK) return this.wkStandby(ctx, W, H);

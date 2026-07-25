@@ -58,7 +58,7 @@
       if (s.tab === 'episteme') {
         return [
           { label: s.epistemePlay ? '❚❚ PAUSE' : '▶ PLAY', onClick: () => this.setState(st => ({ epistemePlay: !st.epistemePlay })), style: cs(s.epistemePlay, '#7b2dff') },
-          { label: '↺ RESTART', onClick: () => this.epistemeRestart(), style: cs(false) },
+          { label: '↺ RESTART', onClick: () => this.penRestart('episteme', 'epistemePlay'), style: cs(false) },
           ...[[1.5, 'SLOW'], [5, 'NORMAL'], [16, 'FAST']].map(([v, l]) => ({
             label: l, onClick: () => this.setState({ epistemeSpeed: v }), style: cs(s.epistemeSpeed === v, '#7b2dff')
           })),
@@ -75,7 +75,7 @@
           })),
           ...(pen ? [
             { label: s.attentionPlay ? '\u275a\u275a PAUSE' : '\u25b6 PLAY', onClick: () => this.setState(st => ({ attentionPlay: !st.attentionPlay })), style: cs(s.attentionPlay, '#39ff14') },
-            { label: '\u21ba RESTART', onClick: () => this.attentionRestart(), style: cs(false) },
+            { label: '\u21ba RESTART', onClick: () => this.penRestart('attentionPen', 'attentionPlay'), style: cs(false) },
             ...[[1, 'SLOW'], [4, 'NORMAL'], [12, 'FAST']].map(([v, l]) => ({
               label: l, onClick: () => this.setState({ attentionSpeed: v }), style: cs(s.attentionSpeed === v, '#39ff14')
             }))
@@ -92,7 +92,7 @@
           })),
           ...(pen ? [
             { label: s.dictionPlay ? '\u275a\u275a PAUSE' : '\u25b6 PLAY', onClick: () => this.setState(st => ({ dictionPlay: !st.dictionPlay })), style: cs(s.dictionPlay, '#39ff14') },
-            { label: '\u21ba RESTART', onClick: () => this.dictionRestart(), style: cs(false) },
+            { label: '\u21ba RESTART', onClick: () => this.penRestart('dictionPen', 'dictionPlay'), style: cs(false) },
             ...[[0.6, 'SLOW'], [2, 'NORMAL'], [6, 'FAST']].map(([v, l]) => ({
               label: l, onClick: () => this.setState({ dictionSpeed: v }), style: cs(s.dictionSpeed === v, '#39ff14')
             }))
@@ -115,7 +115,7 @@
       if (s.tab === 'crucible') {
         return [
           { label: s.cruciblePlay ? '❚❚ PAUSE' : '▶ PLAY', onClick: () => this.setState(st => ({ cruciblePlay: !st.cruciblePlay })), style: cs(s.cruciblePlay, this.WTCOL.contradicts) },
-          { label: '↺ RESTART', onClick: () => this.crucibleRestart(), style: cs(false) },
+          { label: '↺ RESTART', onClick: () => this.penRestart('crucible', 'cruciblePlay'), style: cs(false) },
           ...[[1, 'SLOW'], [3, 'NORMAL'], [8, 'FAST']].map(([v, l]) => ({
             label: l, onClick: () => this.setState({ crucibleSpeed: v }), style: cs(s.crucibleSpeed === v, this.WTCOL.contradicts)
           })),
@@ -276,11 +276,6 @@
         volSeries, maxVolat,
         play: 0.001, scrub: false, scrubGeo: null, hover: -1
       };
-    },
-    epistemeRestart() {
-      const E = this.M.episteme; if (!E) return;
-      E.play = 0.001; for (const f of E.frags) f.shownAt = 0;
-      this.setState({ epistemePlay: true });
     },
     draw_episteme(ctx, W, H, dt) {
       if (!this.WK) return this.wkStandby(ctx, W, H);
@@ -469,11 +464,6 @@
         rows, nP, mentions, own, docs, vol, mMax, oMax, dMax, vMax, frags, dom,
         play: 0.001, scrub: false, scrubGeo: null, hover: -1
       };
-    },
-    attentionRestart() {
-      const P = this.M.attentionPen; if (!P) return;
-      P.play = 0.001; for (const f of P.frags) f.shownAt = 0;
-      this.setState({ attentionPlay: true });
     },
     draw_attentionPen(ctx, W, H, dt) {
       if (!this.M.attentionPen || this.M.attentionPen.dom !== this.state.attentionDom) this.initAttentionPen();
@@ -778,11 +768,6 @@
         terms, nP, score, uses, reach, sMax, uMax, rMax, frags, dom, col,
         play: 0.001, scrub: false, scrubGeo: null, hover: -1
       };
-    },
-    dictionRestart() {
-      const P = this.M.dictionPen; if (!P) return;
-      P.play = 0.001; for (const f of P.frags) f.shownAt = 0;
-      this.setState({ dictionPlay: true });
     },
     draw_dictionPen(ctx, W, H, dt) {
       if (!this.M.dictionPen || this.M.dictionPen.dom !== this.state.dictionDom) this.initDictionPen();
@@ -1215,11 +1200,6 @@
         rows, nP, series, maxRate, vol, maxVol, frags, filter, nContra, nHealed,
         play: 0.001, scrub: false, scrubGeo: null, hover: -1
       };
-    },
-    crucibleRestart() {
-      const K = this.M.crucible; if (!K) return;
-      K.play = 0.001; for (const f of K.frags) f.shownAt = 0;
-      this.setState({ cruciblePlay: true });
     },
     draw_crucible(ctx, W, H, dt) {
       if (!this.WK) return this.wkStandby(ctx, W, H);
