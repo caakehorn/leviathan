@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+
+# data/wiki-data.json is served unencrypted (the wiki source is public at
+# caakehorn.github.io/wiki-brain), but it is a single machine-readable blob of
+# the whole corpus — a different exposure surface than the rendered pages.
+# This is advisory only and is NOT an access control: the file stays fetchable
+# by anyone with the URL.
+Disallow: /data/

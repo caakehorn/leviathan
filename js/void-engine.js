@@ -116,7 +116,10 @@
       c.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;display:block;';
       this.appendChild(c);
 
-      var gl = this._gl = c.getContext('webgl', { antialias: false, preserveDrawingBuffer: true });
+      /* No preserveDrawingBuffer: nothing here reads the buffer back (no
+         readPixels, no toDataURL), and keeping it forces the driver off its
+         fast swap path. galaxy-cluster.js already omits it. */
+      var gl = this._gl = c.getContext('webgl', { antialias: false });
       if (!gl) {
         this.style.background = 'radial-gradient(circle at 50% 45%, #1a0030 0%, #10001f 70%)';
         return;

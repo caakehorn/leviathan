@@ -1,0 +1,11 @@
+version: 2
+updates:
+  # sync-wiki.yml holds contents:write and pushes to main; pages.yml holds
+  # id-token:write. Both pin actions by mutable major tag, so a security
+  # advisory in one of them would otherwise surface nowhere.
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: ci

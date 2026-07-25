@@ -1,2 +1,6 @@
 # transient wiki-brain checkout made by .github/workflows/sync-wiki.yml
 .wiki-brain/
+
+# Python bytecode from running tools/
+__pycache__/
+*.pyc

@@ -22,21 +22,21 @@
     supplies: '#c77dff', 'supplied-by': '#c77dff', contextualizes: '#e0aaff', escalates: '#b026ff',
     resolves: '#39ff14', 'component-of': '#8fa878', contains: '#8fa878', related: '#5f7a4e'
   };
-  const esc = (s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-
   window.WikiModules = {
     WCOL: DCOL,
     WDOMS: DOMS,
     WTCOL: TCOL,
     WHINTS: {
-      reader: 'THE SECOND BRAIN, VERBATIM \u00b7 343 PAGES \u00b7 CLICK ANY [[LINK]] \u00b7 SEARCH LEFT \u00b7 TYPED CONNECTIONS UP TOP',
+      // These three are replaced with live counts by initWiki; the defaults are
+      // only seen if it bails, so they carry no numbers rather than stale ones.
+      reader: 'THE SECOND BRAIN, VERBATIM \u00b7 CLICK ANY [[LINK]] \u00b7 SEARCH LEFT \u00b7 TYPED CONNECTIONS UP TOP',
       web: 'EVERY PAGE IS A NODE \u00b7 GRAB AND FLING \u00b7 CLICK TO PIN A DOSSIER \u00b7 DOUBLE-CLICK OPENS THE PAGE IN THE READER',
-      claims: '639 TYPED EDGES, EACH ONE AN ARGUED CLAIM \u00b7 SCROLL THE FEED \u00b7 CLICK A CARD EDGE TO OPEN SOURCE OR TARGET',
+      claims: 'TYPED EDGES, EACH ONE AN ARGUED CLAIM \u00b7 SCROLL THE FEED \u00b7 CLICK A CARD EDGE TO OPEN SOURCE OR TARGET',
       census: 'EVERY DOCUMENTED HUMAN AS A LIFELINE \u00b7 BAR = FIRST TO LAST CONTACT \u00b7 HOVER FOR THE ONE-LINER \u00b7 CLICK TO READ',
       strata: 'WHAT THE WIKI KNOWS, PLOTTED IN TIME \u00b7 EACH BAND IS A PAGE\u2019S DATE RANGE \u00b7 LANES = DOMAINS \u00b7 CLICK TO READ',
       accrete: 'THE WIKI DOCUMENTING ITSELF \u00b7 EVERY BAR A DAY OF OPERATIONS \u00b7 LINE = CUMULATIVE PAGES \u00b7 HOVER A DAY',
       tagmap: 'THEMES AS GRAVITY \u00b7 TAGS THAT SHARE PAGES ATTRACT \u00b7 CLICK A TAG TO LIST ITS PAGES \u00b7 CLICK A PAGE TO READ',
-      mass: 'THE CORPUS BY WEIGHT \u00b7 234,736 WORDS TILED BY DOMAIN AND PAGE \u00b7 HOVER FOR COUNTS \u00b7 CLICK TO READ',
+      mass: 'THE CORPUS BY WEIGHT \u00b7 TILED BY DOMAIN AND PAGE \u00b7 HOVER FOR COUNTS \u00b7 CLICK TO READ',
       lattice: 'GRAPH FORENSICS \u00b7 EDGE-TYPE SPECTRUM \u00b7 RECIPROCITY \u00b7 THE ORPHAN RING = PAGES NOTHING POINTS TO \u00b7 CLICK TO READ',
       evidence: 'WHERE THE KNOWLEDGE COMES FROM \u00b7 EVERY BAR A RAW SOURCE \u00b7 CLICK TO SEE THE PAGES IT FEEDS \u00b7 CLICK A PAGE TO READ',
       chronicle: 'PRESS PLAY · THE WIKI BUILDING ITSELF, DAY BY DAY · GREEN LINE = CUMULATIVE PAGES · CLAIMS SURFACE AS PAGES ENTER · CLICK ONE TO READ',
@@ -443,7 +443,9 @@
       if (type === 'wheel') {
         Cl.scroll = Math.max(0, Math.min((Cl.contentH || 0) - this.H + 60, Cl.scroll + e.deltaY));
       } else if (type === 'down') {
-        const th = (Cl.typeHits || []).find(t => p.x < 200 && p.y >= t.y0 && p.y <= t.y1);
+        // 236 is the rail width used to lay the labels out; the hit zone was 200,
+        // so clicks on the right end of a longer type label did nothing.
+        const th = (Cl.typeHits || []).find(t => p.x < 236 && p.y >= t.y0 && p.y <= t.y1);
         if (th) { this.setState({ claimType: this.state.claimType === th.t ? 'ALL' : th.t }); Cl.scroll = 0; return; }
         if (Cl.hoverRow) {
           const r = Cl.hoverRow;
@@ -714,7 +716,6 @@
         this.card(ctx, mx, my, lines);
       }
     },
-    pt_accrete() {},
 
     // ============================================================
     // WIKI 07 — TAGS (themes as gravity)
@@ -1162,7 +1163,11 @@
       if (!log.length) { this.M.chronicle = { empty: true }; return; }
       // the log is a dense, days-long authoring burst rather than a slow multi-year
       // trickle (see ACCRETION) \u2014 daily buckets give it real texture, weekly ones don't
-      const d0 = this.d2i(log[0].d);
+      // Take the minimum rather than log[0]: the ops array is not guaranteed
+      // sorted, and anything earlier than the first entry would fall outside the
+      // bucket range below and be dropped with no signal.
+      let d0 = this.d2i(log[0].d);
+      for (const o of log) { const i = this.d2i(o.d); if (i < d0) d0 = i; }
       const d1 = this.d2i(WK.maxD);
       const nD = Math.max(2, (d1 - d0) + 2);
       const sums = {}; for (const [k] of this.CHRON_PENS) sums[k] = new Float32Array(nD);

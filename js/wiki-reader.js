@@ -12,37 +12,17 @@
 // Replaces the previous reader wholesale (nav + markdown renderer + page
 // renderer); nothing here is layered on top of the old one.
 (function () {
-  // SLIME: the nine domains spread across a purple↔green ramp. Confined to two
-  // hue families they can't be told apart by hue alone, so the five greens and
-  // four purples alternate and are separated by lightness and saturation
-  // instead — and no two adjacent domains share a family.
-  const DOM_NEON = {
-    self:      '#39ff14',   // electric lime
-    timeline:  '#b026ff',   // vivid purple
-    people:    '#ccff00',   // acid yellow-green
-    mind:      '#7b2dff',   // violet
-    work:      '#00ffa3',   // spring green
-    interests: '#e0aaff',   // pale lilac
-    health:    '#7dffb0',   // mint
-    places:    '#c77dff',   // light purple
-    legal:     '#9ecb4a'    // olive
-  };
-  const DOMS = ['self', 'timeline', 'people', 'mind', 'work', 'interests', 'health', 'places', 'legal'];
-
-  // Edge types, coloured by what they DO to an argument. contradicts gets the
-  // hottest purple in the ramp — it is the alarm, and must not collide with
-  // the merely-structural edges.
-  const EDGE_NEON = {
-    causes: '#ccff00', 'caused-by': '#ccff00',
-    evidences: '#39ff14', 'evidenced-by': '#39ff14',
-    instantiates: '#7b2dff', 'instance-of': '#7b2dff',
-    precedes: '#7dffb0', follows: '#7dffb0',
-    parallels: '#00ffa3', mirrors: '#00ffa3', resolves: '#00ffa3',
-    contradicts: '#e01aff',
-    'co-occurs': '#8fa878', 'component-of': '#8fa878', contains: '#8fa878',
-    supplies: '#c77dff', 'supplied-by': '#c77dff',
-    contextualizes: '#e0aaff', escalates: '#b026ff', related: '#5f7a4e'
-  };
+  // The domain and edge-type ramps live in wiki-modules.js (WCOL/WDOMS/WTCOL),
+  // which every other consumer already reads. The reader used to carry its own
+  // copies; they drifted — `mirrors` and `resolves` were pulled off #00ffa3 in
+  // the canonical table so CRUCIBLE could show the tension family on adjacent
+  // pen lanes, and the reader never got the change. 15 edges therefore rendered
+  // one colour on a canvas and a different one in the SIGNAL MANIFEST.
+  // wiki-modules.js is loaded before this file, so the exports are already up.
+  const WM = window.WikiModules || {};
+  const DOM_NEON = WM.WCOL;
+  const DOMS = WM.WDOMS;
+  const EDGE_NEON = WM.WTCOL;
 
   const esc = (s) => String(s == null ? '' : s)
     .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -397,8 +377,6 @@
 `;
 
   window.WikiReader = {
-    RDR_DOM_NEON: DOM_NEON,
-
     // ── mount ────────────────────────────────────────────────────────────
     // index.html hands us one empty div; everything below it is ours.
     readerRef(el) {
