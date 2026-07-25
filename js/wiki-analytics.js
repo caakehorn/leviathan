@@ -48,7 +48,8 @@
       attention: 'WORDS WRITTEN ABOUT A SUBJECT vs. THE SIZE OF ITS OWN PAGE · ABOVE THE LINE = DOCUMENTATION DEBT · CLICK ANY DOT OR DEBT ROW TO READ',
       diction: 'EACH DOMAIN’S PRIVATE VOCABULARY, BY TF-IDF · HOVER A TERM FOR THE PAGES THAT CONCENTRATE IT · CLICK A PAGE TO READ',
       schema: 'METADATA CONFORMANCE · PAGE TYPE × FIELD COVERAGE · HOVER A CELL · CLICK IT TO LIST THE PAGES MISSING THAT FIELD',
-      echo: 'WHERE THE WIKI REPEATS ITSELF · EVERY PAGE AGAINST EVERY OTHER, BY PROSE SIMILARITY · HOVER A CELL · CLICK AN ECHO TO READ'
+      echo: 'WHERE THE WIKI REPEATS ITSELF · EVERY PAGE AGAINST EVERY OTHER, BY PROSE SIMILARITY · HOVER A CELL · CLICK AN ECHO TO READ',
+      crucible: 'WHERE THE RECORD DISAGREES WITH ITSELF · EVERY CONTRADICTS EDGE, VERBATIM · GREEN = LATER RESOLVED · PRESS ▶ · CLICK EITHER SIDE TO READ'
     },
 
     // chips for the second-wave tabs · returns null when the tab isn't ours
@@ -80,6 +81,20 @@
         return [['core', 'CORE FIELDS'], ['box', 'INFOBOX FIELDS'], ['all', 'ALL']].map(([id, l]) => ({
           label: l, onClick: () => { this.setState({ schemaMode: id }); if (this.M.schema) this.M.schema.pinned = null; }, style: cs(s.schemaMode === id, '#00ffa3')
         }));
+      }
+      if (s.tab === 'crucible') {
+        return [
+          { label: s.cruciblePlay ? '❚❚ PAUSE' : '▶ PLAY', onClick: () => this.setState(st => ({ cruciblePlay: !st.cruciblePlay })), style: cs(s.cruciblePlay, this.WTCOL.contradicts) },
+          { label: '↺ RESTART', onClick: () => this.crucibleRestart(), style: cs(false) },
+          ...[[1, 'SLOW'], [3, 'NORMAL'], [8, 'FAST']].map(([v, l]) => ({
+            label: l, onClick: () => this.setState({ crucibleSpeed: v }), style: cs(s.crucibleSpeed === v, this.WTCOL.contradicts)
+          })),
+          ...[['all', 'ALL'], ['unresolved', 'UNRESOLVED'], ['healed', 'HEALED']].map(([id, l]) => ({
+            label: l,
+            onClick: () => { this.setState({ crucibleFilter: id }); this.M.crucible = null; },
+            style: cs(s.crucibleFilter === id, id === 'healed' ? this.WTCOL.resolves : this.WTCOL.contradicts)
+          }))
+        ];
       }
       if (s.tab === 'echo') {
         return [[0.12, 'FAINT ≥ .12'], [0.25, 'CLEAR ≥ .25'], [0.45, 'LOUD ≥ .45']].map(([v, l]) => ({
@@ -792,6 +807,225 @@
           S.pinned = (S.pinned && S.pinned.r.t === cell.cell.r.t && S.pinned.k === cell.cell.k) ? null : cell.cell;
         } else S.pinned = null;
       }
+    },
+
+    // ============================================================
+    // WIKI 18 — CRUCIBLE  (where the record disagrees with itself)
+    //
+    // The corpus ships the ground truth: contradicts / resolves / mirrors /
+    // parallels edges, each carrying an authored `claim`. No NLI, no
+    // embeddings — the disagreements were argued by hand and this instrument
+    // just puts them at the centre instead of buried in a 640-edge feed.
+    //
+    // The axis is the whole TENSION FAMILY of page-pairs, ranked so the
+    // contradictions lead. Sweeping only the contradictions would be a
+    // four-position playhead — the 7 contradicts edges are reciprocal and
+    // collapse to 4 unordered pairs — which is a fact, not an instrument.
+    // The chips filter down to them; the pens show what kind of tension each
+    // pair carries as the needle crosses it.
+    // ============================================================
+    CRUC_FAM: ['contradicts', 'resolves', 'mirrors', 'parallels'],
+    initCrucible() {
+      const WK = this.WK, T = this.WTCOL;
+      const filter = this.state.crucibleFilter || 'all';
+      const fam = new Set(this.CRUC_FAM);
+
+      // endpoint tallies: how much of each relation touches a given page
+      const touch = {};
+      for (const e of WK.typed) {
+        if (!fam.has(e.type)) continue;
+        for (const side of [e.a, e.b]) {
+          (touch[side] = touch[side] || {})[e.type] = ((touch[side] || {})[e.type] || 0) + 1;
+        }
+      }
+      // total typed degree, for the volume lane
+      const deg = {};
+      for (const e of WK.typed) { deg[e.a] = (deg[e.a] || 0) + 1; deg[e.b] = (deg[e.b] || 0) + 1; }
+
+      const pairs = new Map();
+      for (const e of WK.typed) {
+        if (!fam.has(e.type)) continue;
+        const key = e.a < e.b ? e.a + '|' + e.b : e.b + '|' + e.a;
+        if (!pairs.has(key)) {
+          const [x, y] = key.split('|');
+          pairs.set(key, { key, a: WK.byId[x], b: WK.byId[y], edges: [] });
+        }
+        pairs.get(key).edges.push(e);
+      }
+
+      let rows = [...pairs.values()].filter(r => r.a && r.b);
+      for (const r of rows) {
+        const ta = touch[r.a.id] || {}, tb = touch[r.b.id] || {};
+        r.contra = (ta.contradicts || 0) + (tb.contradicts || 0);
+        r.resolv = (ta.resolves || 0) + (tb.resolves || 0);
+        r.mirror = (ta.mirrors || 0) + (tb.mirrors || 0);
+        r.parall = (ta.parallels || 0) + (tb.parallels || 0);
+        r.hasContra = r.edges.some(e => e.type === 'contradicts');
+        // healed = a resolution reaches one of these pages, even if the
+        // resolving edge is not itself on this pair
+        r.healed = r.hasContra && r.resolv > 0;
+        r.deg = (deg[r.a.id] || 0) + (deg[r.b.id] || 0);
+      }
+      if (filter === 'unresolved') rows = rows.filter(r => r.hasContra && !r.healed);
+      else if (filter === 'healed') rows = rows.filter(r => r.healed);
+
+      // contradictions lead, hottest first; the rest fall in behind by tension
+      rows.sort((x, y) =>
+        (y.hasContra ? 1 : 0) - (x.hasContra ? 1 : 0)
+        || y.contra - x.contra
+        || (y.mirror + y.parall) - (x.mirror + x.parall)
+        || x.a.id.localeCompare(y.a.id));
+
+      const nP = rows.length;
+      const series = { contra: new Float32Array(nP), resolv: new Float32Array(nP), mirror: new Float32Array(nP), parall: new Float32Array(nP) };
+      const vol = new Float32Array(nP);
+      let maxVol = 1;
+      const maxRate = { contra: 0.001, resolv: 0.001, mirror: 0.001, parall: 0.001 };
+      rows.forEach((r, i) => {
+        for (const k of ['contra', 'resolv', 'mirror', 'parall']) {
+          series[k][i] = r[k];
+          if (r[k] > maxRate[k]) maxRate[k] = r[k];
+        }
+        vol[i] = r.deg;
+        if (r.deg > maxVol) maxVol = r.deg;
+      });
+
+      // the verbatim payoff: every authored claim on every edge of the pair,
+      // coloured by its relation and clickable through to the page that argues it
+      const frags = [];
+      rows.forEach((r, i) => {
+        const ordered = r.edges.slice().sort((x, y) =>
+          (y.type === 'contradicts' ? 1 : 0) - (x.type === 'contradicts' ? 1 : 0));
+        ordered.forEach((e, j) => {
+          if (!e.claim || e.claim.length < 12) return;
+          const src = WK.byId[e.a], dst = WK.byId[e.b];
+          if (!src || !dst) return;
+          frags.push({
+            pos: i + Math.min(0.9, j * 0.12),
+            text: e.claim,
+            tag: (r.healed && e.type === 'contradicts' ? '✔ HEALED · ' : '')
+              + e.type.toUpperCase() + ' · ' + src.title.slice(0, 22) + ' → ' + dst.title.slice(0, 22),
+            shownAt: 0,
+            pen: r.healed && e.type === 'contradicts' ? T.resolves : (T[e.type] || '#8fa878'),
+            id: e.a
+          });
+        });
+      });
+      frags.sort((a, b) => a.pos - b.pos);
+
+      const nContra = rows.filter(r => r.hasContra).length;
+      const nHealed = rows.filter(r => r.healed).length;
+      this.M.crucible = {
+        rows, nP, series, maxRate, vol, maxVol, frags, filter, nContra, nHealed,
+        play: 0.001, scrub: false, scrubGeo: null, hover: -1
+      };
+    },
+    crucibleRestart() {
+      const K = this.M.crucible; if (!K) return;
+      K.play = 0.001; for (const f of K.frags) f.shownAt = 0;
+      this.setState({ cruciblePlay: true });
+    },
+    draw_crucible(ctx, W, H, dt) {
+      if (!this.WK) return this.wkStandby(ctx, W, H);
+      if (!this.M.crucible || this.M.crucible.filter !== (this.state.crucibleFilter || 'all')) this.initCrucible();
+      const C = this.COL, K = this.M.crucible, T = this.WTCOL;
+      if (!K.nP) {
+        ctx.font = '11px ' + this.MONO; ctx.fillStyle = C.dim; ctx.textAlign = 'center';
+        ctx.fillText('NO PAIRS MATCH THIS FILTER', W / 2, H / 2); ctx.textAlign = 'left';
+        return;
+      }
+      const PENS = [
+        ['contra', 'CONTRADICTION', T.contradicts],
+        ['resolv', 'RESOLUTION', T.resolves],
+        ['mirror', 'TENSION', T.mirrors],
+        ['parall', 'PARALLEL', T.parallels]
+      ];
+      const filtLabel = K.filter === 'unresolved' ? 'UNRESOLVED ONLY' : K.filter === 'healed' ? 'HEALED ONLY' : 'ALL TENSION PAIRS, CONTRADICTIONS FIRST';
+
+      this.penInstrument(ctx, W, H, dt, {
+        id: 'crucible', accent: T.contradicts, title: 'CRUCIBLE',
+        sub: K.nP + ' PAIRS IN TENSION · ' + K.nContra + ' CONTRADICT · ' + K.nHealed + ' LATER RESOLVED · ' + filtLabel,
+        nP: K.nP, padL: 118, padT: 74, padB: 66, laneGap: 9,
+        lanes: PENS.map(([k, label, col]) => ({
+          data: K.series[k], label, unit: 'EDGES', color: col, max: K.maxRate[k]
+        })),
+        volume: { data: K.vol, max: K.maxVol, color: '#7b2dff' },
+        frags: K.frags,
+        feedTitle: 'THE RECORD ARGUING WITH ITSELF · CLAIMS VERBATIM',
+        feed: { dy: -30, dh: -28 },
+        // contradictions burn, healed pairs go green, the rest stay quiet
+        ribbon: (i, past) => {
+          const r = K.rows[i];
+          const col = r.healed ? T.resolves : r.hasContra ? T.contradicts : '#7b2dff';
+          return hx(col, past ? (r.hasContra ? 0.95 : 0.5) : 0.18);
+        },
+        tickStep: Math.max(1, Math.ceil(K.nP / 8)),
+        tickLabel: (i) => '#' + (i + 1),
+
+        readout: (g) => {
+          const r = K.rows[Math.min(K.nP - 1, Math.floor(K.play))];
+          ctx.font = '600 12px ' + this.MONO; ctx.fillStyle = C.txt; ctx.textAlign = 'right';
+          ctx.fillText((r.a.title.slice(0, 22) + ' ⟷ ' + r.b.title.slice(0, 22)).toUpperCase(), g.chartR - 20, 30);
+          ctx.font = '9px ' + this.MONO;
+          ctx.fillStyle = r.healed ? T.resolves : r.hasContra ? T.contradicts : C.dim;
+          ctx.fillText(r.healed ? '✔ CONTRADICTED, THEN RESOLVED'
+            : r.hasContra ? '✖ CONTRADICTION STANDS'
+            : r.edges.length + ' TENSION EDGE' + (r.edges.length === 1 ? '' : 'S'), g.chartR - 20, 46);
+          ctx.textAlign = 'left';
+        },
+
+        // the boundary where authored contradiction gives way to mere tension
+        marker: (g) => {
+          if (K.filter !== 'all') return;
+          const zi = K.rows.findIndex(r => !r.hasContra);
+          if (zi <= 0) return;
+          const zx = g.xOf(zi);
+          ctx.strokeStyle = hx(T.contradicts, 0.5); ctx.setLineDash([3, 4]);
+          ctx.beginPath(); ctx.moveTo(zx, g.padT); ctx.lineTo(zx, g.botY); ctx.stroke();
+          ctx.setLineDash([]);
+          ctx.font = '8px ' + this.MONO; ctx.fillStyle = hx(T.contradicts, 0.7);
+          ctx.textAlign = 'center'; ctx.fillText('CONTRADICTS ← | → MERELY IN TENSION', zx, g.botY + 24);
+          ctx.textAlign = 'left';
+        },
+
+        overlay: (g) => {
+          K.hover = -1;
+          const mx = this.mouse.x, my = this.mouse.y;
+          if (mx >= g.padL - 6 && mx <= g.chartR - 14 && my >= g.ribY - 6 && my <= g.botY + 6) {
+            K.hover = Math.max(0, Math.min(K.nP - 1, Math.round(((mx - g.padL) / (g.chartR - g.padL - 20)) * (K.nP - 1))));
+          }
+          if (K.hover >= 0) {
+            const r = K.rows[K.hover];
+            ctx.strokeStyle = 'rgba(232,230,225,0.22)'; ctx.setLineDash([2, 4]);
+            ctx.beginPath(); ctx.moveTo(g.xOf(K.hover), g.padT); ctx.lineTo(g.xOf(K.hover), g.botY); ctx.stroke();
+            ctx.setLineDash([]);
+            const lines = [
+              [r.a.title.slice(0, 40), this.WCOL[r.a.domain] || C.txt, '600 12px ' + this.GROT],
+              ['⟷ ' + r.b.title.slice(0, 38), this.WCOL[r.b.domain] || C.txt, '600 12px ' + this.GROT],
+              ['#' + (K.hover + 1) + ' OF ' + K.nP + ' · ' + r.deg + ' TYPED EDGES ON THE PAIR', C.dim, '9px ' + this.MONO]
+            ];
+            for (const e of r.edges.slice(0, 3)) {
+              lines.push([e.type.toUpperCase(), T[e.type] || C.dim, '9px ' + this.MONO]);
+              if (e.claim) for (const ln of this.wkWrap(ctx, e.claim.slice(0, 190), 380).slice(0, 3)) {
+                lines.push([ln, C.txt, '11px ' + this.GROT]);
+              }
+            }
+            lines.push([r.healed ? '✔ A RESOLUTION REACHES THIS PAIR' : r.hasContra ? '✖ NOTHING RESOLVES THIS' : 'TENSION WITHOUT CONTRADICTION',
+              r.healed ? T.resolves : r.hasContra ? T.contradicts : C.faint, '9px ' + this.MONO]);
+            lines.push(['CLICK TO READ ' + r.a.title.slice(0, 26), C.dim, '8.5px ' + this.MONO]);
+            this.card(ctx, mx, my, lines);
+          }
+          if (this.cv) this.cv.style.cursor = K.hover >= 0 ? 'pointer' : 'crosshair';
+        }
+      });
+    },
+    pt_crucible(type, p) {
+      const K = this.M.crucible; if (!K) return;
+      if (type === 'down') {
+        const hit = (K.fragRects || []).find(r => p.x >= r.x && p.x <= r.x + r.w && p.y >= r.y && p.y <= r.y + r.h);
+        if (hit) { this.wikiOpen(hit.id); return; }
+      }
+      if (this.penScrub('crucible', type, p) === 'click' && K.hover >= 0) this.wikiOpen(K.rows[K.hover].a.id);
     },
 
     // ============================================================

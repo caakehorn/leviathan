@@ -410,7 +410,10 @@ class Component extends DCLogic {
     attentionDom: 'ALL',
     dictionDom: 'mind',
     schemaMode: 'core',
-    echoMin: 0.25
+    echoMin: 0.25,
+    cruciblePlay: false,
+    crucibleSpeed: 3,
+    crucibleFilter: 'all'
   };
 
   // ---------- constants ----------
@@ -449,7 +452,7 @@ class Component extends DCLogic {
       if (this.state.phase !== 'archive') return;
       if (e.target && (e.target.tagName === 'TEXTAREA' || e.target.tagName === 'INPUT')) return;
       const order = this.state.section === 'wiki'
-        ? ['reader', 'web', 'claims', 'census', 'strata', 'accrete', 'tagmap', 'mass', 'lattice', 'evidence', 'chronicle', 'genesis', 'episteme', 'attention', 'diction', 'schema', 'echo']
+        ? ['reader', 'web', 'claims', 'census', 'strata', 'accrete', 'tagmap', 'mass', 'lattice', 'evidence', 'chronicle', 'genesis', 'episteme', 'crucible', 'attention', 'diction', 'schema', 'echo']
         : ['pulse', 'clock', 'orbits', 'atlas', 'lexicon', 'shelf', 'weather', 'annie', 'signal', 'mirror', 'gravity', 'forensic', 'rings', 'silence', 'psyche', 'sync', 'drift', 'oracle', 'authority'];
       const i = '1234567890-='.indexOf(e.key);
       if (i >= 0 && order[i]) this.setTab(order[i]);
@@ -461,6 +464,7 @@ class Component extends DCLogic {
       if (e.key === ' ' && this.state.tab === 'chronicle') { e.preventDefault(); this.setState(s => ({ chroniclePlay: !s.chroniclePlay })); }
       if (e.key === ' ' && this.state.tab === 'genesis') { e.preventDefault(); this.setState(s => ({ genesisPlay: !s.genesisPlay })); }
       if (e.key === ' ' && this.state.tab === 'episteme') { e.preventDefault(); this.setState(s => ({ epistemePlay: !s.epistemePlay })); }
+      if (e.key === ' ' && this.state.tab === 'crucible') { e.preventDefault(); this.setState(s => ({ cruciblePlay: !s.cruciblePlay })); }
     };
     window.addEventListener('keydown', this.onKey);
     if (this.state.phase !== 'splash') setTimeout(() => this._setPhase(this.state.phase), 30);
@@ -4397,7 +4401,7 @@ class Component extends DCLogic {
   renderVals() {
     const s = this.state, C = this.COL;
     const tabDefs = s.section === 'wiki'
-      ? [['reader', 'READER'], ['web', 'WEB'], ['claims', 'CLAIMS'], ['census', 'CENSUS'], ['strata', 'STRATA'], ['accrete', 'ACCRETION'], ['tagmap', 'TAGS'], ['mass', 'MASS'], ['lattice', 'HEALTH'], ['evidence', 'EVIDENCE'], ['chronicle', 'CHRONICLE'], ['genesis', 'GENESIS'], ['episteme', 'EPISTEME'], ['attention', 'ATTENTION'], ['diction', 'DICTION'], ['schema', 'SCHEMA'], ['echo', 'ECHO']]
+      ? [['reader', 'READER'], ['web', 'WEB'], ['claims', 'CLAIMS'], ['census', 'CENSUS'], ['strata', 'STRATA'], ['accrete', 'ACCRETION'], ['tagmap', 'TAGS'], ['mass', 'MASS'], ['lattice', 'HEALTH'], ['evidence', 'EVIDENCE'], ['chronicle', 'CHRONICLE'], ['genesis', 'GENESIS'], ['episteme', 'EPISTEME'], ['crucible', 'CRUCIBLE'], ['attention', 'ATTENTION'], ['diction', 'DICTION'], ['schema', 'SCHEMA'], ['echo', 'ECHO']]
       : [['pulse', 'PULSE'], ['clock', 'CLOCK'], ['orbits', 'ORBITS'], ['atlas', 'ATLAS'], ['lexicon', 'LEXICON'], ['shelf', 'SHELF'], ['weather', 'WEATHER'], ['annie', 'POLYGRAPH'], ['signal', 'SIGNAL'], ['mirror', 'MIRROR'], ['gravity', 'GRAVITY'], ['forensic', 'FORENSIC'], ['rings', 'RINGS'], ['silence', 'SILENCE'], ['psyche', 'PSYCHE'], ['sync', 'SYNC'], ['drift', 'DRIFT'], ['oracle', 'ORACLE'], ['authority', 'AUTHORITY']];
     const ACC = s.section === 'wiki' ? C.violet : C.amber;
     const tabs = tabDefs.map(([id, label], i) => ({

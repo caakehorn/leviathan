@@ -8,13 +8,19 @@
     work: '#00ffa3', interests: '#e0aaff', health: '#7dffb0', places: '#c77dff', legal: '#9ecb4a'
   };
   const DOMS = ['self', 'timeline', 'people', 'mind', 'work', 'interests', 'health', 'places', 'legal'];
-  // SLIME — matches the reader's edge ramp; contradicts keeps the hottest purple
+  // SLIME — matches the reader's edge ramp; contradicts keeps the hottest purple.
+  // The tension family (contradicts / resolves / mirrors / parallels) is pulled
+  // apart deliberately: CRUCIBLE puts all four on adjacent pen lanes, and the
+  // slime collapse had left three of them sharing #00ffa3, which would have made
+  // RESOLUTION, TENSION and PARALLEL indistinguishable side by side. Eighteen
+  // relation types cannot all be unique inside two hue families, so the colours
+  // are spent on the types that appear together rather than spread evenly.
   const TCOL = {
     causes: '#ccff00', 'caused-by': '#ccff00', evidences: '#39ff14', 'evidenced-by': '#39ff14',
     instantiates: '#7b2dff', 'instance-of': '#7b2dff', precedes: '#7dffb0', follows: '#7dffb0',
-    parallels: '#00ffa3', mirrors: '#00ffa3', contradicts: '#e01aff', 'co-occurs': '#8fa878',
+    parallels: '#00ffa3', mirrors: '#7dffb0', contradicts: '#e01aff', 'co-occurs': '#8fa878',
     supplies: '#c77dff', 'supplied-by': '#c77dff', contextualizes: '#e0aaff', escalates: '#b026ff',
-    resolves: '#00ffa3', 'component-of': '#8fa878', contains: '#8fa878', related: '#5f7a4e'
+    resolves: '#39ff14', 'component-of': '#8fa878', contains: '#8fa878', related: '#5f7a4e'
   };
   const esc = (s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
