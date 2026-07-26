@@ -94,7 +94,7 @@ it would protect nothing and only make the citations harder to check.
 It shares no data layer with the rest of the site. `js/procurement-data.js` is
 the entire dataset — a hand-assembled pool of ~55 records, each one a quotation
 plus its source file, its row, its provenance tier and whatever caveat the wiki
-attached to it. The five instruments do nothing but order that pool, count it,
+attached to it. The six instruments do nothing but order that pool, count it,
 and read it back. Clicking any line in any feed pins the full source card.
 
 Because the pool is checked in rather than generated, editing it is editing the
@@ -102,6 +102,15 @@ page: add a record to the `R` array in `js/procurement-data.js` and every
 instrument picks it up on the next load. Records need `d` (ISO date at day,
 month or year precision), `lane`, `who`, `tier`, `tag`, `text`, `src`, `dir` and
 `page`; `note` and `approx` are optional, and `k` is the LEDGER sub-kind.
+
+`ASKS` is a second, separate pool feeding **THE ASK** — every request from Annie
+the record dates, Feb 2025 onward, plotted against a real calendar rather than
+an ordering. Its records carry `kind` (`sub` / `money` / `errand` / `presence`)
+and `count`: `1` for a discrete dated ask, `0` for a pattern-level record that
+carries a rate rather than an item. The distinction is load-bearing — the
+itemised total is small because the corpus narrates only ~13% of those 500 days,
+not because the asks were rare, and `ASK_WINDOWS` marks the narrated stretches
+so the instrument can draw missing record as missing rather than as absence.
 
 ## Keeping the WIKI section in sync
 

@@ -560,6 +560,208 @@
     2025: { dan: 9565, annie: 10074 }
   };
 
+  // ===================================================================
+  // THE ASK LEDGER — every request from her the record dates, Feb 2025 on
+  //
+  // A separate pool from the one above, because it answers a different
+  // question and has a different failure mode. The corpus does NOT publish a
+  // count of her requests. What it publishes is a base rate, discovered by
+  // accident: running a control on the 187:4 love-to-request claim, the
+  // 2026-07-18 recount found 97.2% of a random sample of ALL her messages in
+  // the Aug 2025 – Mar 2026 window had a request within ±24h — "she made
+  // requests nearly every day." That control deflated the love statistic and
+  // simultaneously established the ask rate.
+  //
+  // So there are two numbers here and they must not be confused:
+  //   · the ITEMISED count — discrete asks the wiki dates and describes. It is
+  //     small because the corpus only narrates a handful of days closely, not
+  //     because those were the only asks. `count: 1` marks these.
+  //   · the RATE — near-daily, from the base-rate control. `count: 0` marks
+  //     the pattern-level records that carry it.
+  //
+  // The instrument draws the documented windows as bands so the empty stretches
+  // read as "no day-level record published," which is what they are, rather
+  // than as "she asked for nothing."
+  //
+  // kind: sub (substance) · money · errand · presence
+  const ASKS = [
+    {
+      d: '2025-04-21', span: ['2025-04-17', '2025-04-26'], count: 0, kind: 'sub', tier: 'WIKI',
+      tag: 'A REPRESENTATIVE WEEK, NOT A SINGLE ASK',
+      text: 'Drug-procurement logistics (a supplier called "Bop," a contact named John, Suz often facilitating delivery) generate friction over timing and money.',
+      src: 'wiki/timeline/periods/feb-apr-2025-return-and-rupture',
+      dir: 'day-by-day account of Apr 17–25 2025, from a ChatGPT session Dan ran Apr 27 2025',
+      page: 'wiki/timeline/periods/feb-apr-2025-return-and-rupture',
+      note: 'PATTERN, NOT AN ITEM — excluded from the itemised counter. The wiki calls it "a tight, repeating cycle" across ten days, two months after the move to Uniontown. The underlying message log is not on disk; only the analysis session is.'
+    },
+    {
+      d: '2025-11-20', span: ['2025-08-01', '2026-03-16'], count: 1, kind: 'money', tier: 'WIKI',
+      tag: 'THE LONGEST SILENCE ENDS WITH A MONEY REQUEST',
+      text: 'Her longest documented silence ran 36.5 hours and ended with a money request.',
+      src: 'wiki/people/annie-ulmer · wiki/timeline/events/march-2026-terminal-phase',
+      dir: 'wiki finding — undated within the Aug 2025 – Mar 2026 window',
+      page: 'wiki/timeline/events/march-2026-terminal-phase',
+      note: 'UNDATED: the record fixes the duration and the re-entry vehicle but not the day. Plotted at the window midpoint and flagged; it is counted once because it is a specific documented event, not a rate.'
+    },
+    {
+      d: '2026-01-24', count: 0, kind: 'sub', who: 'dan', tier: 'DOSSIER',
+      tag: 'HIS OWN SUMMARY OF THE PATTERN, NAMED IN REAL TIME',
+      text: 'You have never once said I love you and not needed something from me immediately after',
+      src: 'report collection.txt / Honest assessment and value judgment analysis.md',
+      dir: 'Dan, Jan 24 2026 — dossier-transcribed, not located in an on-disk CSV',
+      page: 'wiki/mind/synthesis/dan-annie-fallout-verdict',
+      note: 'PATTERN, NOT AN ITEM. His lived read, and the corpus lets it stand as exactly that — a subjective report, not a count. The statistic built on top of it (187:4) did not survive.'
+    },
+    {
+      d: '2026-02-21', count: 1, kind: 'presence', tier: 'WIKI',
+      tag: 'PRESSING FOR A COMMITMENT TO COME OVER',
+      text: 'Annie pressing Dan for a straight answer on whether he’s coming over, Dan going quiet, Annie reading the silence as evasion.',
+      src: 'wiki/timeline/events/march-2026-terminal-phase',
+      dir: 'wiki finding — afternoon of Feb 21 2026, before the evening detonation',
+      page: 'wiki/timeline/events/march-2026-terminal-phase',
+      note: 'The only ask in the ledger that is for presence rather than for a thing. It ends with her threatening to "literally fucking tell your parents what you do," blocking, unblocking, and blocking again.'
+    },
+    {
+      d: '2026-03-09', count: 1, kind: 'sub', tier: 'WIKI',
+      tag: 'THE MORNING AFTER THE EULOGY',
+      text: 'The morning of March 9 opened with Annie asking for a drug pickup as if the previous night had not occurred.',
+      src: 'wiki/timeline/events/march-2026-terminal-phase',
+      dir: 'wiki finding — morning of Mar 9 2026',
+      page: 'wiki/timeline/events/march-2026-terminal-phase',
+      note: 'The previous night, March 8, reads in the analysis as a relationship eulogy — Dan releasing her with the specificity of someone who has stopped hoping. The ask arrives the next morning with no reference to it.'
+    },
+    {
+      d: '2026-03-10', count: 1, kind: 'sub', tier: 'WIKI',
+      tag: 'THE BATHROOM INCIDENT',
+      text: 'Dan. Calm down. Please. I will be over.',
+      src: 'wiki/timeline/events/march-2026-terminal-phase',
+      dir: 'Annie, 7:37 PM Mar 10 2026 — mid-burst, 37 unanswered messages in',
+      page: 'wiki/timeline/events/march-2026-terminal-phase',
+      note: 'She arrived, said she wanted to be together, went to the bathroom, and tried to leave through the front door without a word. The analysis calls it the whole dynamic in one physical action: "affirmation, extraction attempt, disappearance, compressed into under five minutes."'
+    },
+    {
+      d: '2026-03-11', count: 1, kind: 'sub', tier: 'RAW-CSV',
+      tag: 'THE CLEAREST ONE IN THE RECORD',
+      text: 'So is there anything I can get for you or your mom at the gas station so I can get a line or two. You can tell me no',
+      src: 'imessage_2124702449_both_all_now.csv',
+      dir: '2026-03-11 17:25:03 | Received',
+      page: 'wiki/mind/synthesis/dan-annie-fallout-verdict',
+      note: 'Seventeen hours after his most contained goodbye on record ("You’ve been heard. Goodbye," 12:25 AM). No acknowledgment of the goodbye — the drug request IS the re-entry vehicle. She offers the errand as the consideration and writes his right of refusal in herself.'
+    },
+    {
+      d: '2026-03-12', count: 1, kind: 'sub', tier: 'WIKI',
+      tag: 'A COLLECTION, MINUTES AFTER THE CONFESSION',
+      text: 'Ok let me get the keys',
+      src: 'wiki/people/annie-ulmer',
+      dir: 'Dan’s reply, minutes after Annie answered "YES" twice under sustained pressure',
+      page: 'wiki/people/annie-ulmer',
+      note: 'His words, her run. Holding the confirmation he had spent months seeking, his first move was one more delivery — "He could not stop providing even with the evidence in hand that had justified stopping long before."'
+    },
+    {
+      d: '2026-03-13', approx: true, count: 1, kind: 'errand', tier: 'WIKI',
+      tag: 'CLIPPERS, AND ONE LAST RUN',
+      text: 'So tomorrow you’re going to come pick up your clippers and I will get you what you want from bop one last time',
+      src: 'wiki/people/annie-ulmer',
+      dir: 'Dan, hours after "I hope you someday realize how much you really did ruin my life"',
+      page: 'wiki/people/annie-ulmer',
+      note: 'Counted because "what you want" is a standing request being answered. The hostility and the provision are hours apart and unlinked.'
+    },
+    {
+      d: '2026-03-19', count: 1, kind: 'money', tier: 'WIKI',
+      tag: 'A $50 SHORTFALL, CLOSED THROUGH HER MOTHER',
+      text: 'A $50 shortfall for supply that Annie tries to close by "magically" getting another fifty from her mother.',
+      src: 'wiki/timeline/events/march-2026-terminal-phase',
+      dir: 'wiki finding — Mar 19 2026, from a full-day thread sampled 2026-07-14',
+      page: 'wiki/timeline/events/march-2026-terminal-phase',
+      note: 'Her own mother as the fallback funding line. On Feb 21 she had already said the quiet part: "You think I’m worried people will find out I do drugs or my mom does and facilitated you doing them."'
+    },
+    {
+      d: '2026-03-19', count: 1, kind: 'errand', tier: 'WIKI',
+      tag: 'A BLACK-AND-MILD CANDY RUN',
+      text: 'A black-and-mild candy run.',
+      src: 'wiki/timeline/events/march-2026-terminal-phase',
+      dir: 'wiki finding — Mar 19 2026',
+      page: 'wiki/timeline/events/march-2026-terminal-phase',
+      note: 'The ordinary end of the ledger. It sits in the same day as the $50 shortfall and a cancelled evening ("I cannot stay. My mom asked me to come home... Don’t hate me... Please").'
+    },
+    {
+      d: '2026-05-04', count: 1, kind: 'money', tier: 'WIKI',
+      tag: 'WARMTH AT NIGHT, AN ATM CODE IN THE MORNING',
+      text: 'On May 4, warmth the prior evening was followed the next morning by a cardless-ATM-code request.',
+      src: 'wiki/timeline/events/april-may-2026-final-weeks',
+      dir: 'wiki finding — morning of May 4 2026',
+      page: 'wiki/timeline/events/april-may-2026-final-weeks',
+      note: 'The warmth in question was "I am not okay with that," her reply to a suicide statement. FLAGGED: this page is sourced from a single chat-analysis session and says so.'
+    },
+    {
+      d: '2026-05-05', count: 1, kind: 'sub', tier: 'WIKI',
+      tag: 'THE ASK ARRIVES BEFORE THE JOB NEWS',
+      text: 'Annie mentions starting work at "Marucas" on the morning of May 5 — in the same message exchange where she opens with a drug-supply-chain logistics request, meaning the request preceded the job announcement in sequence.',
+      src: 'wiki/timeline/events/april-may-2026-final-weeks',
+      dir: 'wiki finding — morning of May 5 2026',
+      page: 'wiki/timeline/events/april-may-2026-final-weeks',
+      note: 'The job is the thing that ends her dependency four weeks later. The request still comes first in the thread.'
+    },
+    {
+      d: '2026-05-05', count: 1, kind: 'sub', tier: 'WIKI',
+      tag: 'ARRIVED, COLLECTED, LEFT',
+      text: 'On May 5, Annie arrived without her phone, collected supply, and left.',
+      src: 'wiki/timeline/events/april-may-2026-final-weeks',
+      dir: 'wiki finding — May 5 2026',
+      page: 'wiki/timeline/events/april-may-2026-final-weeks',
+      note: 'Same day Dan wrote "stay away from me you liar" at 3:09 PM. The collection happened anyway.'
+    },
+    {
+      d: '2026-05-31', approx: true, count: 1, kind: 'sub', tier: 'DOSSIER',
+      tag: 'THE LAST ONE · A BLUE FOLDER IN A MAILBOX',
+      text: 'Dan had dropped a blue folder containing drugs Annie had requested into a mailbox for her; moments after she retrieved it, Tuquick opened a roughly two-hour barrage of slurs, threats, and a demand to meet in person.',
+      src: 'end-fight-notebooklm-podcast-transcript.md',
+      dir: 'podcast dramatisation of the same message logs — REVISED 2026-07-20',
+      page: 'wiki/people/tuquick-17248123683',
+      note: 'FLAGGED: the account is a NotebookLM-style dramatisation of the logs, not a located row. If it holds, the final documented transaction of the relationship is a drug drop she asked for, hours before "Goodbye forever."'
+    },
+    {
+      d: '2025-11-24', span: ['2025-08-01', '2026-03-16'], count: 0, kind: 'money', tier: 'RAW-CSV',
+      tag: 'THE RATE, FOUND BY ACCIDENT',
+      text: '97.2% of a random sample of ALL her messages in the window have a request within ±24h. She made requests nearly every day, so any class of her messages is ~96–97% "request-adjacent" at a 24-hour radius.',
+      src: 'imessage_7244346811+2124702449_both_all_now.csv',
+      dir: 'base-rate control, 2026-07-18 recount · Aug 1 2025 – Mar 16 2026 · her side = 8,293 messages',
+      page: 'wiki/mind/synthesis/dan-annie-fallout-verdict',
+      note: 'THIS IS THE REAL COUNTER, and it is a rate rather than a total. The control was run to test whether her love-declarations were procurement signals — it killed that claim and established the ask frequency in the same pass. No integer total of her requests exists anywhere in the corpus.'
+    },
+    {
+      d: '2025-11-24', span: ['2025-08-01', '2026-03-16'], count: 0, kind: 'presence', tier: 'RAW-CSV',
+      tag: 'THE INVERSE COUNTER — WHAT SHE ASKED ABOUT HIM',
+      text: 'Annie’s own unprompted wellbeing checks on Dan across the full 222-day window: seven, three of which are perfunctory ("Thank you okay") responses to a favor he’d just done her. Net of those, four genuine checks survive — once every fifty-five days.',
+      src: 'wiki/people/annie-ulmer · the 2026-07-18 audit',
+      dir: 'recount over the 222-day terminal window',
+      page: 'wiki/people/annie-ulmer',
+      note: 'Set against hundreds of documented instances of Dan asking after her grandmother, her ankle, her legal situation, her car. Requests near-daily; enquiries after him, four.'
+    }
+  ];
+
+  // Days the corpus actually narrates closely. Everything outside these bands
+  // has no day-level record published — which is not the same as nothing
+  // happening in it, and the instrument draws the difference.
+  const ASK_WINDOWS = [
+    ['2025-04-17', '2025-04-26', 'APR 2025 WEEK SAMPLE'],
+    ['2026-02-21', '2026-02-21', 'FEB 21'],
+    ['2026-03-01', '2026-03-16', 'MARCH TERMINAL PHASE'],
+    ['2026-03-19', '2026-03-20', 'MAR 19–20'],
+    ['2026-04-01', '2026-05-06', 'FINAL SEVEN WEEKS'],
+    ['2026-05-31', '2026-06-01', 'THE END FIGHT']
+  ];
+
+  ASKS.forEach((r, i) => {
+    r.i = i;
+    r.who = r.who || 'annie'; // every ask is hers unless the record says otherwise
+    r.day = dayNum(r.d);
+    r.w = TIER_W[r.tier] || 1;
+    r.shownAt = 0;
+    if (r.span) { r.spanA = dayNum(r.span[0]); r.spanB = dayNum(r.span[1]); }
+  });
+  ASKS.sort((a, b) => a.day - b.day || a.i - b.i);
+
   // Dan's own documented verbal-abuse instances per month, as published on
   // wiki/people/annie-ulmer. The series stops in February because that is where
   // the wiki stops counting — the months after it are absent, not zero, and the
@@ -612,6 +814,10 @@
 
   window.ProcurementData = {
     records: R,
+    asks: ASKS,
+    askWindows: ASK_WINDOWS.map(([a, b, label]) => ({ a: dayNum(a), b: dayNum(b), label })),
+    askStart: dayNum('2025-02-01'),
+    askEnd: dayNum('2026-06-15'),
     tierWeight: TIER_W,
     yearMsgs: YEAR_MSGS,
     abuseMo: ABUSE_MO,

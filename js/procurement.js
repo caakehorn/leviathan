@@ -16,6 +16,7 @@
 //   UNCONDITIONAL his hostility against his provision; the leverage lane is empty
 //   CLOCK         the dependency window, sized against the whole relationship
 //   PROVENANCE    the case re-sorted by how hard the evidence is
+//   THE ASK       her requests on a real calendar, Feb 2025 on, with a counter
 (function () {
   const D = window.ProcurementData;
 
@@ -76,6 +77,7 @@
         pinned: null,
         brief: false,
         agencyPlay: false, agencySpeed: 4,
+        askPlay: false, askSpeed: 60,
         ledgerPlay: false, ledgerSpeed: 2,
         uncondPlay: false, uncondSpeed: 3,
         clockPlay: false, clockSpeed: 9,
@@ -171,14 +173,16 @@
       ['ledger', 'II · LEDGER'],
       ['uncond', 'III · UNCONDITIONAL'],
       ['clock', 'IV · CLOCK'],
-      ['prov', 'V · PROVENANCE']
+      ['prov', 'V · PROVENANCE'],
+      ['ask', 'VI · THE ASK']
     ];
     HINTS = {
       agency: 'EVERY PROCUREMENT ACT IN THE RECORD, IN ORDER · PRESS ▶ · THE BOTTOM PEN IS SUPPLY WITHHELD AS LEVERAGE AND IT NEVER LEAVES THE FLOOR · CLICK ANY LINE FOR ITS SOURCE ROW',
       ledger: 'HER OWN DEALER, HER OWN RUNS, HER OWN MONEY — 2018–2019, SEVEN YEARS BEFORE HE WAS EVER HER SOURCE · CLICK ANY LINE FOR ITS SOURCE ROW',
       uncond: 'HIS HOSTILITY CLIMBS. THE SUPPLY NEVER MOVES WITH IT. THE LEVERAGE LANE IS EMPTY BECAUSE THE RECORD HAS NOTHING TO PUT IN IT · CLICK ANY LINE FOR ITS SOURCE',
       clock: 'THE WHOLE RELATIONSHIP AT MONTH RESOLUTION · THE SHADED WINDOW IS WHERE SHE SOURCED THROUGH HIM — ENTERED BY HER OWN MOVE, LEFT BY HER OWN JOB',
-      prov: 'THE SAME CASE RE-SORTED BY HOW HARD THE EVIDENCE IS · RAW EXPORT ROWS FIRST, DAN’S UNCORROBORATED WORD LAST · FILTER TO SEE WHAT SURVIVES WITHOUT HIM'
+      prov: 'THE SAME CASE RE-SORTED BY HOW HARD THE EVIDENCE IS · RAW EXPORT ROWS FIRST, DAN’S UNCORROBORATED WORD LAST · FILTER TO SEE WHAT SURVIVES WITHOUT HIM',
+      ask: 'EVERY REQUEST FROM HER THE RECORD DATES, FEB 2025 ONWARD, ON A REAL CALENDAR · THE COUNTER RIDES UNDERNEATH · LIT BANDS ARE THE ONLY DAYS THE CORPUS NARRATES'
     };
 
     chip(label, on, tone, onClick) {
@@ -214,7 +218,8 @@
         ledger: [[0.8, 'SLOW'], [2, 'NORMAL'], [6, 'FAST']],
         uncond: [[1, 'SLOW'], [3, 'NORMAL'], [9, 'FAST']],
         clock: [[3, 'SLOW'], [9, 'NORMAL'], [26, 'FAST']],
-        prov: [[2, 'SLOW'], [5, 'NORMAL'], [15, 'FAST']]
+        prov: [[2, 'SLOW'], [5, 'NORMAL'], [15, 'FAST']],
+        ask: [[20, 'SLOW'], [60, 'NORMAL'], [180, 'FAST']]
       }[t];
       chips.push(...this.speedChips(t + 'Speed', sp, '#b026ff'));
       if (t === 'prov') {
@@ -918,6 +923,158 @@
           this.cv.style.cursor = P.hover >= 0 ? 'pointer' : 'crosshair';
         }
       });
+    }
+
+    // ============================================================
+    // VI — THE ASK
+    // A calendar timeline, Feb 2025 → Jun 2026, one position per day, with a
+    // running counter riding underneath it. Unlike the other five this one is
+    // plotted against real time rather than an ordering, so the gaps are gaps:
+    // the shaded bands are the only stretches the corpus narrates at
+    // day-level, and the emptiness between them is missing record, not
+    // absence of asks. The rate that governs those stretches — near-daily —
+    // is in the feed, in the lane the counter cannot show.
+    // ============================================================
+    initAsk() {
+      const d0 = D.askStart, d1 = D.askEnd;
+      const nP = d1 - d0 + 1;
+      const rows = D.asks;
+      const at = (r) => Math.max(0, Math.min(nP - 1, r.day - d0));
+      const KINDS = [
+        ['sub', 'FOR A SUBSTANCE', '#39ff14'],
+        ['money', 'FOR MONEY', '#00ffa3'],
+        ['errand', 'FOR AN ERRAND', '#c77dff'],
+        ['presence', 'FOR HIM TO COME', '#b026ff']
+      ];
+      const series = {}, max = {};
+      for (const [k] of KINDS) {
+        series[k] = density(nP, rows.filter(r => r.kind === k && r.count).map(r => ({ pos: at(r), w: 1 })), 7);
+        max[k] = maxOf(series[k]);
+      }
+      const mx = Math.max(...Object.values(max));
+      for (const k of Object.keys(max)) max[k] = mx; // one scale, so the lanes compare
+
+      // the counter: cumulative itemised asks, day by day
+      const total = rows.reduce((a, r) => a + (r.count || 0), 0);
+      const cum = new Float32Array(nP);
+      let run = 0;
+      const byDay = {};
+      for (const r of rows) if (r.count) byDay[at(r)] = (byDay[at(r)] || 0) + r.count;
+      for (let i = 0; i < nP; i++) { run += byDay[i] || 0; cum[i] = run; }
+
+      const wins = D.askWindows.map(w => ({ a: w.a - d0, b: w.b - d0, label: w.label }));
+      const covered = wins.reduce((a, w) => a + (w.b - w.a + 1), 0);
+
+      this.M.ask = {
+        rows, nP, d0, KINDS, series, max, cum, total, wins, covered, at, hover: -1,
+        play: 0.001, scrub: false, scrubGeo: null,
+        frags: rows.map(r => ({
+          pos: at(r), text: r.text,
+          tag: (r.count ? '' : '◇ PATTERN · ') + stamp(r) + ' · ' + r.tag,
+          shownAt: 0,
+          pen: r.count ? (KINDS.find(k => k[0] === r.kind) || [, , '#39ff14'])[2] : '#e01aff',
+          id: r
+        })).sort((a, b) => a.pos - b.pos)
+      };
+    }
+
+    draw_ask(ctx, W, H, dt) {
+      if (!this.M.ask) this.initAsk();
+      const A = this.M.ask;
+      const dayOf = (i) => new Date((A.d0 + i) * 86400000);
+      const label = (i) => {
+        const dt2 = dayOf(i);
+        return dt2.getUTCDate() === 1 ? MONTHS[dt2.getUTCMonth()] + (dt2.getUTCMonth() === 0 ? ' ' + dt2.getUTCFullYear() : '') : null;
+      };
+      const pctDoc = Math.round((A.covered / A.nP) * 100);
+
+      this.penInstrument(ctx, W, H, dt, {
+        id: 'ask', accent: '#39ff14', title: 'THE ASK',
+        sub: this.fitSub(ctx, A.total + ' ITEMISED ASKS OVER ' + A.nP + ' DAYS · ONLY ' + pctDoc + '% OF THOSE DAYS ARE NARRATED'),
+        nP: A.nP, padL: 160, padT: 76, padB: 74, laneGap: 7,
+        lanes: A.KINDS.map(([k, lab, col]) => ({
+          data: A.series[k], label: lab, unit: 'DATED ASKS', color: col, max: A.max[k]
+        })),
+        volume: { data: A.cum, max: Math.max(1, A.total), color: '#e01aff', label: 'RUNNING TOTAL' },
+        frags: A.frags,
+        feedTitle: 'EVERY ASK THE RECORD DATES · ◇ = RATE, NOT AN ITEM · CLICK FOR SOURCE',
+        feed: { dy: -32, dh: -30 },
+        // the ribbon IS the coverage map: lit where the corpus narrates the day
+        ribbon: (i, past) => {
+          const inWin = A.wins.some(w => i >= w.a && i <= w.b);
+          return hx(inWin ? '#39ff14' : '#2a1245', past ? (inWin ? 0.95 : 0.55) : (inWin ? 0.3 : 0.12));
+        },
+        tickStep: 1,
+        tickLabel: label,
+
+        readout: (g) => {
+          const i = Math.min(A.nP - 1, Math.floor(A.play));
+          const dt2 = dayOf(i);
+          ctx.font = '700 15px ' + this.MONO; ctx.fillStyle = '#e01aff'; ctx.textAlign = 'right';
+          ctx.fillText('ASKS SO FAR: ' + A.cum[i], g.chartR - 20, 32);
+          ctx.font = '9px ' + this.MONO; ctx.fillStyle = COL.dim;
+          const inWin = A.wins.find(w => i >= w.a && i <= w.b);
+          ctx.fillText(MONTHS[dt2.getUTCMonth()] + ' ' + dt2.getUTCDate() + ' ' + dt2.getUTCFullYear()
+            + ' · ' + (inWin ? inWin.label : 'NO DAY-LEVEL RECORD'), g.chartR - 20, 48);
+          ctx.textAlign = 'left';
+        },
+
+        marker: (g) => {
+          // shade the narrated windows behind the lanes
+          for (const w of A.wins) {
+            const xa = g.xOf(w.a), xb = g.xOf(w.b);
+            ctx.fillStyle = 'rgba(57,255,20,0.07)';
+            ctx.fillRect(xa, g.padT, Math.max(1.5, xb - xa), g.botY - g.padT);
+          }
+          ctx.font = '9px ' + this.MONO; ctx.textAlign = 'left';
+          ctx.fillStyle = hx('#39ff14', 0.85);
+          ctx.fillText('LIT BANDS = DAYS THE CORPUS NARRATES. THE DARK STRETCHES ARE MISSING RECORD, NOT QUIET MONTHS.', g.padL, g.botY + 40);
+          ctx.fillStyle = hx('#e01aff', 0.9);
+          ctx.fillText('THE REAL RATE IS IN THE FEED: 97.2% OF ALL HER MESSAGES, AUG 2025 – MAR 2026, HAVE A REQUEST WITHIN ±24h.', g.padL, g.botY + 54);
+        },
+
+        overlay: (g) => {
+          A.hover = -1;
+          const mx = this.mouse.x, my = this.mouse.y;
+          if (mx >= g.padL - 6 && mx <= g.chartR - 14 && my >= g.ribY - 6 && my <= g.botY + 6) {
+            A.hover = Math.max(0, Math.min(A.nP - 1, Math.round(((mx - g.padL) / (g.chartR - g.padL - 20)) * (A.nP - 1))));
+          }
+          if (A.hover >= 0) {
+            const i = A.hover, dt2 = dayOf(i);
+            ctx.strokeStyle = 'rgba(232,230,225,0.22)'; ctx.setLineDash([2, 4]);
+            ctx.beginPath(); ctx.moveTo(g.xOf(i), g.padT); ctx.lineTo(g.xOf(i), g.botY); ctx.stroke();
+            ctx.setLineDash([]);
+            // nearest asks within a fortnight, so a sparse timeline still reads
+            const near = A.rows.filter(r => Math.abs(A.at(r) - i) <= 14).sort((a, b) => Math.abs(A.at(a) - i) - Math.abs(A.at(b) - i));
+            const inWin = A.wins.find(w => i >= w.a && i <= w.b);
+            const lines = [
+              [MONTHS[dt2.getUTCMonth()] + ' ' + dt2.getUTCDate() + ', ' + dt2.getUTCFullYear(), COL.txt, '600 12px ' + this.GROT],
+              [inWin ? 'NARRATED · ' + inWin.label : 'NO DAY-LEVEL RECORD PUBLISHED', inWin ? '#39ff14' : COL.faint, '9px ' + this.MONO],
+              ['RUNNING TOTAL HERE: ' + A.cum[i] + ' OF ' + A.total, '#e01aff', '9px ' + this.MONO]
+            ];
+            if (near.length) {
+              lines.push(['', COL.dim, '9px ' + this.MONO]);
+              for (const r of near.slice(0, 2)) {
+                lines.push([(r.count ? '· ' : '◇ ') + stamp(r) + ' · ' + r.tag, TIER_COL[r.tier], '9px ' + this.MONO]);
+                for (const ln of this.wrap(ctx, '“' + r.text.slice(0, 150) + '”', 380).slice(0, 3)) lines.push([ln, COL.txt, '11px ' + this.GROT]);
+              }
+              lines.push(['CLICK TO OPEN THE NEAREST SOURCE', COL.dim, '8.5px ' + this.MONO]);
+            }
+            this.card(ctx, mx, my, lines);
+          }
+          this.cv.style.cursor = A.hover >= 0 ? 'pointer' : 'crosshair';
+        }
+      });
+    }
+
+    pt_ask(type, p) {
+      const A = this.M.ask; if (!A) return;
+      if (type === 'down' && this.feedClick('ask', p, A)) return;
+      if (this.penScrub('ask', type, p) === 'click' && A.hover >= 0) {
+        const near = A.rows.filter(r => Math.abs(A.at(r) - A.hover) <= 14)
+          .sort((a, b) => Math.abs(A.at(a) - A.hover) - Math.abs(A.at(b) - A.hover));
+        if (near.length) this.pin(near[0]);
+      }
     }
 
     pt_prov(type, p) {
