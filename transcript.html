@@ -45,8 +45,9 @@
   .row{display:grid;grid-template-columns:58px 112px 78px 1fr;gap:10px;padding:7px 0;border-bottom:1px solid #1b0b2e;
        content-visibility:auto;contain-intrinsic-size:auto 40px}
   .row.hide{display:none}
-  .ln{color:#4b3a63;font-size:11px;text-align:right;padding-top:3px;user-select:none}
-  .ln:target{color:#e01aff}
+  .ln{color:#4b3a63;font-size:11px;text-align:right;padding-top:3px;user-select:none;
+      text-decoration:none;display:block}
+  .ln:hover{color:#39ff14;text-decoration:underline}
   .ts{color:#6f8a5e;font-size:11px;padding-top:3px;white-space:nowrap}
   .who{font-size:12px;font-weight:600;letter-spacing:.09em;padding-top:2px;white-space:nowrap}
   .row.tx-sent .who{color:#39ff14}
@@ -58,7 +59,12 @@
   .row.rx .tx{border-left:3px solid #e01aff;padding-left:11px}
   .row.att .ts::after{content:' ATT';color:#b026ff;font-size:9px}
   .row.tap{opacity:.6}
-  .row.cur{background:#1e0b33}
+  .row.cur{background:#26103d;outline:1px solid #b026ff;outline-offset:2px}
+  .row.cur .ln{color:#e01aff;font-weight:600}
+  /* arrived here from a link on an evidence page — say so, once */
+  .row.landed{position:relative}
+  .row.landed::before{content:'LINKED HERE';position:absolute;left:0;top:-9px;font-size:8.5px;
+      letter-spacing:.16em;color:#10001f;background:#e01aff;padding:1px 6px;border-radius:2px}
   mark{background:#b026ff;color:#10001f;padding:0 1px}
   .note{font-size:12.5px;line-height:1.6;font-family:'Space Grotesk',sans-serif;color:#9db38f;
         padding:16px 0;max-width:80ch}
@@ -128,7 +134,8 @@
     var m=M[i], d=document.createElement('div');
     d.className='row '+(m[1]?'tx-sent':'rx')+(m[3]&1?' att':'')+(m[3]&2?' tap':'');
     d.id='L'+(i+1);
-    d.innerHTML='<div class="ln">'+(i+1)+'</div><div class="ts">'+m[0].slice(0,16)+
+    d.innerHTML='<a class="ln" href="#L'+(i+1)+'" title="link to this message">'+(i+1)+
+                '</a><div class="ts">'+m[0].slice(0,16)+
                 '</div><div class="who">'+(m[1]?'DAN':'ANNIE')+
                 '</div><div class="tx">'+textHTML(i)+'</div>';
     rows[i]=d;
@@ -197,17 +204,25 @@
     updateCount();
   }
 
-  function gotoLine(n){
+  function gotoLine(n,landed){
     var idx=n-1;
     if(idx<0||idx>=M.length) return;
     growUntil(idx);
     var el=rows[idx];
     if(el){
-      var prevCur=DOC.querySelector('.row.cur'); if(prevCur) prevCur.classList.remove('cur');
+      var prevCur=DOC.querySelector('.row.cur');
+      if(prevCur){prevCur.classList.remove('cur');prevCur.classList.remove('landed');}
       el.classList.add('cur');
+      if(landed) el.classList.add('landed');
       el.scrollIntoView({block:'center'});
     }
   }
+
+  function fromHash(){
+    var h=location.hash;
+    if(/^#L\d+$/.test(h)) gotoLine(+h.slice(2),true);
+  }
+  addEventListener('hashchange',fromHash);
 
   var tmr;
   Q.addEventListener('input',function(){
@@ -259,7 +274,7 @@
       'be pointed to exactly. Faded lines are reactions (a thumbs-up or a heart on someone else’s '+
       'message, not a message of its own). ATT marks a message that carried a photo or attachment.';
     recompute();
-    if(location.hash&&/^#L\d+$/.test(location.hash)) gotoLine(+location.hash.slice(2));
+    fromHash();
   }).catch(function(e){
     META.textContent='FAILED TO LOAD data/transcript.json — '+e.message;
   });

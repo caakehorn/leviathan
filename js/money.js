@@ -40,16 +40,24 @@
         q.append(el('div', 'qm', 'ANNIE · ' + e.t
           + (e.recv ? '  ·  RECEIVED $' + e.recv : '') + (e.spend ? '  ·  TOWARD A BUY $' + e.spend : '')));
         q.append(el('div', 'qx', '“' + e.x + '”'));
+        if (window.TranscriptLink) {
+          q.append(window.TranscriptLink.el({ d: e.d, t: e.t, who: 'A', text: e.x }));
+        }
         row.append(q);
         for (const s of e.q) {
           if (s.x === e.x.slice(0, 230)) continue;
           const b = el('div', 'q qSup');
           b.append(el('div', 'qm', 'SAME DAY · ' + s.t));
           b.append(el('div', 'qx', '“' + s.x + '”'));
+          if (window.TranscriptLink) {
+            b.append(window.TranscriptLink.el({ d: e.d, t: s.t, who: '?', text: s.x }));
+          }
           row.append(b);
         }
-        row.append(el('div', 'src-note', 'VERIFY: search the full export for ' + e.d + '.'
+        row.append(el('div', 'src-note', 'VERIFY: every quote above links to the exact line it came from '
+          + 'in the full record.'
           + (e.chain ? '' : ' A same-day link is circumstantial — she had other bills, and money is fungible.')));
+        if (window.TranscriptLink) row.append(window.TranscriptLink.dayEl(e.d));
       }
       host.append(row);
     }

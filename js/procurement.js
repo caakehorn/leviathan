@@ -289,6 +289,18 @@
       row('ACTOR', { annie: 'ANNIE', dan: 'DAN', third: 'THIRD PARTY', record: 'THE RECORD ITSELF' }[r.who]);
       this.srcEl.append(meta);
 
+      // Straight into the record itself, at the line this came off.
+      if (window.TranscriptLink) {
+        const ts = /^(\d{4}-\d{2}-\d{2})[ T](\d{2}:\d{2})/.exec(r.dir || '');
+        const d = (ts && ts[1]) || (/^\d{4}-\d{2}-\d{2}$/.test(r.d || '') ? r.d : null);
+        const t = (ts && ts[2]) || (r.t || '');
+        const who = /Sent/i.test(r.dir || '') ? 'D' : /Received/i.test(r.dir || '') ? 'A'
+          : r.who === 'dan' ? 'D' : r.who === 'annie' ? 'A' : '?';
+        const link = d && t ? window.TranscriptLink.el({ d, t, who, text: r.text })
+          : d ? window.TranscriptLink.dayEl(d) : null;
+        if (link) { const wrap = document.createElement('div'); wrap.append(link); this.srcEl.append(wrap); }
+      }
+
       if (r.note) this.srcEl.append(mk('note', r.note));
       const a = document.createElement('a');
       a.href = url; a.target = '_blank'; a.rel = 'noopener noreferrer';
@@ -1002,7 +1014,7 @@
           tag: r.d + ' ' + r.t + ' · ' + KTAG[r.k],
           shownAt: 0, pen: KCOL[r.k],
           id: {
-            tier: 'RAW-CSV', tag: KTAG[r.k], text: r.x,
+            tier: 'RAW-CSV', tag: KTAG[r.k], text: r.x, d: r.d, t: r.t,
             src: 'wiki-brain raw/self/message-csv/ · merged Annie-thread exports',
             dir: r.d + ' ' + r.t + ' | Received | +1 212 ··· 2449',
             page: 'wiki/people/annie-ulmer', who: 'annie', day: r.day, approx: false,
