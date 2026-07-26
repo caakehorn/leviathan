@@ -268,11 +268,16 @@
     var sent=0; for(i=0;i<M.length;i++) if(M[i][1]) sent++;
     META.textContent=M.length.toLocaleString()+' MESSAGES  ·  '+j.first.slice(0,10)+' → '+j.last.slice(0,10)+
       '  ·  '+sent.toLocaleString()+' FROM DAN / '+(M.length-sent).toLocaleString()+' FROM ANNIE';
-    FOOT.textContent='This is the complete message history between Dan and Annie, in the order it was '+
-      'sent — every message, nothing removed and nothing edited. Each line says who sent it: DAN in '+
-      'green, ANNIE in pink. The number on the far left is the line number, so any single message can '+
-      'be pointed to exactly. Faded lines are reactions (a thumbs-up or a heart on someone else’s '+
-      'message, not a message of its own). ATT marks a message that carried a photo or attachment.';
+    FOOT.textContent='This is the message history between Dan and Annie, in the order it was sent — '+
+      'nothing removed and nothing edited. It runs across all three of Annie’s numbers and is '+
+      'assembled from every export on file, because no single export holds the whole thing. Each '+
+      'line says who sent it: DAN in green, ANNIE in pink. The number on the far left is the line '+
+      'number, so any single message can be pointed to exactly. Faded lines are reactions (a '+
+      'thumbs-up or a heart on someone else’s message, not a message of its own). ATT marks a '+
+      'message that carried a photo or attachment. '+
+      'The record is not continuous, and the gaps are in the exports rather than in the '+
+      'relationship: nothing survives between August 2020 and December 2022, nothing from January '+
+      'to July 2023, and nothing for June 2016, September 2016 or August 2017.';
     recompute();
     fromHash();
   }).catch(function(e){
