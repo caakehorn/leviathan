@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>THE ASK — PROCUREMENT · instrument VI</title>
+<meta name="robots" content="noindex, nofollow">
+<meta name="referrer" content="no-referrer">
+<meta name="theme-color" content="#10001f">
+<link rel="icon" href="data:,">
+
+<!-- Standalone, directly-linkable view of instrument VI · THE ASK.
+     Same provenance contract as procurement.html: no passphrase, because every
+     line it quotes is already public in data/wiki-data.json and in the
+     wiki-brain repository it is built from. noindex keeps it unlisted, not
+     secret. Linking to this URL lands a reader on THE ASK and nothing else. -->
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com crossorigin="anonymous">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&amp;family=IBM+Plex+Mono:wght@400;600;700&amp;display=swap" rel="stylesheet">
+
+<meta property="og:type" content="website">
+<meta property="og:title" content="THE ASK — from PROCUREMENT">
+<meta property="og:description" content="Instrument VI of the PROCUREMENT section: Annie Ulmer's own 18,946 messages, recounted from the raw exports — she names the size, she raises the money, she hands him her own ATM code.">
+<meta name="twitter:card" content="summary">
+
+<style>
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0; height: 100%;
+    background: #10001f; color: #e9ffe6;
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+    overflow: hidden;
+  }
+  ::selection { background: #b026ff; color: #10001f; }
+
+  #app { display: flex; flex-direction: column; height: 100%; }
+
+  header {
+    border-bottom: 1px solid #2a1245;
+    padding: 12px 18px 10px;
+    display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px 16px;
+    flex: 0 0 auto;
+  }
+  h1 {
+    margin: 0; font-family: 'Space Grotesk', sans-serif; font-weight: 700;
+    font-size: 17px; letter-spacing: 0.14em; color: #39ff14;
+  }
+  .kicker { font-size: 9px; letter-spacing: 0.18em; color: #6f8a5e; }
+  .kicker b { color: #e0aaff; font-weight: 600; }
+  .back {
+    font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: 0.16em;
+    color: #6b7484; text-decoration: none; border: 1px solid #5b1a8f;
+    padding: 4px 9px; transition: all 120ms ease;
+  }
+  .back:hover { color: #39ff14; border-color: #39ff14; }
+
+  nav, #chips {
+    display: flex; flex-wrap: wrap; gap: 6px;
+    padding: 8px 18px; flex: 0 0 auto;
+  }
+  nav { border-bottom: 1px solid #170a2a; }
+  #chips { border-bottom: 1px solid #170a2a; }
+
+  .chip {
+    font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; letter-spacing: 0.14em;
+    padding: 5px 11px; cursor: pointer; border: 1px solid #5b1a8f;
+    color: #6b7484; background: rgba(13,17,24,0.85);
+    transition: all 120ms ease; white-space: nowrap;
+  }
+  .chip:hover { color: #b6ff8f; border-color: #39ff14; }
+  .chip.on { color: #39ff14; border-color: #39ff14; background: rgba(57,255,20,0.08); }
+
+  #hint {
+    padding: 7px 18px; font-size: 8.5px; letter-spacing: 0.16em;
+    color: #6f8a5e; border-bottom: 1px solid #170a2a; flex: 0 0 auto;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+
+  #stageWrap { position: relative; flex: 1 1 auto; min-height: 0; overflow: hidden; }
+  #scroll { position: absolute; inset: 0; overflow-x: auto; overflow-y: hidden; }
+  #stage { display: block; touch-action: none; }
+
+  /* the source card — the reason the page exists */
+  #source {
+    position: absolute; left: 18px; bottom: 18px; width: min(560px, calc(100% - 36px));
+    max-height: calc(100% - 36px); overflow: auto;
+    background: rgba(11,4,22,0.97); border: 1px solid #2a1245;
+    padding: 14px 16px 16px; box-shadow: 0 0 40px rgba(176,38,255,0.25);
+  }
+  #source[hidden] { display: none; }
+  .srcHead { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+  .tier {
+    font-size: 8.5px; letter-spacing: 0.18em; padding: 3px 8px;
+    border: 1px solid currentColor; flex: 0 0 auto;
+  }
+  .srcTag { font-size: 9px; letter-spacing: 0.14em; color: #e0aaff; flex: 1 1 auto; }
+  .quote {
+    font-family: 'Space Grotesk', sans-serif; font-size: 15px; line-height: 1.45;
+    color: #e9ffe6; margin: 0 0 12px;
+  }
+  dl.meta { display: grid; grid-template-columns: 116px 1fr; gap: 3px 12px; margin: 0 0 10px; }
+  dl.meta dt { font-size: 8px; letter-spacing: 0.16em; color: #3d5230; padding-top: 2px; }
+  dl.meta dd { margin: 0; font-size: 10px; color: #6f8a5e; word-break: break-word; }
+  .note {
+    font-family: 'Space Grotesk', sans-serif; font-size: 11.5px; line-height: 1.5;
+    color: #c77dff; border-left: 2px solid #7b2dff; padding-left: 10px; margin-bottom: 10px;
+  }
+  #source a {
+    font-size: 9px; letter-spacing: 0.14em; color: #b026ff; text-decoration: none;
+    border-bottom: 1px solid rgba(176,38,255,0.5);
+  }
+  #source a:hover { color: #39ff14; border-bottom-color: rgba(57,255,20,0.6); }
+
+  /* the written brief */
+  #brief {
+    position: absolute; inset: 0; overflow: auto;
+    background: rgba(9,3,18,0.975); padding: 28px min(6vw, 60px) 60px;
+  }
+  #brief[hidden] { display: none; }
+  #brief .inner { max-width: 760px; margin: 0 auto; }
+  #brief h2 {
+    font-family: 'Space Grotesk', sans-serif; font-size: 20px; letter-spacing: 0.1em;
+    color: #39ff14; margin: 0 0 6px;
+  }
+  #brief h3 {
+    font-size: 9.5px; letter-spacing: 0.2em; color: #e0aaff;
+    margin: 26px 0 8px; font-weight: 600;
+  }
+  #brief p, #brief li {
+    font-family: 'Space Grotesk', sans-serif; font-size: 13.5px; line-height: 1.62;
+    color: #cfe6c4;
+  }
+  #brief p { margin: 0 0 12px; }
+  #brief ul { margin: 0 0 12px; padding-left: 18px; }
+  #brief li { margin-bottom: 7px; }
+  #brief em { color: #b6ff8f; font-style: normal; }
+  #brief .caveat { border-left: 2px solid #e01aff; padding-left: 12px; color: #e0aaff; }
+  #brief code {
+    font-family: 'IBM Plex Mono', monospace; font-size: 11.5px; color: #00ffa3;
+  }
+
+  @media (max-width: 720px) {
+    #hint { white-space: normal; }
+    h1 { font-size: 14px; }
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <h1>THE ASK</h1>
+    <div class="kicker">
+      INSTRUMENT VI OF THE <b>PROCUREMENT</b> SECTION · HER 18,946 MESSAGES, RECOUNTED FROM RAW · NO PASSPHRASE, EVERY LINE PUBLIC
+    </div>
+    <div style="flex: 1;"></div>
+    <a class="back" href="./procurement.html">◂ ALL SIX INSTRUMENTS</a>
+  </header>
+
+  <nav id="tabs"></nav>
+  <div id="chips"></div>
+  <div id="hint"></div>
+
+  <div id="stageWrap">
+    <div id="scroll"><canvas id="stage"></canvas></div>
+
+    <aside id="source" hidden></aside>
+
+    <div id="brief" hidden>
+      <div class="inner">
+        <h2>What this instrument is for, and what it does not claim</h2>
+
+        <p>
+          One question, asked narrowly: <em>was Annie Ulmer's acquisition and use of
+          controlled substances something she did, or something that was done to
+          her?</em> THE ASK answers its part of that question out of the message record
+          alone — her own words, recounted from the raw exports, not the wiki's
+          summarizing prose. Every line it counts is readable verbatim beside it —
+          click any of them and the file, the timestamp, the direction tag and the
+          wiki page that carries it open in full.
+        </p>
+
+        <h3>THE ASK — RECOUNTED FROM THE RAW LOGS</h3>
+        <p>
+          This one does not come from the wiki's prose. Every Annie-thread export in
+          wiki-brain's <code>raw/self/message-csv/</code> was merged, the one UTC-stamped
+          export converted to local time (it had been minting phantom duplicates
+          four hours off), the result deduplicated, and her side kept:
+          <em>18,946 messages from her</em>, 2025-02-01 to 2026-06-05, <em>every month
+          covered</em> — no narrative gaps to explain away.
+        </p>
+        <p>
+          Classification is frame-and-object, not keyword: a request has to be a
+          speech act aimed at somebody <em>and</em> name what it is for. Then every
+          single hit was read by hand and the false positives struck. The precision
+          that survived that audit is printed on the instrument, because a number
+          nobody can check is not evidence.
+        </p>
+        <p>
+          <b>The shape that came out is not the one the summaries imply.</b> Of 357
+          procurement messages from her:
+        </p>
+        <ul>
+          <li><em>42</em> are her <b>naming the size of the buy</b> — the denominated order. He asks, she answers with a number. <em>"How much" → "60."</em> <em>"i need a number now / she's making the call" → "100."</em></li>
+          <li><em>131</em> are her <b>asking for it</b> — mostly oblique, in the thread's own euphemisms: "get one," "get something," "I want a line," "More z," <em>"Why can't I just get it tonight,"</em> <em>"I want to get it first. I am dying here."</em></li>
+          <li><em>137</em> are her <b>raising the money</b>, including the ten times she asks her own mother or sister for it.</li>
+          <li><em>25</em> are her <b>handing him the cardless code to her own bank account</b> — <em>"I'll send you an access code. Take fifty out."</em> <em>"Can you please go to atm for me. Get out $80. I will send you the card less code."</em></li>
+          <li><em>22</em> are her <b>asking whether the source is reachable</b> — "Is there any possibility of seeing bop," "Did you ever end up seeing bop," "Is he coming."</li>
+        </ul>
+        <p>
+          Two findings a keyword sweep cannot reach. The denominated order is one:
+          the message is just <code>60</code>, and it reads as noise until his side is
+          put back beside it, at which point it reads as a purchase order. The last
+          one is <em>"100?"</em>, sent at 5:51 PM on <b>May 31, 2026</b> — six hours
+          before "Goodbye forever."
+        </p>
+        <p>
+          The cardless code is the other, and it inverts the dependency picture
+          outright. Twenty-five times she sends him a one-hour access code to
+          <em>her own bank account</em> so he can withdraw the purchase money at an ATM.
+          A person being supplied by someone does not hand that person their
+          banking credentials to fund the purchase.
+        </p>
+        <p>
+          And on <b>March 6, 2026</b> she names the alternative herself:
+          <em>"I'll find someone else to get it from and you'll never have to deal
+          with this again."</em> That sentence is not available to somebody whose
+          access runs through him alone.
+        </p>
+        <p>
+          She states <em>68 dollar amounts totalling $2,629</em> and announces <em>32 ATM
+          runs</em>. The transaction the record actually documents is a purchase she
+          funds and directs, not a supply she is handed. Her own line, March 26 2025:
+          <em>"When I am the one who will be fucking paying for it."</em>
+        </p>
+        <p>
+          The rate is real too, and it is the corpus's own: a base-rate control run
+          on 2026-07-18 found <em>97.2% of a random sample of all her messages</em> in the
+          Aug 2025 – Mar 2026 window had a request within ±24h. That control was
+          built to test whether her love-declarations were procurement signals; it
+          killed that claim and established the ask frequency in the same pass.
+        </p>
+        <p>
+          The number worth setting against all of it: across the same 222-day window
+          she made <em>seven</em> unprompted enquiries after how he was — four once the
+          perfunctory ones are netted out. Once every fifty-five days.
+        </p>
+
+        <h3>WHAT THIS INSTRUMENT DOES NOT CLAIM</h3>
+        <p class="caveat">
+          It does not claim Dan is a bystander. The same corpus states plainly
+          that he was the supply-chain architect of the terminal phase, that
+          structuring a dependency was his doing, that his verbal abuse
+          quadrupled across seven months and reproduces exactly from raw, and
+          that the surveillance arc points toward control. Those findings are
+          <em>on the full PROCUREMENT page</em>, in the same lanes as everything else,
+          under <b>AGAINST DAN</b> in <b>PROVENANCE</b>. Structuring a supply relationship with
+          someone who was already using for a decade is not the same act as
+          creating the use — but it is not nothing, and nothing here pretends
+          otherwise.
+        </p>
+
+        <h3>SOURCING</h3>
+        <p>
+          Every record is drawn from the public wiki at
+          <code>github.com/caakehorn/wiki-brain</code>, shipped unencrypted in this
+          repository as <code>data/wiki-data.json</code>. Records carry the wiki's own
+          provenance tiers, and where the wiki flags a line as dossier-only,
+          undated, contradicted or unresolved, the flag travels with it and is
+          shown in the source card. <b>PROVENANCE</b> (on the full page) sorts the whole
+          case by that tier so the weak sourcing is impossible to hide behind
+          the strong.
+        </p>
+        <p>
+          Press <b>ESC</b> to close this, and the space bar to start and stop the pens.
+          Use <b>◂ ALL SIX INSTRUMENTS</b> above to return to the full PROCUREMENT section.
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="./js/pen-core.js"></script>
+<script src="./js/procurement-data.js"></script>
+<script src="./js/procurement-asks.js"></script>
+<script src="./js/procurement.js"></script>
+
+<!-- Bootstrap: collapse the tab bar to THE ASK only and open on it, so this
+     URL is a direct link to instrument VI and nothing else. Runs after
+     procurement.js's own DOMContentLoaded handler has constructed the instance. -->
+<script>
+  window.addEventListener('DOMContentLoaded', function () {
+    var p = window.__procurement;
+    if (!p) return;
+    // restrict the tab bar to THE ASK (instrument VI)
+    p.TABS = [['ask', 'VI · THE ASK']];
+    // open on it
+    p.setState({ tab: 'ask', pinned: null });
+  });
+</script>
+</body>
+</html>
