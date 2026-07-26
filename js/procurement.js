@@ -16,7 +16,7 @@
 //   UNCONDITIONAL his hostility against his provision; the leverage lane is empty
 //   CLOCK         the dependency window, sized against the whole relationship
 //   PROVENANCE    the case re-sorted by how hard the evidence is
-//   THE ASK       her requests on a real calendar, Feb 2025 on, with a counter
+//   THE ASK       her procurement messages recounted from raw, Feb 2025 on
 (function () {
   const D = window.ProcurementData;
 
@@ -182,7 +182,7 @@
       uncond: 'HIS HOSTILITY CLIMBS. THE SUPPLY NEVER MOVES WITH IT. THE LEVERAGE LANE IS EMPTY BECAUSE THE RECORD HAS NOTHING TO PUT IN IT · CLICK ANY LINE FOR ITS SOURCE',
       clock: 'THE WHOLE RELATIONSHIP AT MONTH RESOLUTION · THE SHADED WINDOW IS WHERE SHE SOURCED THROUGH HIM — ENTERED BY HER OWN MOVE, LEFT BY HER OWN JOB',
       prov: 'THE SAME CASE RE-SORTED BY HOW HARD THE EVIDENCE IS · RAW EXPORT ROWS FIRST, DAN’S UNCORROBORATED WORD LAST · FILTER TO SEE WHAT SURVIVES WITHOUT HIM',
-      ask: 'EVERY REQUEST FROM HER THE RECORD DATES, FEB 2025 ONWARD, ON A REAL CALENDAR · THE COUNTER RIDES UNDERNEATH · LIT BANDS ARE THE ONLY DAYS THE CORPUS NARRATES'
+      ask: 'RECOUNTED FROM THE RAW EXPORTS — 18,946 OF HER MESSAGES, FEB 2025 → JUN 2026 · SHE IS RAISING THE MONEY, NOT ASKING HIM FOR DRUGS · CLICK ANY LINE'
     };
 
     chip(label, on, tone, onClick) {
@@ -927,54 +927,73 @@
 
     // ============================================================
     // VI — THE ASK
-    // A calendar timeline, Feb 2025 → Jun 2026, one position per day, with a
-    // running counter riding underneath it. Unlike the other five this one is
-    // plotted against real time rather than an ordering, so the gaps are gaps:
-    // the shaded bands are the only stretches the corpus narrates at
-    // day-level, and the emptiness between them is missing record, not
-    // absence of asks. The rate that governs those stretches — near-daily —
-    // is in the feed, in the lane the counter cannot show.
+    // Recounted from raw. Every Annie-thread export in wiki-brain merged, the
+    // UTC-stamped one converted to local (it was minting phantom duplicates
+    // four hours off), deduplicated, her side only: 18,946 messages across
+    // Feb 2025 → Jun 2026 with every month covered. Classified by speech-act
+    // frame plus named object, then every hit read by hand and the false
+    // positives struck. Per-category precision is on the page.
+    //
+    // The shape that came out is not the one the wiki's prose implies. She is
+    // overwhelmingly not asking him to hand her drugs — she is raising money
+    // and placing orders. The lanes are ordered so that reads top to bottom.
     // ============================================================
     initAsk() {
-      const d0 = D.askStart, d1 = D.askEnd;
+      const A0 = window.ProcurementAsks;
+      const d0 = D.dayNum(A0.meta.from), d1 = D.dayNum(A0.meta.to);
       const nP = d1 - d0 + 1;
-      const rows = D.asks;
-      const at = (r) => Math.max(0, Math.min(nP - 1, r.day - d0));
-      const KINDS = [
-        ['sub', 'FOR A SUBSTANCE', '#39ff14'],
-        ['money', 'FOR MONEY', '#00ffa3'],
-        ['errand', 'FOR AN ERRAND', '#c77dff'],
-        ['presence', 'FOR HIM TO COME', '#b026ff']
+      const rows = A0.records.map(r => ({ ...r, day: D.dayNum(r.d), pos: D.dayNum(r.d) - d0 }))
+        .filter(r => r.pos >= 0 && r.pos < nP);
+      const LANES = [
+        ['fund', 'SHE RAISES THE MONEY', '#39ff14', ['fund']],
+        ['order', 'SHE PLACES THE ORDER', '#00ffa3', ['order', 'chase']],
+        ['ask', 'SHE ASKS HIM FOR IT', '#c77dff', ['askSupply', 'askMoney', 'askOther']],
+        ['fam', 'SHE ASKS HER FAMILY', '#b026ff', ['ask3p']]
       ];
-      const series = {}, max = {};
-      for (const [k] of KINDS) {
-        series[k] = density(nP, rows.filter(r => r.kind === k && r.count).map(r => ({ pos: at(r), w: 1 })), 7);
+      const series = {}, max = {}, counts = {};
+      for (const [k, , , kinds] of LANES) {
+        const hits = rows.filter(r => kinds.includes(r.k));
+        counts[k] = hits.length;
+        series[k] = density(nP, hits.map(r => ({ pos: r.pos, w: 1 })), 9);
         max[k] = maxOf(series[k]);
       }
       const mx = Math.max(...Object.values(max));
-      for (const k of Object.keys(max)) max[k] = mx; // one scale, so the lanes compare
+      for (const k of Object.keys(max)) max[k] = mx;
 
-      // the counter: cumulative itemised asks, day by day
-      const total = rows.reduce((a, r) => a + (r.count || 0), 0);
+      const total = rows.length;
       const cum = new Float32Array(nP);
-      let run = 0;
       const byDay = {};
-      for (const r of rows) if (r.count) byDay[at(r)] = (byDay[at(r)] || 0) + r.count;
+      for (const r of rows) byDay[r.pos] = (byDay[r.pos] || 0) + 1;
+      let run = 0;
       for (let i = 0; i < nP; i++) { run += byDay[i] || 0; cum[i] = run; }
 
-      const wins = D.askWindows.map(w => ({ a: w.a - d0, b: w.b - d0, label: w.label }));
-      const covered = wins.reduce((a, w) => a + (w.b - w.a + 1), 0);
+      const KTAG = {
+        fund: 'SHE RAISES THE MONEY', order: 'SHE PLACES THE ORDER', chase: 'SHE CHASES THE SUPPLY',
+        askSupply: 'SHE ASKS HIM FOR SUPPLY', askMoney: 'SHE ASKS HIM FOR MONEY',
+        askOther: 'SHE ASKS HIM FOR SOMETHING', ask3p: 'SHE ASKS HER OWN FAMILY'
+      };
+      const KCOL = {
+        fund: '#39ff14', order: '#00ffa3', chase: '#00ffa3',
+        askSupply: '#c77dff', askMoney: '#c77dff', askOther: '#c77dff', ask3p: '#b026ff'
+      };
 
       this.M.ask = {
-        rows, nP, d0, KINDS, series, max, cum, total, wins, covered, at, hover: -1,
+        rows, nP, d0, LANES, series, max, counts, cum, total, byDay, hover: -1,
+        meta: A0.meta,
         play: 0.001, scrub: false, scrubGeo: null,
         frags: rows.map(r => ({
-          pos: at(r), text: r.text,
-          tag: (r.count ? '' : '◇ PATTERN · ') + stamp(r) + ' · ' + r.tag,
-          shownAt: 0,
-          pen: r.count ? (KINDS.find(k => k[0] === r.kind) || [, , '#39ff14'])[2] : '#e01aff',
-          id: r
-        })).sort((a, b) => a.pos - b.pos)
+          pos: r.pos, text: r.x,
+          tag: r.d + ' ' + r.t + ' · ' + KTAG[r.k],
+          shownAt: 0, pen: KCOL[r.k],
+          id: {
+            tier: 'RAW-CSV', tag: KTAG[r.k], text: r.x,
+            src: 'wiki-brain raw/self/message-csv/ · merged Annie-thread exports',
+            dir: r.d + ' ' + r.t + ' | Received | +1 212 ··· 2449',
+            page: 'wiki/people/annie-ulmer', who: 'annie', day: r.day, approx: false,
+            note: 'Recounted from raw, not from the wiki\u2019s prose. Classified by speech-act frame plus named object, then hand-audited; this category held '
+              + (A0.meta.precision[r.k] || 100) + '% precision against a full manual read of every hit.'
+          }
+        }))
       };
     }
 
@@ -983,54 +1002,49 @@
       const A = this.M.ask;
       const dayOf = (i) => new Date((A.d0 + i) * 86400000);
       const label = (i) => {
-        const dt2 = dayOf(i);
-        return dt2.getUTCDate() === 1 ? MONTHS[dt2.getUTCMonth()] + (dt2.getUTCMonth() === 0 ? ' ' + dt2.getUTCFullYear() : '') : null;
+        const t = dayOf(i);
+        return t.getUTCDate() === 1 ? MONTHS[t.getUTCMonth()] + (t.getUTCMonth() === 0 ? ' ' + t.getUTCFullYear() : '') : null;
       };
-      const pctDoc = Math.round((A.covered / A.nP) * 100);
+      const askShare = Math.round((A.counts.ask / A.total) * 100);
 
       this.penInstrument(ctx, W, H, dt, {
         id: 'ask', accent: '#39ff14', title: 'THE ASK',
-        sub: this.fitSub(ctx, A.total + ' ITEMISED ASKS OVER ' + A.nP + ' DAYS · ONLY ' + pctDoc + '% OF THOSE DAYS ARE NARRATED'),
-        nP: A.nP, padL: 160, padT: 76, padB: 74, laneGap: 7,
-        lanes: A.KINDS.map(([k, lab, col]) => ({
-          data: A.series[k], label: lab, unit: 'DATED ASKS', color: col, max: A.max[k]
+        sub: this.fitSub(ctx, A.total + ' PROCUREMENT MESSAGES FROM HER · ' + A.counts.fund + ' RAISING MONEY · ONLY ' + A.counts.ask + ' ASKING HIM'),
+        nP: A.nP, padL: 176, padT: 76, padB: 76, laneGap: 7,
+        lanes: A.LANES.map(([k, lab, col]) => ({
+          data: A.series[k], label: lab, unit: A.counts[k] + ' MESSAGES', color: col, max: A.max[k]
         })),
         volume: { data: A.cum, max: Math.max(1, A.total), color: '#e01aff', label: 'RUNNING TOTAL' },
         frags: A.frags,
-        feedTitle: 'EVERY ASK THE RECORD DATES · ◇ = RATE, NOT AN ITEM · CLICK FOR SOURCE',
+        feedTitle: 'HER OWN WORDS, FROM THE RAW EXPORTS · CLICK FOR PROVENANCE',
         feed: { dy: -32, dh: -30 },
-        // the ribbon IS the coverage map: lit where the corpus narrates the day
         ribbon: (i, past) => {
-          const inWin = A.wins.some(w => i >= w.a && i <= w.b);
-          return hx(inWin ? '#39ff14' : '#2a1245', past ? (inWin ? 0.95 : 0.55) : (inWin ? 0.3 : 0.12));
+          const n = A.byDay[i] || 0;
+          if (!n) return hx('#2a1245', past ? 0.4 : 0.12);
+          return hx('#39ff14', past ? Math.min(1, 0.5 + n * 0.25) : 0.25);
         },
         tickStep: 1,
         tickLabel: label,
 
         readout: (g) => {
           const i = Math.min(A.nP - 1, Math.floor(A.play));
-          const dt2 = dayOf(i);
+          const t = dayOf(i);
           ctx.font = '700 15px ' + this.MONO; ctx.fillStyle = '#e01aff'; ctx.textAlign = 'right';
-          ctx.fillText('ASKS SO FAR: ' + A.cum[i], g.chartR - 20, 32);
+          ctx.fillText('RUNNING TOTAL: ' + A.cum[i], g.chartR - 20, 32);
           ctx.font = '9px ' + this.MONO; ctx.fillStyle = COL.dim;
-          const inWin = A.wins.find(w => i >= w.a && i <= w.b);
-          ctx.fillText(MONTHS[dt2.getUTCMonth()] + ' ' + dt2.getUTCDate() + ' ' + dt2.getUTCFullYear()
-            + ' · ' + (inWin ? inWin.label : 'NO DAY-LEVEL RECORD'), g.chartR - 20, 48);
+          ctx.fillText(MONTHS[t.getUTCMonth()] + ' ' + t.getUTCDate() + ' ' + t.getUTCFullYear()
+            + ' · ' + (A.byDay[i] || 0) + ' THAT DAY', g.chartR - 20, 48);
           ctx.textAlign = 'left';
         },
 
         marker: (g) => {
-          // shade the narrated windows behind the lanes
-          for (const w of A.wins) {
-            const xa = g.xOf(w.a), xb = g.xOf(w.b);
-            ctx.fillStyle = 'rgba(57,255,20,0.07)';
-            ctx.fillRect(xa, g.padT, Math.max(1.5, xb - xa), g.botY - g.padT);
-          }
           ctx.font = '9px ' + this.MONO; ctx.textAlign = 'left';
-          ctx.fillStyle = hx('#39ff14', 0.85);
-          ctx.fillText('LIT BANDS = DAYS THE CORPUS NARRATES. THE DARK STRETCHES ARE MISSING RECORD, NOT QUIET MONTHS.', g.padL, g.botY + 40);
-          ctx.fillStyle = hx('#e01aff', 0.9);
-          ctx.fillText('THE REAL RATE IS IN THE FEED: 97.2% OF ALL HER MESSAGES, AUG 2025 – MAR 2026, HAVE A REQUEST WITHIN ±24h.', g.padL, g.botY + 54);
+          ctx.fillStyle = hx('#39ff14', 0.9);
+          ctx.fillText(A.meta.herMessages.toLocaleString('en-US') + ' OF HER MESSAGES READ, ' + A.meta.from + ' → ' + A.meta.to
+            + ' · EVERY MONTH COVERED · NO NARRATIVE GAPS TO EXPLAIN AWAY.', g.padL, g.botY + 40);
+          ctx.fillStyle = hx('#e0aaff', 0.9);
+          ctx.fillText('SHE STATES ' + A.meta.dollarMentions + ' DOLLAR AMOUNTS TOTALLING $' + A.meta.dollarsStated.toLocaleString('en-US')
+            + ' AND ANNOUNCES ' + A.meta.atmRuns + ' ATM RUNS. ' + askShare + '% OF THESE MESSAGES ASK HIM FOR ANYTHING.', g.padL, g.botY + 54);
         },
 
         overlay: (g) => {
@@ -1040,26 +1054,21 @@
             A.hover = Math.max(0, Math.min(A.nP - 1, Math.round(((mx - g.padL) / (g.chartR - g.padL - 20)) * (A.nP - 1))));
           }
           if (A.hover >= 0) {
-            const i = A.hover, dt2 = dayOf(i);
+            const i = A.hover, t = dayOf(i);
             ctx.strokeStyle = 'rgba(232,230,225,0.22)'; ctx.setLineDash([2, 4]);
             ctx.beginPath(); ctx.moveTo(g.xOf(i), g.padT); ctx.lineTo(g.xOf(i), g.botY); ctx.stroke();
             ctx.setLineDash([]);
-            // nearest asks within a fortnight, so a sparse timeline still reads
-            const near = A.rows.filter(r => Math.abs(A.at(r) - i) <= 14).sort((a, b) => Math.abs(A.at(a) - i) - Math.abs(A.at(b) - i));
-            const inWin = A.wins.find(w => i >= w.a && i <= w.b);
+            const near = A.rows.filter(r => Math.abs(r.pos - i) <= 5).sort((a, b) => Math.abs(a.pos - i) - Math.abs(b.pos - i));
             const lines = [
-              [MONTHS[dt2.getUTCMonth()] + ' ' + dt2.getUTCDate() + ', ' + dt2.getUTCFullYear(), COL.txt, '600 12px ' + this.GROT],
-              [inWin ? 'NARRATED · ' + inWin.label : 'NO DAY-LEVEL RECORD PUBLISHED', inWin ? '#39ff14' : COL.faint, '9px ' + this.MONO],
+              [MONTHS[t.getUTCMonth()] + ' ' + t.getUTCDate() + ', ' + t.getUTCFullYear(), COL.txt, '600 12px ' + this.GROT],
+              [(A.byDay[i] || 0) + ' PROCUREMENT MESSAGE' + ((A.byDay[i] || 0) === 1 ? '' : 'S') + ' THAT DAY', '#39ff14', '9px ' + this.MONO],
               ['RUNNING TOTAL HERE: ' + A.cum[i] + ' OF ' + A.total, '#e01aff', '9px ' + this.MONO]
             ];
-            if (near.length) {
-              lines.push(['', COL.dim, '9px ' + this.MONO]);
-              for (const r of near.slice(0, 2)) {
-                lines.push([(r.count ? '· ' : '◇ ') + stamp(r) + ' · ' + r.tag, TIER_COL[r.tier], '9px ' + this.MONO]);
-                for (const ln of this.wrap(ctx, '“' + r.text.slice(0, 150) + '”', 380).slice(0, 3)) lines.push([ln, COL.txt, '11px ' + this.GROT]);
-              }
-              lines.push(['CLICK TO OPEN THE NEAREST SOURCE', COL.dim, '8.5px ' + this.MONO]);
+            for (const r of near.slice(0, 3)) {
+              lines.push([r.d + ' ' + r.t, COL.dim, '9px ' + this.MONO]);
+              for (const ln of this.wrap(ctx, '\u201c' + r.x.slice(0, 140) + '\u201d', 380).slice(0, 3)) lines.push([ln, COL.txt, '11px ' + this.GROT]);
             }
+            if (near.length) lines.push(['CLICK TO OPEN THE NEAREST ROW', COL.dim, '8.5px ' + this.MONO]);
             this.card(ctx, mx, my, lines);
           }
           this.cv.style.cursor = A.hover >= 0 ? 'pointer' : 'crosshair';
@@ -1071,9 +1080,12 @@
       const A = this.M.ask; if (!A) return;
       if (type === 'down' && this.feedClick('ask', p, A)) return;
       if (this.penScrub('ask', type, p) === 'click' && A.hover >= 0) {
-        const near = A.rows.filter(r => Math.abs(A.at(r) - A.hover) <= 14)
-          .sort((a, b) => Math.abs(A.at(a) - A.hover) - Math.abs(A.at(b) - A.hover));
-        if (near.length) this.pin(near[0]);
+        const near = A.rows.filter(r => Math.abs(r.pos - A.hover) <= 5)
+          .sort((a, b) => Math.abs(a.pos - A.hover) - Math.abs(b.pos - A.hover));
+        if (near.length) {
+          const f = A.frags.find(x => x.id && x.id.text === near[0].x);
+          if (f) this.pin(f.id);
+        }
       }
     }
 

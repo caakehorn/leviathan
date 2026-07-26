@@ -17,7 +17,8 @@ js/
   wiki-modules.js     # first-wave wiki visualizers (WEB, CLAIMS, MASS, …)
   wiki-analytics.js   # second-wave wiki instruments computed from page prose
   procurement-data.js # PROCUREMENT's evidence pool — citations, not claims
-  procurement.js      # PROCUREMENT's five instruments
+  procurement-asks.js # THE ASK's ledger, recounted from wiki-brain raw/
+  procurement.js      # PROCUREMENT's six instruments
 data/
   leviathan.enc       # AES-256-GCM encrypted content bundle (decrypted in-browser)
   wiki-data.json      # WIKI section dataset, built from github.com/caakehorn/wiki-brain
@@ -103,14 +104,17 @@ instrument picks it up on the next load. Records need `d` (ISO date at day,
 month or year precision), `lane`, `who`, `tier`, `tag`, `text`, `src`, `dir` and
 `page`; `note` and `approx` are optional, and `k` is the LEDGER sub-kind.
 
-`ASKS` is a second, separate pool feeding **THE ASK** — every request from Annie
-the record dates, Feb 2025 onward, plotted against a real calendar rather than
-an ordering. Its records carry `kind` (`sub` / `money` / `errand` / `presence`)
-and `count`: `1` for a discrete dated ask, `0` for a pattern-level record that
-carries a rate rather than an item. The distinction is load-bearing — the
-itemised total is small because the corpus narrates only ~13% of those 500 days,
-not because the asks were rare, and `ASK_WINDOWS` marks the narrated stretches
-so the instrument can draw missing record as missing rather than as absence.
+**THE ASK** does not run on that pool. `js/procurement-asks.js` is a recount from
+primary sources: every Annie-thread export in
+[wiki-brain](https://github.com/caakehorn/wiki-brain)'s `raw/self/message-csv/`
+merged, the one UTC-stamped export converted to local time (it was minting
+phantom duplicates four hours off), deduplicated on text within a 120-second
+window, her side kept — 18,946 messages, 2025-02-01 to 2026-06-05, every month
+covered. Requests are classified by speech-act frame *plus* named object rather
+than by keyword, and every hit was then read by hand with the false positives
+struck; the surviving per-category precision ships in `meta.precision` and is
+displayed on the instrument. Regenerating it means re-running that merge — the
+file is a build artifact of the raw exports, not hand-authored like `R`.
 
 ## Keeping the WIKI section in sync
 
