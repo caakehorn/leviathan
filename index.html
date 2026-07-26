@@ -3,8 +3,14 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- THE GATE — must be first: it hides the document synchronously, so
+     nothing behind the passphrase paints even for a frame. -->
+<script src="./js/gate.js"></script>
 <title>VOID + LEVIATHAN — @danfrank</title>
 <meta name="description" content="VOID + LEVIATHAN — the archive console. One subject, six corpora, 2011–2026.">
+<!-- Behind the gate now, so there is nothing to index. -->
+<meta name="robots" content="noindex, nofollow">
+<meta name="referrer" content="no-referrer">
 <meta name="theme-color" content="#041206">
 <link rel="icon" href="data:,">
 
@@ -662,6 +668,22 @@ class Component extends DCLogic {
   // real protection; this overlay is just the passphrase entry surface.
   requestArchive() {
     if (this._dataLoaded) { this._setPhase('archive'); return; }
+    // js/gate.js already made the visitor clear the same passphrase at the
+    // door, so reuse it rather than asking a second time for something they
+    // have demonstrably got. If that decrypt somehow fails we fall through to
+    // the prompt rather than stranding them on a dead button.
+    const carried = window.LVGate && window.LVGate.passphrase();
+    if (carried) {
+      this.setState({ loading: true });
+      this.loadData(carried).then(() => {
+        this._dataLoaded = true;   // loadData clears `loading` itself
+        this._setPhase('archive');
+      }).catch(() => {
+        this.setState({ loading: false });
+        this._showGate();
+      });
+      return;
+    }
     this._showGate();
   }
 
@@ -673,13 +695,17 @@ class Component extends DCLogic {
     box.style.cssText = 'width:min(420px,86vw);border:1px solid rgba(57,255,20,0.5);background:rgba(3,12,6,0.96);padding:30px 28px;box-shadow:0 0 60px rgba(57,255,20,0.18);';
     box.innerHTML =
       '<div style="font-size:11px;letter-spacing:0.3em;color:#39ff14;margin-bottom:6px;">⬢ LEVIATHAN ARCHIVE</div>'
-      + '<div style="font-size:12px;line-height:1.7;color:#a8d9b8;margin-bottom:18px;">This archive is encrypted. Enter the passphrase to decrypt and view the data.</div>'
+      // One greeting for the whole deployment: js/gate.js owns the words, and
+      // this fallback prompt borrows them rather than keeping a second copy.
+      + '<div data-say style="font-size:12px;line-height:1.7;color:#a8d9b8;margin-bottom:18px;"></div>'
       + '<input type="password" autocomplete="off" aria-label="Archive passphrase" placeholder="passphrase" style="width:100%;box-sizing:border-box;background:rgba(0,0,0,0.5);border:1px solid rgba(57,255,20,0.4);color:#b6ff8f;font-family:inherit;font-size:13px;padding:11px 12px;letter-spacing:0.05em;outline:none;">'
       // role=alert so the failure is announced; without it a screen reader user
       // gets no feedback at all on a wrong passphrase.
       + '<div data-err role="alert" style="min-height:16px;font-size:10px;letter-spacing:0.1em;color:#b026ff;margin:8px 2px 0;"></div>'
       + '<button data-go style="width:100%;margin-top:10px;cursor:pointer;background:#39ff14;border:1px solid #39ff14;color:#041206;font-family:inherit;font-weight:700;font-size:11px;letter-spacing:0.22em;padding:12px;">DECRYPT ►</button>'
       + '<button data-cancel style="width:100%;margin-top:8px;cursor:pointer;background:none;border:1px solid rgba(150,220,120,0.3);color:#a8d9b8;font-family:inherit;font-size:10px;letter-spacing:0.2em;padding:9px;">CANCEL</button>';
+    box.querySelector('[data-say]').textContent = (window.LVGate && window.LVGate.greeting)
+      || 'This archive is encrypted. Enter the passphrase to decrypt and view the data.';
     ov.appendChild(box);
     document.body.appendChild(ov);
     const input = box.querySelector('input');
