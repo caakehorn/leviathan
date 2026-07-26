@@ -40,12 +40,16 @@
    "askMoney": 75,
    "askOther": 57,
    "ask3p": 100,
-   "denom": 97
+   "denom": 97,
+   "want": 88,
+   "see": 100,
+   "code": 100
   },
   "dollarsStated": 2629,
   "dollarMentions": 68,
   "atmRuns": 32,
-  "denomOrders": 42
+  "denomOrders": 42,
+  "total": 357
  },
  "records": [
   {
@@ -73,6 +77,18 @@
    "x": "I said 50"
   },
   {
+   "d": "2025-03-07",
+   "t": "11:41",
+   "k": "want",
+   "x": "Like I will definitely want to get something after this nonsense.. waiting for lunch to get here"
+  },
+  {
+   "d": "2025-03-07",
+   "t": "17:51",
+   "k": "want",
+   "x": "Or I am going to just say I am going to get it myself"
+  },
+  {
    "d": "2025-03-11",
    "t": "17:13",
    "k": "chase",
@@ -95,6 +111,18 @@
    "t": "18:51",
    "k": "ask3p",
    "x": "Unless.. I can put in 50 and ask my Mom to send me fifty tomorrow for the phone bill"
+  },
+  {
+   "d": "2025-03-16",
+   "t": "13:35",
+   "k": "want",
+   "x": "Sooooo are you going to get something to today you gonna share with Eggie"
+  },
+  {
+   "d": "2025-03-16",
+   "t": "14:21",
+   "k": "want",
+   "x": "Have you told her “I want to get something for myself”"
   },
   {
    "d": "2025-03-18",
@@ -121,10 +149,34 @@
    "x": "And you can bring me my shit and I’ll leave you the fuck alone"
   },
   {
+   "d": "2025-03-25",
+   "t": "22:25",
+   "k": "want",
+   "x": "Get it."
+  },
+  {
    "d": "2025-03-26",
    "t": "17:08",
    "k": "order",
    "x": "I want drugs"
+  },
+  {
+   "d": "2025-03-29",
+   "t": "18:51",
+   "k": "want",
+   "x": "Did she get anything today."
+  },
+  {
+   "d": "2025-03-30",
+   "t": "13:20",
+   "k": "want",
+   "x": "Well Claire is on her way home. So hopefully she will be paying me today. Not exactly sure how much. But I do have $25 cash. So I’ll let you know so we can get something"
+  },
+  {
+   "d": "2025-04-02",
+   "t": "18:12",
+   "k": "want",
+   "x": "Trying to get a little money together so maybe we can get something small"
   },
   {
    "d": "2025-04-03",
@@ -137,6 +189,12 @@
    "t": "20:05",
    "k": "askSupply",
    "x": "ca. you please bring me a one hitter"
+  },
+  {
+   "d": "2025-04-05",
+   "t": "07:32",
+   "k": "see",
+   "x": "So wait did you ever end up seeing him"
   },
   {
    "d": "2025-04-08",
@@ -161,6 +219,12 @@
    "t": "18:59",
    "k": "denom",
    "x": "40"
+  },
+  {
+   "d": "2025-04-11",
+   "t": "16:48",
+   "k": "want",
+   "x": "Either I want to send your mom money to get something… and you send money back for the bill or get something in exchange for me covering the bill"
   },
   {
    "d": "2025-04-11",
@@ -191,6 +255,18 @@
    "t": "13:00",
    "k": "fund",
    "x": "I have $20 cash"
+  },
+  {
+   "d": "2025-04-15",
+   "t": "14:01",
+   "k": "want",
+   "x": "I am going back to sugies at 3:00. Staying until 5:00. My mom is supposed to meet me there and get me a check. I was planning to come over after I leave there. If you want me to of course. If you want to try to get one whole one today we can"
+  },
+  {
+   "d": "2025-04-17",
+   "t": "09:47",
+   "k": "want",
+   "x": "Did you get a whole piece of toast"
   },
   {
    "d": "2025-04-17",
@@ -229,10 +305,28 @@
    "x": "Can I come get Betty after I leave here so I can feed her and I can shower and sleep just a little bit then come back over"
   },
   {
+   "d": "2025-04-23",
+   "t": "13:09",
+   "k": "want",
+   "x": "If you want to get something today we can.. maybe not share as much this time with your mom. I dont know. But if you want to I have my card, but I don’t have a car today"
+  },
+  {
+   "d": "2025-04-25",
+   "t": "12:25",
+   "k": "want",
+   "x": "Ok… well let me know if you want to get anything today. We just finished lunch here."
+  },
+  {
    "d": "2025-04-25",
    "t": "14:11",
    "k": "fund",
    "x": "Should I go to the atm now and come there before I go back to get sugie up"
+  },
+  {
+   "d": "2025-04-25",
+   "t": "21:58",
+   "k": "want",
+   "x": "Did your mom also get something"
   },
   {
    "d": "2025-04-27",
@@ -247,10 +341,34 @@
    "x": "When I leave here, I’ll go get her money from the atm. I dont know if its still possible to get something less than a full one from him.. but since i wont have enough to get a full one could we get something else like 60"
   },
   {
+   "d": "2025-05-03",
+   "t": "20:36",
+   "k": "want",
+   "x": "I was just questioning bc I didn’t ask her in the first place to bring me any if she did get something"
+  },
+  {
+   "d": "2025-05-03",
+   "t": "22:21",
+   "k": "want",
+   "x": "If you want to come get it yeah"
+  },
+  {
    "d": "2025-05-05",
    "t": "08:56",
    "k": "askSupply",
    "x": "If I bring the money after the bank can you please bring me a one hitter out side"
+  },
+  {
+   "d": "2025-05-05",
+   "t": "14:31",
+   "k": "see",
+   "x": "So when are you coming back"
+  },
+  {
+   "d": "2025-05-05",
+   "t": "15:19",
+   "k": "see",
+   "x": "You were all “he knows you want to see him in the morning” blah blah blah"
   },
   {
    "d": "2025-05-07",
@@ -263,6 +381,12 @@
    "t": "17:25",
    "k": "fund",
    "x": "Do you have enough cash there to cover my $30 if I am not there in time? I have the cash already"
+  },
+  {
+   "d": "2025-05-10",
+   "t": "17:39",
+   "k": "want",
+   "x": "You’ll probably say no and hate me for even asking but your mom mentioned she may be texting him. I dont know if it would be possible to owe her anything to get something. I’ll cash check Monday morning"
   },
   {
    "d": "2025-05-13",
@@ -305,6 +429,24 @@
    "t": "16:15",
    "k": "denom",
    "x": "45"
+  },
+  {
+   "d": "2025-05-20",
+   "t": "16:44",
+   "k": "want",
+   "x": "I gotta go upstairs and get it"
+  },
+  {
+   "d": "2025-05-22",
+   "t": "14:17",
+   "k": "want",
+   "x": "I mean i obviously have some left but might as well get it today since ill be at both sugies and my uncles house back and forth tomorrow"
+  },
+  {
+   "d": "2025-05-23",
+   "t": "23:13",
+   "k": "see",
+   "x": "So is he coming tonight or not"
   },
   {
    "d": "2025-05-31",
@@ -367,6 +509,12 @@
    "x": "I’ll bring you cash I guess. Not a full one. $I may have sixty. I dont know yet. I’m in serious pain right now"
   },
   {
+   "d": "2025-06-13",
+   "t": "11:13",
+   "k": "want",
+   "x": "I will try to get a little money today to at least be able to get something"
+  },
+  {
    "d": "2025-06-14",
    "t": "10:17",
    "k": "fund",
@@ -397,16 +545,46 @@
    "x": "I have 75 total."
   },
   {
+   "d": "2025-06-17",
+   "t": "23:03",
+   "k": "want",
+   "x": "I wouldn’t ever get anything and not make sure you have something too"
+  },
+  {
    "d": "2025-06-18",
    "t": "17:34",
    "k": "fund",
    "x": "Sent a text at the same time as you saying do you need money for a sub"
   },
   {
+   "d": "2025-06-19",
+   "t": "11:52",
+   "k": "want",
+   "x": "And asked me if I was going to get anything"
+  },
+  {
+   "d": "2025-06-19",
+   "t": "11:55",
+   "k": "want",
+   "x": "To be able to get something"
+  },
+  {
+   "d": "2025-06-20",
+   "t": "22:24",
+   "k": "want",
+   "x": "Seriously.. I’m not going anywhere ever. I can come over and get it Dan."
+  },
+  {
    "d": "2025-06-24",
    "t": "09:13",
    "k": "order",
    "x": "Got check. Need to shower first. Then I’ll cash it and I’ll be over. Tell your mom I want a full one"
+  },
+  {
+   "d": "2025-06-26",
+   "t": "09:19",
+   "k": "see",
+   "x": "Let me see him please"
   },
   {
    "d": "2025-06-28",
@@ -416,9 +594,21 @@
   },
   {
    "d": "2025-07-01",
+   "t": "07:58",
+   "k": "want",
+   "x": "And i dont know how you expect me to be able to get anything today when I do t have money. And he absolutely ripped us off yesterday unless your mom took a bunch of it out for herself."
+  },
+  {
+   "d": "2025-07-01",
    "t": "12:36",
    "k": "fund",
    "x": "I’ll bring $60 over."
+  },
+  {
+   "d": "2025-07-03",
+   "t": "20:30",
+   "k": "want",
+   "x": "I will fucking get it to you"
   },
   {
    "d": "2025-07-05",
@@ -457,10 +647,34 @@
    "x": "I have the cash. I’ll be over when my dad comes back with his car since mine isn’t here."
   },
   {
+   "d": "2025-07-09",
+   "t": "12:21",
+   "k": "see",
+   "x": "Excuse me when is he coming"
+  },
+  {
+   "d": "2025-07-09",
+   "t": "14:20",
+   "k": "want",
+   "x": "I will get it"
+  },
+  {
+   "d": "2025-07-10",
+   "t": "15:13",
+   "k": "see",
+   "x": "When is he coming"
+  },
+  {
    "d": "2025-07-11",
    "t": "11:25",
    "k": "order",
    "x": "And I plan on asking her to write me a check today after her nap. Need to pay the second payment plan for phone bill tomorrow. I may have enough left to get half a one later. I dont know yet."
+  },
+  {
+   "d": "2025-07-12",
+   "t": "21:29",
+   "k": "see",
+   "x": "Is he coming."
   },
   {
    "d": "2025-07-16",
@@ -529,6 +743,12 @@
    "x": "I will bring the money in a few minutes then go pick up dinner"
   },
   {
+   "d": "2025-08-06",
+   "t": "11:51",
+   "k": "want",
+   "x": "I’ll get it over as soon as I can"
+  },
+  {
    "d": "2025-08-07",
    "t": "12:08",
    "k": "denom",
@@ -554,6 +774,12 @@
   },
   {
    "d": "2025-08-14",
+   "t": "15:50",
+   "k": "want",
+   "x": "I’m going g to be responsible and say just have him pick up James money and not get anything else if I do get my money"
+  },
+  {
+   "d": "2025-08-14",
    "t": "17:45",
    "k": "fund",
    "x": "Can I just send it to your mom and you can go to the ATM"
@@ -571,10 +797,40 @@
    "x": "Tell bop I want a full one"
   },
   {
+   "d": "2025-08-19",
+   "t": "08:04",
+   "k": "want",
+   "x": "But there really isn’t any left for real. I will try to get some extra money if possible t o get something today"
+  },
+  {
+   "d": "2025-08-19",
+   "t": "19:05",
+   "k": "want",
+   "x": "Get it"
+  },
+  {
    "d": "2025-08-21",
    "t": "09:07",
    "k": "fund",
    "x": "Yes. I’ll bring money over in a little bit. I have sixty"
+  },
+  {
+   "d": "2025-08-21",
+   "t": "14:07",
+   "k": "want",
+   "x": "I can come get it instead of you dropping off"
+  },
+  {
+   "d": "2025-08-23",
+   "t": "09:03",
+   "k": "see",
+   "x": "I will try to get you some money to see tom okay?"
+  },
+  {
+   "d": "2025-08-23",
+   "t": "13:13",
+   "k": "want",
+   "x": "Alright I think I may have fifty to get something. And fifteen for you to see tom. I’ll let you know for sure"
   },
   {
    "d": "2025-08-25",
@@ -619,10 +875,40 @@
    "x": "I have sixty dollars"
   },
   {
+   "d": "2025-09-07",
+   "t": "14:38",
+   "k": "want",
+   "x": "I wouldn’t even know who to get anything from Dan,"
+  },
+  {
+   "d": "2025-09-07",
+   "t": "14:39",
+   "k": "want",
+   "x": "I said I will be getting a check tomorrow and we will get one like we always do on Monday"
+  },
+  {
    "d": "2025-09-16",
    "t": "10:37",
    "k": "ask3p",
    "x": "I’m trying to get my mom to send me some money. She’s mad because I keep asking for her and it’s always “this is is the last time I’m done sending you money”"
+  },
+  {
+   "d": "2025-09-16",
+   "t": "10:47",
+   "k": "see",
+   "x": "How much do you need to see tom. I’m just confused"
+  },
+  {
+   "d": "2025-09-16",
+   "t": "13:10",
+   "k": "see",
+   "x": "I made that happen bc you needed to see tom"
+  },
+  {
+   "d": "2025-09-16",
+   "t": "17:39",
+   "k": "see",
+   "x": "Did you end up seeing tom?"
   },
   {
    "d": "2025-09-17",
@@ -631,10 +917,28 @@
    "x": "Ok thank you I’ll leave and go to the atm now"
   },
   {
+   "d": "2025-09-17",
+   "t": "21:51",
+   "k": "want",
+   "x": "Hope you got back from seeing tom okay. I believe i will have some money at some point tomorrow hopefully and we will get something. Miss you. Goodnight Dan"
+  },
+  {
    "d": "2025-09-18",
    "t": "12:06",
    "k": "fund",
    "x": "I have the money"
+  },
+  {
+   "d": "2025-09-19",
+   "t": "11:37",
+   "k": "want",
+   "x": "I should have a check sometime this afternoon to hopefully get something"
+  },
+  {
+   "d": "2025-09-20",
+   "t": "09:56",
+   "k": "want",
+   "x": "I’m sorry Dan. I know that’s probably annoying.. but I dont have any money at all left to get anything.. if by some miracle I can get some money today we will get something"
   },
   {
    "d": "2025-09-20",
@@ -685,6 +989,12 @@
    "x": "I have the money already out. I am going to sleep for a little while longer then I’ll bring it over"
   },
   {
+   "d": "2025-09-30",
+   "t": "12:28",
+   "k": "see",
+   "x": "Did you hear from him yet"
+  },
+  {
    "d": "2025-10-03",
    "t": "17:35",
    "k": "fund",
@@ -715,6 +1025,12 @@
    "x": "Did you need money for a sub"
   },
   {
+   "d": "2025-10-09",
+   "t": "19:08",
+   "k": "want",
+   "x": "I can send you that if you need it. I have enough to get something tomorrow"
+  },
+  {
    "d": "2025-10-10",
    "t": "09:30",
    "k": "order",
@@ -743,6 +1059,12 @@
    "t": "10:38",
    "k": "fund",
    "x": "I have $60 going to atm"
+  },
+  {
+   "d": "2025-10-15",
+   "t": "12:21",
+   "k": "want",
+   "x": "I feel like I should probably just wait until tomorrow to get anything"
   },
   {
    "d": "2025-10-15",
@@ -781,6 +1103,12 @@
    "x": "I have twenty right now.."
   },
   {
+   "d": "2025-10-20",
+   "t": "09:51",
+   "k": "want",
+   "x": "I will get one later today"
+  },
+  {
    "d": "2025-10-22",
    "t": "11:17",
    "k": "fund",
@@ -815,6 +1143,18 @@
    "t": "15:13",
    "k": "fund",
    "x": "I have $30. But I don’t have my car keys.. so i dont know"
+  },
+  {
+   "d": "2025-10-26",
+   "t": "15:48",
+   "k": "want",
+   "x": "I dont know I dont have to get anything"
+  },
+  {
+   "d": "2025-10-28",
+   "t": "18:19",
+   "k": "want",
+   "x": "Did you or your mom get anything today"
   },
   {
    "d": "2025-10-28",
@@ -883,6 +1223,12 @@
    "x": "60"
   },
   {
+   "d": "2025-11-11",
+   "t": "15:25",
+   "k": "want",
+   "x": "Yes I’ll get something"
+  },
+  {
    "d": "2025-11-12",
    "t": "12:13",
    "k": "fund",
@@ -943,6 +1289,18 @@
    "x": "I have twenty.. i dont know if your mom would be able to sell me any of whatever she has?"
   },
   {
+   "d": "2025-12-04",
+   "t": "13:52",
+   "k": "want",
+   "x": "You said you had z there already"
+  },
+  {
+   "d": "2025-12-04",
+   "t": "15:29",
+   "k": "want",
+   "x": "I’m moving this fucking chair then I’ll come get it."
+  },
+  {
    "d": "2025-12-05",
    "t": "13:09",
    "k": "fund",
@@ -955,6 +1313,12 @@
    "x": "I have fifty."
   },
   {
+   "d": "2025-12-06",
+   "t": "23:18",
+   "k": "want",
+   "x": "Why can’t I just get it tonight"
+  },
+  {
    "d": "2025-12-07",
    "t": "12:46",
    "k": "denom",
@@ -965,6 +1329,12 @@
    "t": "11:47",
    "k": "fund",
    "x": "I will figure out a way to get money together to see him before the kid comes"
+  },
+  {
+   "d": "2025-12-08",
+   "t": "11:59",
+   "k": "want",
+   "x": "And use the money my mom send me to get something"
   },
   {
    "d": "2025-12-08",
@@ -986,15 +1356,39 @@
   },
   {
    "d": "2025-12-10",
+   "t": "14:08",
+   "k": "want",
+   "x": "Loved “well come feel like crap with me and i will at least get you some z”"
+  },
+  {
+   "d": "2025-12-10",
    "t": "16:45",
    "k": "ask3p",
    "x": "Trying to get my mom to write me a check from Sugie"
+  },
+  {
+   "d": "2025-12-11",
+   "t": "14:49",
+   "k": "want",
+   "x": "More z"
   },
   {
    "d": "2025-12-12",
    "t": "20:06",
    "k": "fund",
    "x": "I have $20"
+  },
+  {
+   "d": "2025-12-13",
+   "t": "14:33",
+   "k": "want",
+   "x": "So wait are there z or no lol"
+  },
+  {
+   "d": "2025-12-13",
+   "t": "21:48",
+   "k": "want",
+   "x": "Argh. I wouldn’t mind more z…. But i refuse to have you walk here"
   },
   {
    "d": "2025-12-15",
@@ -1015,10 +1409,28 @@
    "x": "I gotta get changed and hit the atm"
   },
   {
+   "d": "2025-12-17",
+   "t": "22:32",
+   "k": "want",
+   "x": "I was just thinking of it and I wanted to text “I wish I had some z’s” but only if you had seen the tiktok to understand lol"
+  },
+  {
    "d": "2025-12-19",
    "t": "11:18",
    "k": "askMoney",
    "x": "Is she able to like spot me until I have the money,"
+  },
+  {
+   "d": "2025-12-19",
+   "t": "11:40",
+   "k": "want",
+   "x": "I doubt I’ll get anything before 12:30"
+  },
+  {
+   "d": "2025-12-20",
+   "t": "11:09",
+   "k": "want",
+   "x": "Your mom can’t get anything until I pay her back"
   },
   {
    "d": "2025-12-21",
@@ -1045,10 +1457,22 @@
    "x": "Let me dry my hair real quick I have fifty"
   },
   {
+   "d": "2025-12-23",
+   "t": "17:41",
+   "k": "want",
+   "x": "So how am I gonna get it"
+  },
+  {
    "d": "2025-12-27",
    "t": "12:45",
    "k": "fund",
    "x": "I have twenty"
+  },
+  {
+   "d": "2025-12-27",
+   "t": "12:45",
+   "k": "want",
+   "x": "I really want to get something today., i dont know if she is able to help or not."
   },
   {
    "d": "2025-12-27",
@@ -1087,10 +1511,22 @@
    "x": "I asked my mom to send me a little money but she hasn’t yet"
   },
   {
+   "d": "2026-01-04",
+   "t": "14:10",
+   "k": "want",
+   "x": "But she was going to get it I said I wouldn’t"
+  },
+  {
    "d": "2026-01-06",
    "t": "15:37",
    "k": "fund",
    "x": "I’m trying to get some money together okay"
+  },
+  {
+   "d": "2026-01-08",
+   "t": "13:35",
+   "k": "code",
+   "x": "I don’t even have to send it to your mom. You can use the card less access and I can send the code"
   },
   {
    "d": "2026-01-08",
@@ -1099,10 +1535,52 @@
    "x": "I have sixty"
   },
   {
+   "d": "2026-01-08",
+   "t": "13:46",
+   "k": "code",
+   "x": "Tell me when you are going to atm and I’ll send you the code"
+  },
+  {
+   "d": "2026-01-08",
+   "t": "13:51",
+   "k": "want",
+   "x": "Code is good for an hour I’ll get it now"
+  },
+  {
+   "d": "2026-01-09",
+   "t": "16:16",
+   "k": "want",
+   "x": "Whatever. Save my twenty. I’ll come get it later."
+  },
+  {
    "d": "2026-01-10",
    "t": "12:46",
    "k": "fund",
    "x": "Let me know when I can bring the money"
+  },
+  {
+   "d": "2026-01-14",
+   "t": "19:05",
+   "k": "want",
+   "x": "I wish I had more z"
+  },
+  {
+   "d": "2026-01-14",
+   "t": "19:08",
+   "k": "code",
+   "x": "I dont know if you need to go to the bank for just a small amount I can give you a card less code"
+  },
+  {
+   "d": "2026-01-15",
+   "t": "10:33",
+   "k": "code",
+   "x": "May need for you to go to atm for me i dont know yet I’ll let you know for sure"
+  },
+  {
+   "d": "2026-01-15",
+   "t": "12:37",
+   "k": "code",
+   "x": "Can you please go to atm for me. Get out $80. I will send you the card less code"
   },
   {
    "d": "2026-01-15",
@@ -1129,10 +1607,34 @@
    "x": "Plus 50 more"
   },
   {
+   "d": "2026-01-16",
+   "t": "13:30",
+   "k": "code",
+   "x": "If you need to get fifty out of atm do it I’ll send you code"
+  },
+  {
+   "d": "2026-01-16",
+   "t": "13:33",
+   "k": "code",
+   "x": "I’ll send you code"
+  },
+  {
+   "d": "2026-01-17",
+   "t": "13:56",
+   "k": "code",
+   "x": "Do you want me to send you the code"
+  },
+  {
    "d": "2026-01-18",
    "t": "14:02",
    "k": "fund",
    "x": "I have forty dollars leaving now"
+  },
+  {
+   "d": "2026-01-19",
+   "t": "07:48",
+   "k": "want",
+   "x": "Good morning And okay I will do my best to get it around lunch"
   },
   {
    "d": "2026-01-19",
@@ -1153,6 +1655,12 @@
    "x": "I have $20"
   },
   {
+   "d": "2026-01-22",
+   "t": "13:21",
+   "k": "code",
+   "x": "But if you want to get the twenty out let me know and I’ll send you a code"
+  },
+  {
    "d": "2026-01-23",
    "t": "11:44",
    "k": "fund",
@@ -1165,6 +1673,12 @@
    "x": "I have $59"
   },
   {
+   "d": "2026-01-24",
+   "t": "13:01",
+   "k": "code",
+   "x": "Tell me when to get a code"
+  },
+  {
    "d": "2026-01-25",
    "t": "18:29",
    "k": "askOther",
@@ -1173,7 +1687,7 @@
   {
    "d": "2026-01-26",
    "t": "14:46",
-   "k": "fund",
+   "k": "want",
    "x": "Well the kids have been here all afternoon… I am trying to get money together to hopefully get something today"
   },
   {
@@ -1196,15 +1710,51 @@
   },
   {
    "d": "2026-01-27",
+   "t": "14:45",
+   "k": "code",
+   "x": "Just tell me when to send the atm code"
+  },
+  {
+   "d": "2026-01-27",
    "t": "15:18",
    "k": "fund",
    "x": "I’ll go to the ATM"
+  },
+  {
+   "d": "2026-02-01",
+   "t": "14:22",
+   "k": "see",
+   "x": "She fucking asked me to stop and get it. I said is he coming soon? If so I will go get the wine now. She said yes"
   },
   {
    "d": "2026-02-05",
    "t": "16:29",
    "k": "denom",
    "x": "I only have fifty."
+  },
+  {
+   "d": "2026-02-05",
+   "t": "16:32",
+   "k": "code",
+   "x": "I have to go get my car. If you want to go to atm for me I’ll send code."
+  },
+  {
+   "d": "2026-02-05",
+   "t": "16:47",
+   "k": "code",
+   "x": "You can’t go to ATM for me?"
+  },
+  {
+   "d": "2026-02-11",
+   "t": "11:08",
+   "k": "want",
+   "x": "Well how would I get anything without money 😂"
+  },
+  {
+   "d": "2026-02-11",
+   "t": "11:10",
+   "k": "want",
+   "x": "Well I want something obviously. But I can’t get anything"
   },
   {
    "d": "2026-02-11",
@@ -1223,6 +1773,12 @@
    "t": "18:07",
    "k": "chase",
    "x": "Did you get your subs yet"
+  },
+  {
+   "d": "2026-02-18",
+   "t": "16:13",
+   "k": "want",
+   "x": "I know it’s probably annoying to ask this. But what are the chances you could see him again? I wanted to get something to save for tomorrow bc I am pretty sure I have to take Sugie to an appointment in the afternoon"
   },
   {
    "d": "2026-02-22",
@@ -1261,6 +1817,12 @@
    "x": "But I’ll bring the money to you first"
   },
   {
+   "d": "2026-03-06",
+   "t": "18:19",
+   "k": "want",
+   "x": "I’ll find someone else to get it from and you’ll never have to deal with this again"
+  },
+  {
    "d": "2026-03-07",
    "t": "20:10",
    "k": "fund",
@@ -1291,6 +1853,12 @@
    "x": "I only have like 30"
   },
   {
+   "d": "2026-03-17",
+   "t": "10:18",
+   "k": "want",
+   "x": "Let me see if I can get anything more. What time are you going to paint today"
+  },
+  {
    "d": "2026-03-19",
    "t": "21:19",
    "k": "fund",
@@ -1304,9 +1872,27 @@
   },
   {
    "d": "2026-03-23",
+   "t": "17:52",
+   "k": "want",
+   "x": "Well i technically have some money if you want to get something"
+  },
+  {
+   "d": "2026-03-23",
    "t": "17:57",
    "k": "denom",
    "x": "100?"
+  },
+  {
+   "d": "2026-03-23",
+   "t": "18:26",
+   "k": "code",
+   "x": "When should I get a code for the atm"
+  },
+  {
+   "d": "2026-03-23",
+   "t": "18:36",
+   "k": "want",
+   "x": "god if I make you this miserable I will leave you alone we don’t need to get anything"
   },
   {
    "d": "2026-03-23",
@@ -1322,9 +1908,63 @@
   },
   {
    "d": "2026-03-28",
+   "t": "18:17",
+   "k": "see",
+   "x": "Did you ever end up seeing bop"
+  },
+  {
+   "d": "2026-03-28",
+   "t": "18:51",
+   "k": "want",
+   "x": "I want some 😕"
+  },
+  {
+   "d": "2026-03-28",
    "t": "19:58",
    "k": "askOther",
    "x": "Bring me some 🥺"
+  },
+  {
+   "d": "2026-04-05",
+   "t": "21:21",
+   "k": "want",
+   "x": "I will get something yes"
+  },
+  {
+   "d": "2026-04-05",
+   "t": "21:22",
+   "k": "want",
+   "x": "I’ll get something tomorrow"
+  },
+  {
+   "d": "2026-04-07",
+   "t": "11:18",
+   "k": "code",
+   "x": "Are you able to go to an atm"
+  },
+  {
+   "d": "2026-04-07",
+   "t": "11:42",
+   "k": "code",
+   "x": "I’ll get you a code"
+  },
+  {
+   "d": "2026-04-07",
+   "t": "22:49",
+   "k": "want",
+   "x": "I will get it"
+  },
+  {
+   "d": "2026-04-08",
+   "t": "13:07",
+   "k": "code",
+   "x": "I’ll send you an access code. Take fifty out."
+  },
+  {
+   "d": "2026-04-09",
+   "t": "14:39",
+   "k": "code",
+   "x": "That code will expire"
   },
   {
    "d": "2026-04-14",
@@ -1345,6 +1985,18 @@
    "x": "Like I have twenty but it’s my last twenty I have to my name right now"
   },
   {
+   "d": "2026-04-22",
+   "t": "17:12",
+   "k": "see",
+   "x": "Did you ever see him"
+  },
+  {
+   "d": "2026-04-27",
+   "t": "09:12",
+   "k": "want",
+   "x": "Yes. It might not be a lot but I will get something"
+  },
+  {
    "d": "2026-05-04",
    "t": "11:24",
    "k": "fund",
@@ -1353,13 +2005,19 @@
   {
    "d": "2026-05-04",
    "t": "11:26",
-   "k": "fund",
+   "k": "code",
    "x": "If you can go to the atm I guess I’ll give you a code. Take out like $30"
   },
   {
    "d": "2026-05-05",
+   "t": "12:23",
+   "k": "see",
+   "x": "Is there any possibility of seeing bop"
+  },
+  {
+   "d": "2026-05-05",
    "t": "12:25",
-   "k": "fund",
+   "k": "code",
    "x": "Are you able to go to the atm for me"
   },
   {
@@ -1367,6 +2025,48 @@
    "t": "12:26",
    "k": "denom",
    "x": "100 I’ll get the code"
+  },
+  {
+   "d": "2026-05-05",
+   "t": "14:21",
+   "k": "want",
+   "x": "Just let me know when he comes Dan. If you want me to come get it I will. I just have to start getting ready"
+  },
+  {
+   "d": "2026-05-05",
+   "t": "14:53",
+   "k": "want",
+   "x": "I want to get it first. I am dying here"
+  },
+  {
+   "d": "2026-05-09",
+   "t": "12:32",
+   "k": "code",
+   "x": "Can you go to atm"
+  },
+  {
+   "d": "2026-05-10",
+   "t": "12:20",
+   "k": "see",
+   "x": "I dont know if you want to try to see him, or when you start work today. But if you want to.. I’ll have to send you a code soon bc I will have shitty cell service"
+  },
+  {
+   "d": "2026-05-10",
+   "t": "15:41",
+   "k": "see",
+   "x": "Did you see him?"
+  },
+  {
+   "d": "2026-05-11",
+   "t": "12:17",
+   "k": "see",
+   "x": "Is he coming now?"
+  },
+  {
+   "d": "2026-05-14",
+   "t": "15:50",
+   "k": "want",
+   "x": "Well if you find a way to get anything… bring it."
   },
   {
    "d": "2026-05-14",
@@ -1387,10 +2087,40 @@
    "x": "I’ll leave the forty cash. And take twenty out of ATM."
   },
   {
+   "d": "2026-05-14",
+   "t": "21:39",
+   "k": "want",
+   "x": "And the z"
+  },
+  {
+   "d": "2026-05-15",
+   "t": "13:51",
+   "k": "want",
+   "x": "I know this is not what you want to hear from me right now; but if you have anything left or are getting anything.. I only have a little money and would be grateful to get something before work if possible."
+  },
+  {
    "d": "2026-05-15",
    "t": "14:15",
    "k": "fund",
    "x": "I am going to give you the cash I have. Idc."
+  },
+  {
+   "d": "2026-05-16",
+   "t": "14:09",
+   "k": "want",
+   "x": "If I can get it still you won’t be out your sixty Dan."
+  },
+  {
+   "d": "2026-05-17",
+   "t": "12:24",
+   "k": "see",
+   "x": "If you are seeing him before work today let me know.."
+  },
+  {
+   "d": "2026-05-18",
+   "t": "12:16",
+   "k": "see",
+   "x": "Well if you are seeing him let me know"
   },
   {
    "d": "2026-05-18",
@@ -1401,8 +2131,14 @@
   {
    "d": "2026-05-18",
    "t": "12:59",
-   "k": "fund",
+   "k": "code",
    "x": "Are you going to the atm"
+  },
+  {
+   "d": "2026-05-19",
+   "t": "10:51",
+   "k": "code",
+   "x": "Are you about to go to atm"
   },
   {
    "d": "2026-05-19",
@@ -1417,10 +2153,22 @@
    "x": "60"
   },
   {
+   "d": "2026-05-21",
+   "t": "10:39",
+   "k": "want",
+   "x": "And you were right, if it’s POSSIBLE, to get something small today before I go into work… I would really appreciate it"
+  },
+  {
    "d": "2026-05-25",
    "t": "12:19",
    "k": "denom",
    "x": "60"
+  },
+  {
+   "d": "2026-05-31",
+   "t": "17:50",
+   "k": "code",
+   "x": "Can you go to atm"
   },
   {
    "d": "2026-05-31",
@@ -1433,6 +2181,18 @@
    "t": "17:54",
    "k": "fund",
    "x": "I can send money on cashapp now"
+  },
+  {
+   "d": "2026-05-31",
+   "t": "18:37",
+   "k": "code",
+   "x": "Send you a code??"
+  },
+  {
+   "d": "2026-05-31",
+   "t": "19:32",
+   "k": "want",
+   "x": "Am I coming to get it"
   }
  ]
 };

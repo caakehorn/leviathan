@@ -948,10 +948,10 @@
         // the order she names — "How much?" · "60" — is the top lane because it
         // is the act the whole question turns on: she sets the size of the buy
         ['denom', 'SHE NAMES THE NUMBER', '#39ff14', ['denom']],
-        ['order', 'SHE PLACES THE ORDER', '#00ffa3', ['order', 'chase']],
-        ['fund', 'SHE RAISES THE MONEY', '#b6ff8f', ['fund']],
-        ['ask', 'SHE ASKS HIM FOR IT', '#c77dff', ['askSupply', 'askMoney', 'askOther']],
-        ['fam', 'SHE ASKS HER FAMILY', '#b026ff', ['ask3p']]
+        ['want', 'SHE ASKS FOR IT', '#00ffa3', ['want', 'order', 'chase', 'askSupply', 'askMoney', 'askOther']],
+        ['fund', 'SHE RAISES THE MONEY', '#b6ff8f', ['fund', 'ask3p']],
+        ['code', 'SHE HANDS HIM HER ATM CODE', '#c77dff', ['code']],
+        ['see', 'IS THE SOURCE AROUND?', '#b026ff', ['see']]
       ];
       const series = {}, max = {}, counts = {};
       for (const [k, , , kinds] of LANES) {
@@ -972,12 +972,14 @@
 
       const KTAG = {
         denom: 'HE ASKS HOW MUCH \u2014 SHE NAMES THE NUMBER',
+        want: 'SHE ASKS FOR IT', code: 'SHE HANDS HIM HER ATM CODE', see: 'IS THE SOURCE AROUND?',
         fund: 'SHE RAISES THE MONEY', order: 'SHE PLACES THE ORDER', chase: 'SHE CHASES THE SUPPLY',
         askSupply: 'SHE ASKS HIM FOR SUPPLY', askMoney: 'SHE ASKS HIM FOR MONEY',
         askOther: 'SHE ASKS HIM FOR SOMETHING', ask3p: 'SHE ASKS HER OWN FAMILY'
       };
       const KCOL = {
-        denom: '#39ff14', fund: '#b6ff8f', order: '#00ffa3', chase: '#00ffa3',
+        denom: '#39ff14', want: '#00ffa3', code: '#c77dff', see: '#b026ff',
+        fund: '#b6ff8f', order: '#00ffa3', chase: '#00ffa3',
         askSupply: '#c77dff', askMoney: '#c77dff', askOther: '#c77dff', ask3p: '#b026ff'
       };
 
@@ -1009,11 +1011,11 @@
         const t = dayOf(i);
         return t.getUTCDate() === 1 ? MONTHS[t.getUTCMonth()] + (t.getUTCMonth() === 0 ? ' ' + t.getUTCFullYear() : '') : null;
       };
-      const askShare = Math.round((A.counts.ask / A.total) * 100);
+      const askShare = Math.round((A.counts.want / A.total) * 100);
 
       this.penInstrument(ctx, W, H, dt, {
         id: 'ask', accent: '#39ff14', title: 'THE ASK',
-        sub: this.fitSub(ctx, A.total + ' PROCUREMENT MESSAGES · ' + A.counts.denom + ' TIMES SHE NAMES THE SIZE · ONLY ' + A.counts.ask + ' ASKING HIM'),
+        sub: this.fitSub(ctx, A.total + ' PROCUREMENT MESSAGES · ' + A.counts.denom + ' NAME THE SIZE · ' + A.counts.code + ' HAND HIM HER ATM CODE'),
         nP: A.nP, padL: 176, padT: 76, padB: 76, laneGap: 7,
         lanes: A.LANES.map(([k, lab, col]) => ({
           data: A.series[k], label: lab, unit: A.counts[k] + ' MESSAGES', color: col, max: A.max[k]
@@ -1048,7 +1050,7 @@
             + ' · EVERY MONTH COVERED · NO NARRATIVE GAPS TO EXPLAIN AWAY.', g.padL, g.botY + 40);
           ctx.fillStyle = hx('#e0aaff', 0.9);
           ctx.fillText('SHE STATES ' + A.meta.dollarMentions + ' DOLLAR AMOUNTS TOTALLING $' + A.meta.dollarsStated.toLocaleString('en-US')
-            + '. THE PROTOCOL IS HIS QUESTION AND HER NUMBER: \u201cHOW MUCH?\u201d \u2192 \u201c60\u201d. ' + askShare + '% ASK HIM FOR ANYTHING.', g.padL, g.botY + 54);
+            + '. THE PROTOCOL IS HIS QUESTION AND HER NUMBER: \u201cHOW MUCH?\u201d \u2192 \u201c60\u201d. THE CODE LANE IS HER OWN BANK ACCOUNT.', g.padL, g.botY + 54);
         },
 
         overlay: (g) => {
