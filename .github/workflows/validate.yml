@@ -43,8 +43,10 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Compile the build tool
-        run: python3 -m py_compile tools/build-wiki-data.py
+      - name: Compile the build tools
+        run: |
+          python3 -m py_compile tools/build-wiki-data.py
+          python3 -m py_compile tools/build-transcript.py
 
       - name: Parse workflows
         run: |
@@ -102,6 +104,41 @@ jobs:
           print(f'{len(pages)} pages, {typed} typed edges, '
                 f'{sum(p["words"] for p in pages):,} words, '
                 f'{len(d["wikiLog"]["ops"])} log ops')
+          PY
+
+      - name: Check the transcript dataset
+        run: |
+          python3 - <<'PY'
+          import json, sys
+          d = json.load(open('data/transcript.json', encoding='utf-8'))
+
+          missing = {'count', 'first', 'last', 'm'} - set(d)
+          if missing:
+              sys.exit(f'error: transcript.json is missing top-level keys: {sorted(missing)}')
+
+          m = d['m']
+          if len(m) != d['count']:
+              sys.exit(f'error: count says {d["count"]} but there are {len(m)} messages')
+
+          # transcript.html indexes these positionally and unconditionally:
+          # m[0] timestamp, m[1] direction, m[2] text, m[3] flags.
+          for i, row in enumerate(m):
+              if not (isinstance(row, list) and len(row) == 4):
+                  sys.exit(f'error: message {i} is not a 4-element array')
+              if row[1] not in (0, 1) or not isinstance(row[2], str) or not isinstance(row[3], int):
+                  sys.exit(f'error: message {i} has the wrong shape: {row[:2]}')
+
+          # The page renders in file order and never sorts, so the file is the
+          # chronology. An unsorted row would silently show up in the wrong place.
+          ts = [row[0] for row in m]
+          if ts != sorted(ts):
+              sys.exit('error: messages are not in chronological order')
+          if ts[0] != d['first'] or ts[-1] != d['last']:
+              sys.exit('error: first/last do not match the message array')
+
+          sent = sum(1 for row in m if row[1])
+          print(f'{len(m):,} messages, {ts[0][:10]} to {ts[-1][:10]}, '
+                f'{sent:,} sent / {len(m) - sent:,} received')
           PY
 
       - name: Check index.html references files that exist
