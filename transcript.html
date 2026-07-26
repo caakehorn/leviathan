@@ -17,7 +17,7 @@
   .wrap{max-width:1120px;margin:0 auto;padding:0 20px 80px}
   header{border-bottom:1px solid #2a1245;padding:22px 0 14px}
   h1{font-family:'Space Grotesk',sans-serif;font-size:24px;letter-spacing:.12em;color:#39ff14;margin:0 0 6px;font-weight:700}
-  .sub{font-size:9.5px;letter-spacing:.18em;color:#6f8a5e}
+  .sub{font-size:11.5px;letter-spacing:.14em;color:#8fae7c}
   a{color:#39ff14}
 
   /* control bar */
@@ -32,28 +32,41 @@
   .btn[aria-pressed=true]{border-color:#39ff14;color:#39ff14}
   .count{font-size:11px;color:#6f8a5e;letter-spacing:.06em;white-space:nowrap}
 
+  /* legend — who is who, stated plainly */
+  .legend{display:flex;flex-wrap:wrap;gap:18px;align-items:center;padding:12px 0 2px;
+          font-family:'Space Grotesk',sans-serif;font-size:13px;color:#cfe6c4}
+  .legend b{font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.1em;
+            padding:3px 8px;border-radius:3px;font-weight:600}
+  .key-dan{background:#0d2b06;color:#39ff14;border:1px solid #39ff14}
+  .key-annie{background:#2b0733;color:#ff5cf0;border:1px solid #e01aff}
+
   /* rows */
   #doc{padding-top:10px}
-  .row{display:grid;grid-template-columns:62px 128px 1fr;gap:10px;padding:5px 0;border-bottom:1px solid #1b0b2e;
-       content-visibility:auto;contain-intrinsic-size:auto 34px}
+  .row{display:grid;grid-template-columns:58px 112px 78px 1fr;gap:10px;padding:7px 0;border-bottom:1px solid #1b0b2e;
+       content-visibility:auto;contain-intrinsic-size:auto 40px}
   .row.hide{display:none}
-  .ln{color:#4b3a63;font-size:11px;text-align:right;padding-top:2px;user-select:none}
+  .ln{color:#4b3a63;font-size:11px;text-align:right;padding-top:3px;user-select:none}
   .ln:target{color:#e01aff}
-  .ts{color:#6f8a5e;font-size:11px;padding-top:2px;white-space:nowrap}
-  .tx{font-family:'Space Grotesk',sans-serif;font-size:14px;line-height:1.5;white-space:pre-wrap;
+  .ts{color:#6f8a5e;font-size:11px;padding-top:3px;white-space:nowrap}
+  .who{font-size:12px;font-weight:600;letter-spacing:.09em;padding-top:2px;white-space:nowrap}
+  .row.tx-sent .who{color:#39ff14}
+  .row.rx .who{color:#ff5cf0}
+  .tx{font-family:'Space Grotesk',sans-serif;font-size:15.5px;line-height:1.58;white-space:pre-wrap;
       overflow-wrap:anywhere;color:#e9ffe6}
-  .row.rx .tx{color:#cfe6c4}
-  .row.tx-sent .tx{border-left:2px solid #39ff14;padding-left:10px}
-  .row.rx .tx{border-left:2px solid #e01aff;padding-left:10px}
+  .row.rx .tx{color:#f3dcf0}
+  .row.tx-sent .tx{border-left:3px solid #39ff14;padding-left:11px}
+  .row.rx .tx{border-left:3px solid #e01aff;padding-left:11px}
   .row.att .ts::after{content:' ATT';color:#b026ff;font-size:9px}
   .row.tap{opacity:.6}
   .row.cur{background:#1e0b33}
   mark{background:#b026ff;color:#10001f;padding:0 1px}
-  .note{font-size:11px;color:#6f8a5e;padding:14px 0}
+  .note{font-size:12.5px;line-height:1.6;font-family:'Space Grotesk',sans-serif;color:#9db38f;
+        padding:16px 0;max-width:80ch}
   #more{width:100%;margin:18px 0;padding:12px;text-align:center}
   @media(max-width:640px){
-    .row{grid-template-columns:44px 1fr;gap:6px}
+    .row{grid-template-columns:40px 1fr;gap:4px 8px}
     .ts{grid-column:2;font-size:10px;padding-top:0}
+    .who{grid-column:2;padding-top:0}
     .tx{grid-column:2}
   }
 </style>
@@ -65,11 +78,16 @@
   <div class="sub" id="meta">LOADING…</div>
 </header>
 
+<div class="legend">
+  <span><b class="key-dan">DAN</b> &nbsp;messages Dan sent</span>
+  <span><b class="key-annie">ANNIE</b> &nbsp;messages Annie sent</span>
+</div>
+
 <div class="bar">
   <input type="search" id="q" placeholder="search the record —  or #1234 to jump to a line" autocomplete="off" spellcheck="false">
-  <button class="btn" id="fAll" aria-pressed="true">ALL</button>
-  <button class="btn" id="fSent" aria-pressed="false">SENT</button>
-  <button class="btn" id="fRecv" aria-pressed="false">RECEIVED</button>
+  <button class="btn" id="fAll" aria-pressed="true">BOTH</button>
+  <button class="btn" id="fSent" aria-pressed="false">DAN ONLY</button>
+  <button class="btn" id="fRecv" aria-pressed="false">ANNIE ONLY</button>
   <button class="btn" id="prev" title="previous match (Shift+Enter)">◀</button>
   <button class="btn" id="next" title="next match (Enter)">▶</button>
   <span class="count" id="count"></span>
@@ -111,6 +129,7 @@
     d.className='row '+(m[1]?'tx-sent':'rx')+(m[3]&1?' att':'')+(m[3]&2?' tap':'');
     d.id='L'+(i+1);
     d.innerHTML='<div class="ln">'+(i+1)+'</div><div class="ts">'+m[0].slice(0,16)+
+                '</div><div class="who">'+(m[1]?'DAN':'ANNIE')+
                 '</div><div class="tx">'+textHTML(i)+'</div>';
     rows[i]=d;
     return d;
@@ -233,9 +252,12 @@
     for(var i=0;i<M.length;i++) LOW[i]=M[i][2].toLowerCase();
     var sent=0; for(i=0;i<M.length;i++) if(M[i][1]) sent++;
     META.textContent=M.length.toLocaleString()+' MESSAGES  ·  '+j.first.slice(0,10)+' → '+j.last.slice(0,10)+
-      '  ·  '+sent.toLocaleString()+' SENT / '+(M.length-sent).toLocaleString()+' RECEIVED';
-    FOOT.textContent='Complete export, nothing removed. Green rule = sent. Magenta rule = received. '+
-      'Faded rows are tapbacks. ATT marks a message that carried an attachment.';
+      '  ·  '+sent.toLocaleString()+' FROM DAN / '+(M.length-sent).toLocaleString()+' FROM ANNIE';
+    FOOT.textContent='This is the complete message history between Dan and Annie, in the order it was '+
+      'sent — every message, nothing removed and nothing edited. Each line says who sent it: DAN in '+
+      'green, ANNIE in pink. The number on the far left is the line number, so any single message can '+
+      'be pointed to exactly. Faded lines are reactions (a thumbs-up or a heart on someone else’s '+
+      'message, not a message of its own). ATT marks a message that carried a photo or attachment.';
     recompute();
     if(location.hash&&/^#L\d+$/.test(location.hash)) gotoLine(+location.hash.slice(2));
   }).catch(function(e){
