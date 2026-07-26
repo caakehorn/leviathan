@@ -945,8 +945,11 @@
       const rows = A0.records.map(r => ({ ...r, day: D.dayNum(r.d), pos: D.dayNum(r.d) - d0 }))
         .filter(r => r.pos >= 0 && r.pos < nP);
       const LANES = [
-        ['fund', 'SHE RAISES THE MONEY', '#39ff14', ['fund']],
+        // the order she names — "How much?" · "60" — is the top lane because it
+        // is the act the whole question turns on: she sets the size of the buy
+        ['denom', 'SHE NAMES THE NUMBER', '#39ff14', ['denom']],
         ['order', 'SHE PLACES THE ORDER', '#00ffa3', ['order', 'chase']],
+        ['fund', 'SHE RAISES THE MONEY', '#b6ff8f', ['fund']],
         ['ask', 'SHE ASKS HIM FOR IT', '#c77dff', ['askSupply', 'askMoney', 'askOther']],
         ['fam', 'SHE ASKS HER FAMILY', '#b026ff', ['ask3p']]
       ];
@@ -968,12 +971,13 @@
       for (let i = 0; i < nP; i++) { run += byDay[i] || 0; cum[i] = run; }
 
       const KTAG = {
+        denom: 'HE ASKS HOW MUCH \u2014 SHE NAMES THE NUMBER',
         fund: 'SHE RAISES THE MONEY', order: 'SHE PLACES THE ORDER', chase: 'SHE CHASES THE SUPPLY',
         askSupply: 'SHE ASKS HIM FOR SUPPLY', askMoney: 'SHE ASKS HIM FOR MONEY',
         askOther: 'SHE ASKS HIM FOR SOMETHING', ask3p: 'SHE ASKS HER OWN FAMILY'
       };
       const KCOL = {
-        fund: '#39ff14', order: '#00ffa3', chase: '#00ffa3',
+        denom: '#39ff14', fund: '#b6ff8f', order: '#00ffa3', chase: '#00ffa3',
         askSupply: '#c77dff', askMoney: '#c77dff', askOther: '#c77dff', ask3p: '#b026ff'
       };
 
@@ -1009,7 +1013,7 @@
 
       this.penInstrument(ctx, W, H, dt, {
         id: 'ask', accent: '#39ff14', title: 'THE ASK',
-        sub: this.fitSub(ctx, A.total + ' PROCUREMENT MESSAGES FROM HER · ' + A.counts.fund + ' RAISING MONEY · ONLY ' + A.counts.ask + ' ASKING HIM'),
+        sub: this.fitSub(ctx, A.total + ' PROCUREMENT MESSAGES · ' + A.counts.denom + ' TIMES SHE NAMES THE SIZE · ONLY ' + A.counts.ask + ' ASKING HIM'),
         nP: A.nP, padL: 176, padT: 76, padB: 76, laneGap: 7,
         lanes: A.LANES.map(([k, lab, col]) => ({
           data: A.series[k], label: lab, unit: A.counts[k] + ' MESSAGES', color: col, max: A.max[k]
@@ -1044,7 +1048,7 @@
             + ' · EVERY MONTH COVERED · NO NARRATIVE GAPS TO EXPLAIN AWAY.', g.padL, g.botY + 40);
           ctx.fillStyle = hx('#e0aaff', 0.9);
           ctx.fillText('SHE STATES ' + A.meta.dollarMentions + ' DOLLAR AMOUNTS TOTALLING $' + A.meta.dollarsStated.toLocaleString('en-US')
-            + ' AND ANNOUNCES ' + A.meta.atmRuns + ' ATM RUNS. ' + askShare + '% OF THESE MESSAGES ASK HIM FOR ANYTHING.', g.padL, g.botY + 54);
+            + '. THE PROTOCOL IS HIS QUESTION AND HER NUMBER: \u201cHOW MUCH?\u201d \u2192 \u201c60\u201d. ' + askShare + '% ASK HIM FOR ANYTHING.', g.padL, g.botY + 54);
         },
 
         overlay: (g) => {

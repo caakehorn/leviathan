@@ -39,11 +39,13 @@
    "askSupply": 100,
    "askMoney": 75,
    "askOther": 57,
-   "ask3p": 100
+   "ask3p": 100,
+   "denom": 97
   },
   "dollarsStated": 2629,
   "dollarMentions": 68,
-  "atmRuns": 32
+  "atmRuns": 32,
+  "denomOrders": 42
  },
  "records": [
   {
@@ -63,6 +65,12 @@
    "t": "16:03",
    "k": "fund",
    "x": "I’ll send the money if you can go to atm"
+  },
+  {
+   "d": "2025-03-05",
+   "t": "16:43",
+   "k": "denom",
+   "x": "I said 50"
   },
   {
    "d": "2025-03-11",
@@ -120,6 +128,12 @@
   },
   {
    "d": "2025-04-03",
+   "t": "15:14",
+   "k": "denom",
+   "x": "Maybe 20"
+  },
+  {
+   "d": "2025-04-03",
    "t": "20:05",
    "k": "askSupply",
    "x": "ca. you please bring me a one hitter"
@@ -143,6 +157,18 @@
    "x": "can you tell her 40 I have $15 cash and will go to atm now"
   },
   {
+   "d": "2025-04-10",
+   "t": "18:59",
+   "k": "denom",
+   "x": "40"
+  },
+  {
+   "d": "2025-04-11",
+   "t": "17:03",
+   "k": "denom",
+   "x": "It was not"
+  },
+  {
    "d": "2025-04-11",
    "t": "17:27",
    "k": "ask3p",
@@ -153,6 +179,12 @@
    "t": "14:31",
    "k": "order",
    "x": "I want the drugs now"
+  },
+  {
+   "d": "2025-04-14",
+   "t": "12:32",
+   "k": "denom",
+   "x": "$70?"
   },
   {
    "d": "2025-04-14",
@@ -269,6 +301,12 @@
    "x": "Ok can I come get it"
   },
   {
+   "d": "2025-05-20",
+   "t": "16:15",
+   "k": "denom",
+   "x": "45"
+  },
+  {
    "d": "2025-05-31",
    "t": "23:24",
    "k": "askSupply",
@@ -353,6 +391,12 @@
    "x": "I’m trying to get money"
   },
   {
+   "d": "2025-06-17",
+   "t": "11:11",
+   "k": "denom",
+   "x": "I have 75 total."
+  },
+  {
    "d": "2025-06-18",
    "t": "17:34",
    "k": "fund",
@@ -419,10 +463,22 @@
    "x": "And I plan on asking her to write me a check today after her nap. Need to pay the second payment plan for phone bill tomorrow. I may have enough left to get half a one later. I dont know yet."
   },
   {
+   "d": "2025-07-16",
+   "t": "14:56",
+   "k": "denom",
+   "x": "Fifty."
+  },
+  {
    "d": "2025-07-26",
    "t": "15:36",
    "k": "fund",
    "x": "I have twenty. Gotta get my last ten out of the atm. But then I won’t have money for gas."
+  },
+  {
+   "d": "2025-07-26",
+   "t": "15:39",
+   "k": "denom",
+   "x": "I just didn’t think he would come for 30"
   },
   {
    "d": "2025-07-28",
@@ -471,6 +527,12 @@
    "t": "15:31",
    "k": "fund",
    "x": "I will bring the money in a few minutes then go pick up dinner"
+  },
+  {
+   "d": "2025-08-07",
+   "t": "12:08",
+   "k": "denom",
+   "x": "Yeah. 60"
   },
   {
    "d": "2025-08-07",
@@ -529,7 +591,7 @@
   {
    "d": "2025-08-25",
    "t": "17:57",
-   "k": "fund",
+   "k": "denom",
    "x": "I have $120"
   },
   {
@@ -537,6 +599,12 @@
    "t": "11:50",
    "k": "askMoney",
    "x": "Unless your mom has anything she can spot me until tomorrow"
+  },
+  {
+   "d": "2025-08-29",
+   "t": "14:55",
+   "k": "denom",
+   "x": "60"
   },
   {
    "d": "2025-08-30",
@@ -581,6 +649,12 @@
    "x": "I asked my mom if she could send me some money. I’ll let you know if she can"
   },
   {
+   "d": "2025-09-23",
+   "t": "12:26",
+   "k": "denom",
+   "x": "60"
+  },
+  {
    "d": "2025-09-25",
    "t": "10:37",
    "k": "fund",
@@ -591,6 +665,12 @@
    "t": "10:39",
    "k": "fund",
    "x": "But I don’t want to go out in the rain right now to go to the atm"
+  },
+  {
+   "d": "2025-09-28",
+   "t": "12:02",
+   "k": "denom",
+   "x": "60"
   },
   {
    "d": "2025-09-28",
@@ -621,6 +701,12 @@
    "t": "12:20",
    "k": "fund",
    "x": "Trying to get money together"
+  },
+  {
+   "d": "2025-10-08",
+   "t": "12:43",
+   "k": "denom",
+   "x": "Fifty"
   },
   {
    "d": "2025-10-09",
@@ -657,6 +743,12 @@
    "t": "10:38",
    "k": "fund",
    "x": "I have $60 going to atm"
+  },
+  {
+   "d": "2025-10-15",
+   "t": "13:10",
+   "k": "denom",
+   "x": "60"
   },
   {
    "d": "2025-10-16",
@@ -755,6 +847,18 @@
    "x": "I’m going to the ATM now"
   },
   {
+   "d": "2025-11-01",
+   "t": "14:58",
+   "k": "denom",
+   "x": "Um I do have $60."
+  },
+  {
+   "d": "2025-11-06",
+   "t": "11:11",
+   "k": "denom",
+   "x": "Good morning. Can I bring forty over before I go to sugies"
+  },
+  {
    "d": "2025-11-08",
    "t": "12:42",
    "k": "fund",
@@ -771,6 +875,12 @@
    "t": "10:40",
    "k": "order",
    "x": "Good morning I’m going g to try to get a check in a little bit so we can get a whole one today"
+  },
+  {
+   "d": "2025-11-11",
+   "t": "15:04",
+   "k": "denom",
+   "x": "60"
   },
   {
    "d": "2025-11-12",
@@ -821,6 +931,12 @@
    "x": "I have twenty I can send"
   },
   {
+   "d": "2025-12-02",
+   "t": "13:34",
+   "k": "denom",
+   "x": "Probably McDonald’s. And I have 100"
+  },
+  {
    "d": "2025-12-03",
    "t": "17:03",
    "k": "fund",
@@ -839,6 +955,12 @@
    "x": "I have fifty."
   },
   {
+   "d": "2025-12-07",
+   "t": "12:46",
+   "k": "denom",
+   "x": "100"
+  },
+  {
    "d": "2025-12-08",
    "t": "11:47",
    "k": "fund",
@@ -846,9 +968,21 @@
   },
   {
    "d": "2025-12-08",
+   "t": "12:08",
+   "k": "denom",
+   "x": "100"
+  },
+  {
+   "d": "2025-12-08",
    "t": "12:33",
    "k": "fund",
    "x": "So I’ll leave here once the car comes out. I’ll hit the atm"
+  },
+  {
+   "d": "2025-12-09",
+   "t": "10:16",
+   "k": "denom",
+   "x": "I need to pay the phone bill on the 10th"
   },
   {
    "d": "2025-12-10",
@@ -893,6 +1027,12 @@
    "x": "I have $20"
   },
   {
+   "d": "2025-12-22",
+   "t": "15:39",
+   "k": "denom",
+   "x": "Michelle leaving in a min"
+  },
+  {
    "d": "2025-12-23",
    "t": "11:18",
    "k": "fund",
@@ -909,6 +1049,12 @@
    "t": "12:45",
    "k": "fund",
    "x": "I have twenty"
+  },
+  {
+   "d": "2025-12-27",
+   "t": "14:00",
+   "k": "denom",
+   "x": "How do you expect me to get more than the twenty I have Dan"
   },
   {
    "d": "2025-12-27",
@@ -969,6 +1115,18 @@
    "t": "19:22",
    "k": "fund",
    "x": "I have fifty cash."
+  },
+  {
+   "d": "2026-01-16",
+   "t": "13:30",
+   "k": "denom",
+   "x": "The fifty I gave you yesterday"
+  },
+  {
+   "d": "2026-01-16",
+   "t": "13:30",
+   "k": "denom",
+   "x": "Plus 50 more"
   },
   {
    "d": "2026-01-18",
@@ -1043,6 +1201,12 @@
    "x": "I’ll go to the ATM"
   },
   {
+   "d": "2026-02-05",
+   "t": "16:29",
+   "k": "denom",
+   "x": "I only have fifty."
+  },
+  {
    "d": "2026-02-11",
    "t": "12:11",
    "k": "fund",
@@ -1061,6 +1225,18 @@
    "x": "Did you get your subs yet"
   },
   {
+   "d": "2026-02-22",
+   "t": "14:09",
+   "k": "denom",
+   "x": "60"
+  },
+  {
+   "d": "2026-02-23",
+   "t": "12:19",
+   "k": "denom",
+   "x": "On my way with $80"
+  },
+  {
    "d": "2026-02-28",
    "t": "12:47",
    "k": "fund",
@@ -1071,6 +1247,12 @@
    "t": "12:47",
    "k": "fund",
    "x": "Edited to “I am trying to get some money ”"
+  },
+  {
+   "d": "2026-03-02",
+   "t": "11:33",
+   "k": "denom",
+   "x": "100"
   },
   {
    "d": "2026-03-06",
@@ -1085,10 +1267,28 @@
    "x": "And I don’t want you to think this is the only reason why I would want to come over… but I have sixty cash if it is possible"
   },
   {
+   "d": "2026-03-09",
+   "t": "13:11",
+   "k": "denom",
+   "x": "She’s writing me a check. I’ll get 80"
+  },
+  {
    "d": "2026-03-16",
    "t": "11:20",
    "k": "fund",
    "x": "I’ll just bring the money to your mom if you are gone"
+  },
+  {
+   "d": "2026-03-16",
+   "t": "12:13",
+   "k": "denom",
+   "x": "100"
+  },
+  {
+   "d": "2026-03-17",
+   "t": "10:17",
+   "k": "denom",
+   "x": "I only have like 30"
   },
   {
    "d": "2026-03-19",
@@ -1101,6 +1301,12 @@
    "t": "12:59",
    "k": "fund",
    "x": "Well I have twenty for you Dan sorry I will get the other forty"
+  },
+  {
+   "d": "2026-03-23",
+   "t": "17:57",
+   "k": "denom",
+   "x": "100?"
   },
   {
    "d": "2026-03-23",
@@ -1127,6 +1333,12 @@
    "x": "I have $60 dollars. That’s it. That’s all I can fucking do"
   },
   {
+   "d": "2026-04-20",
+   "t": "11:19",
+   "k": "denom",
+   "x": "100"
+  },
+  {
    "d": "2026-04-21",
    "t": "10:06",
    "k": "fund",
@@ -1151,9 +1363,15 @@
    "x": "Are you able to go to the atm for me"
   },
   {
+   "d": "2026-05-05",
+   "t": "12:26",
+   "k": "denom",
+   "x": "100 I’ll get the code"
+  },
+  {
    "d": "2026-05-14",
    "t": "17:27",
-   "k": "fund",
+   "k": "denom",
    "x": "Well I have $25 in bank. And $20 cash…"
   },
   {
@@ -1176,6 +1394,12 @@
   },
   {
    "d": "2026-05-18",
+   "t": "12:58",
+   "k": "denom",
+   "x": "I guess do 100"
+  },
+  {
+   "d": "2026-05-18",
    "t": "12:59",
    "k": "fund",
    "x": "Are you going to the atm"
@@ -1185,6 +1409,24 @@
    "t": "11:16",
    "k": "fund",
    "x": "I’ll get ready quick and hit the atm before I go grocery shopping for Sugie"
+  },
+  {
+   "d": "2026-05-19",
+   "t": "11:16",
+   "k": "denom",
+   "x": "60"
+  },
+  {
+   "d": "2026-05-25",
+   "t": "12:19",
+   "k": "denom",
+   "x": "60"
+  },
+  {
+   "d": "2026-05-31",
+   "t": "17:51",
+   "k": "denom",
+   "x": "100?"
   },
   {
    "d": "2026-05-31",
