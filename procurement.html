@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PROCUREMENT — a third section</title>
+<meta name="robots" content="noindex, nofollow">
+<meta name="referrer" content="no-referrer">
+<meta name="theme-color" content="#10001f">
+<link rel="icon" href="data:,">
+
+<!-- Unlinked from the rest of the site, and unencrypted on purpose: every line
+     it quotes is already public in data/wiki-data.json and in the wiki-brain
+     repository it is built from, so a passphrase here would protect nothing and
+     would only make the evidence harder to check. noindex keeps it out of
+     search results all the same — unlisted, not secret. -->
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&amp;family=IBM+Plex+Mono:wght@400;600;700&amp;display=swap" rel="stylesheet">
+
+<style>
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0; height: 100%;
+    background: #10001f; color: #e9ffe6;
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+    overflow: hidden;
+  }
+  ::selection { background: #b026ff; color: #10001f; }
+
+  #app { display: flex; flex-direction: column; height: 100%; }
+
+  header {
+    border-bottom: 1px solid #2a1245;
+    padding: 12px 18px 10px;
+    display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px 16px;
+    flex: 0 0 auto;
+  }
+  h1 {
+    margin: 0; font-family: 'Space Grotesk', sans-serif; font-weight: 700;
+    font-size: 17px; letter-spacing: 0.14em; color: #39ff14;
+  }
+  .kicker { font-size: 9px; letter-spacing: 0.18em; color: #6f8a5e; }
+  .kicker b { color: #e0aaff; font-weight: 600; }
+
+  nav, #chips {
+    display: flex; flex-wrap: wrap; gap: 6px;
+    padding: 8px 18px; flex: 0 0 auto;
+  }
+  nav { border-bottom: 1px solid #170a2a; }
+  #chips { border-bottom: 1px solid #170a2a; }
+
+  .chip {
+    font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; letter-spacing: 0.14em;
+    padding: 5px 11px; cursor: pointer; border: 1px solid #5b1a8f;
+    color: #6b7484; background: rgba(13,17,24,0.85);
+    transition: all 120ms ease; white-space: nowrap;
+  }
+  .chip:hover { color: #b6ff8f; border-color: #39ff14; }
+  .chip.on { color: #39ff14; border-color: #39ff14; background: rgba(57,255,20,0.08); }
+
+  #hint {
+    padding: 7px 18px; font-size: 8.5px; letter-spacing: 0.16em;
+    color: #6f8a5e; border-bottom: 1px solid #170a2a; flex: 0 0 auto;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+
+  #stageWrap { position: relative; flex: 1 1 auto; min-height: 0; overflow: hidden; }
+  /* The instruments need horizontal room — five lanes, a label gutter and a
+     verbatim feed. Below ~1000px the page scrolls sideways rather than
+     compressing the feed into unreadability. The overlays sit outside the
+     scroller so they stay put while the chart moves. */
+  #scroll { position: absolute; inset: 0; overflow-x: auto; overflow-y: hidden; }
+  #stage { display: block; touch-action: none; }
+
+  /* the source card — the reason the page exists */
+  #source {
+    position: absolute; left: 18px; bottom: 18px; width: min(560px, calc(100% - 36px));
+    max-height: calc(100% - 36px); overflow: auto;
+    background: rgba(11,4,22,0.97); border: 1px solid #2a1245;
+    padding: 14px 16px 16px; box-shadow: 0 0 40px rgba(176,38,255,0.25);
+  }
+  #source[hidden] { display: none; }
+  .srcHead { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+  .tier {
+    font-size: 8.5px; letter-spacing: 0.18em; padding: 3px 8px;
+    border: 1px solid currentColor; flex: 0 0 auto;
+  }
+  .srcTag { font-size: 9px; letter-spacing: 0.14em; color: #e0aaff; flex: 1 1 auto; }
+  .quote {
+    font-family: 'Space Grotesk', sans-serif; font-size: 15px; line-height: 1.45;
+    color: #e9ffe6; margin: 0 0 12px;
+  }
+  dl.meta { display: grid; grid-template-columns: 116px 1fr; gap: 3px 12px; margin: 0 0 10px; }
+  dl.meta dt { font-size: 8px; letter-spacing: 0.16em; color: #3d5230; padding-top: 2px; }
+  dl.meta dd { margin: 0; font-size: 10px; color: #6f8a5e; word-break: break-word; }
+  .note {
+    font-family: 'Space Grotesk', sans-serif; font-size: 11.5px; line-height: 1.5;
+    color: #c77dff; border-left: 2px solid #7b2dff; padding-left: 10px; margin-bottom: 10px;
+  }
+  #source a {
+    font-size: 9px; letter-spacing: 0.14em; color: #b026ff; text-decoration: none;
+    border-bottom: 1px solid rgba(176,38,255,0.5);
+  }
+  #source a:hover { color: #39ff14; border-bottom-color: rgba(57,255,20,0.6); }
+
+  /* the written brief */
+  #brief {
+    position: absolute; inset: 0; overflow: auto;
+    background: rgba(9,3,18,0.975); padding: 28px min(6vw, 60px) 60px;
+  }
+  #brief[hidden] { display: none; }
+  #brief .inner { max-width: 760px; margin: 0 auto; }
+  #brief h2 {
+    font-family: 'Space Grotesk', sans-serif; font-size: 20px; letter-spacing: 0.1em;
+    color: #39ff14; margin: 0 0 6px;
+  }
+  #brief h3 {
+    font-size: 9.5px; letter-spacing: 0.2em; color: #e0aaff;
+    margin: 26px 0 8px; font-weight: 600;
+  }
+  #brief p, #brief li {
+    font-family: 'Space Grotesk', sans-serif; font-size: 13.5px; line-height: 1.62;
+    color: #cfe6c4;
+  }
+  #brief p { margin: 0 0 12px; }
+  #brief ul { margin: 0 0 12px; padding-left: 18px; }
+  #brief li { margin-bottom: 7px; }
+  #brief em { color: #b6ff8f; font-style: normal; }
+  #brief .caveat { border-left: 2px solid #e01aff; padding-left: 12px; color: #e0aaff; }
+  #brief code {
+    font-family: 'IBM Plex Mono', monospace; font-size: 11.5px; color: #00ffa3;
+  }
+
+  @media (max-width: 720px) {
+    #hint { white-space: normal; }
+    h1 { font-size: 14px; }
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <h1>PROCUREMENT</h1>
+    <div class="kicker">
+      A THIRD SECTION · FIVE INSTRUMENTS OVER THE QUESTION OF <b>WHOSE DECISION IT WAS</b> ·
+      NO PASSPHRASE, BECAUSE EVERY LINE HERE IS ALREADY PUBLIC
+    </div>
+  </header>
+
+  <nav id="tabs"></nav>
+  <div id="chips"></div>
+  <div id="hint"></div>
+
+  <div id="stageWrap">
+    <div id="scroll"><canvas id="stage"></canvas></div>
+
+    <aside id="source" hidden></aside>
+
+    <div id="brief" hidden>
+      <div class="inner">
+        <h2>What this page is for, and what it does not claim</h2>
+
+        <p>
+          One question, asked narrowly: <em>was Annie Ulmer's acquisition and use of
+          controlled substances something she did, or something that was done to
+          her?</em> The five instruments here answer it out of the message record
+          alone. Each pen is a count of cited lines, and every line it counts is
+          readable verbatim beside it — click any of them and the file, the
+          timestamp, the direction tag and the wiki page that carries it open in
+          full.
+        </p>
+
+        <h3>WHAT THE RECORD SHOWS</h3>
+        <ul>
+          <li>
+            She ran a supplier relationship of her own in <em>2018–2019</em> — travelling
+            to the source, placing orders by size, moving money, absorbing losses
+            when she was beaten, chasing the line when it went dead, and
+            introducing other buyers to it. That is <em>2,010 days</em> before the
+            window in which she is said to have been made dependent.
+          </li>
+          <li>
+            Third parties routed their own requests <em>through her</em>. That is a
+            supply node, not a victim of one.
+          </li>
+          <li>
+            In the terminal window she initiates. The clearest instance is
+            March 11, 2026: she opens the re-entry with the ask, offers an errand
+            as the consideration, and writes the refusal into the message herself —
+            <em>"You can tell me no."</em>
+          </li>
+          <li>
+            The record contains <em>no instance</em> of supply withheld as leverage or
+            punishment, across the entire terminal window, including hours after
+            the worst thing Dan ever said to her and minutes after the confession
+            he had spent months trying to obtain. Coercive control runs on the
+            threat of withdrawal. There is no withdrawal here to threaten with.
+          </li>
+          <li>
+            For every month of the relationship except the fifteen shaded in
+            <b>CLOCK</b>, she had her own income, her own route to supply, or both.
+            That window begins with a move she made and a funded apartment she
+            declined, and it ends with a job she took four weeks before the
+            relationship closed.
+          </li>
+          <li>
+            The most independent witness in the corpus is the man she left Dan
+            for — who had attacked Dan publicly two weeks earlier, and who then
+            described the addiction as hers, unprompted, to the last person with
+            any claim on his loyalty.
+          </li>
+        </ul>
+
+        <h3>WHAT THIS PAGE DOES NOT CLAIM</h3>
+        <p class="caveat">
+          It does not claim Dan is a bystander. The same corpus states plainly
+          that he was the supply-chain architect of the terminal phase, that
+          structuring a dependency was his doing, that his verbal abuse
+          quadrupled across seven months and reproduces exactly from raw, and
+          that the surveillance arc points toward control. Those findings are
+          <em>on this page</em>, in the same lanes as everything else, under
+          <b>AGAINST DAN</b> in <b>PROVENANCE</b>. Structuring a supply relationship with
+          someone who was already using for a decade is not the same act as
+          creating the use — but it is not nothing, and nothing here pretends
+          otherwise.
+        </p>
+        <p class="caveat">
+          It also does not use the record's most quotable statistic. The
+          <code>187:4</code> love-to-request ratio, long cited as proof that her
+          affection was a procurement instrument, was killed by a base-rate
+          control the corpus ran on itself on 2026-07-18 and inverted by the
+          directional test. It is absent from every lane here except as an
+          example of the record correcting against its own author.
+        </p>
+
+        <h3>SOURCING</h3>
+        <p>
+          Every record is drawn from the public wiki at
+          <code>github.com/caakehorn/wiki-brain</code>, shipped unencrypted in this
+          repository as <code>data/wiki-data.json</code>. Records carry the wiki's own
+          provenance tiers, and where the wiki flags a line as dossier-only,
+          undated, contradicted or unresolved, the flag travels with it and is
+          shown in the source card. <b>PROVENANCE</b> sorts the whole case by that
+          tier so the weak sourcing is impossible to hide behind the strong.
+        </p>
+        <p>
+          Press <b>ESC</b> to close this, and the space bar to start and stop the pens.
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="./js/pen-core.js"></script>
+<script src="./js/procurement-data.js"></script>
+<script src="./js/procurement.js"></script>
+</body>
+</html>

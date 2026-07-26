@@ -7,3 +7,9 @@ Allow: /
 # This is advisory only and is NOT an access control: the file stays fetchable
 # by anyone with the URL.
 Disallow: /data/
+
+# procurement.html is an unlisted third section — nothing links to it, and it
+# also carries <meta name="robots" content="noindex">. Same caveat as above:
+# advisory, not access control. It is unencrypted on purpose (every line it
+# quotes is already public in data/wiki-data.json), just not advertised.
+Disallow: /procurement.html
