@@ -82,6 +82,7 @@
         uncondPlay: false, uncondSpeed: 3,
         clockPlay: false, clockSpeed: 9,
         provPlay: false, provSpeed: 5,
+        parentsPlay: false, parentsSpeed: 10,
         provFilter: 'all'
       };
       Object.assign(this, window.PenCore);
@@ -174,7 +175,8 @@
       ['uncond', 'III · UNCONDITIONAL'],
       ['clock', 'IV · CLOCK'],
       ['prov', 'V · PROVENANCE'],
-      ['ask', 'VI · THE ASK']
+      ['ask', 'VI · THE ASK'],
+      ['parents', 'VII · PARENTS']
     ];
     HINTS = {
       agency: 'EVERY PROCUREMENT ACT IN THE RECORD, IN ORDER · PRESS ▶ · THE BOTTOM PEN IS SUPPLY WITHHELD AS LEVERAGE AND IT NEVER LEAVES THE FLOOR · CLICK ANY LINE FOR ITS SOURCE ROW',
@@ -182,7 +184,8 @@
       uncond: 'HIS HOSTILITY CLIMBS. THE SUPPLY NEVER MOVES WITH IT. THE LEVERAGE LANE IS EMPTY BECAUSE THE RECORD HAS NOTHING TO PUT IN IT · CLICK ANY LINE FOR ITS SOURCE',
       clock: 'THE WHOLE RELATIONSHIP AT MONTH RESOLUTION · THE SHADED WINDOW IS WHERE SHE SOURCED THROUGH HIM — ENTERED BY HER OWN MOVE, LEFT BY HER OWN JOB',
       prov: 'THE SAME CASE RE-SORTED BY HOW HARD THE EVIDENCE IS · RAW EXPORT ROWS FIRST, DAN’S UNCORROBORATED WORD LAST · FILTER TO SEE WHAT SURVIVES WITHOUT HIM',
-      ask: 'FROM THE RAW TEXT EXPORTS — 18,946 OF ANNIE’S MESSAGES, FEB 2025 → JUN 2026 · ANNIE RAISES THE MONEY AND NAMES THE BUY SIZE — NOT ASKING DAN FOR DRUGS · CLICK ANY LINE FOR ITS SOURCE'
+      ask: 'FROM THE RAW TEXT EXPORTS — 18,946 OF ANNIE’S MESSAGES, FEB 2025 → JUN 2026 · ANNIE RAISES THE MONEY AND NAMES THE BUY SIZE — NOT ASKING DAN FOR DRUGS · CLICK ANY LINE FOR ITS SOURCE',
+      parents: 'ANNIE’S OWN MOTHER AND FATHER, AND THE MONEY BETWEEN THEM — 73 RAW EXPORT ROWS, AUG 2025 → JUL 2026 · SHE ASKS, THEY SEND, THEY REFUSE, SHE OWES · CLICK ANY LINE FOR ITS SOURCE ROW'
     };
 
     chip(label, on, tone, onClick) {
@@ -229,7 +232,8 @@
         uncond: [[1, 'SLOW'], [3, 'NORMAL'], [9, 'FAST']],
         clock: [[3, 'SLOW'], [9, 'NORMAL'], [26, 'FAST']],
         prov: [[2, 'SLOW'], [5, 'NORMAL'], [15, 'FAST']],
-        ask: [[20, 'SLOW'], [60, 'NORMAL'], [180, 'FAST']]
+        ask: [[20, 'SLOW'], [60, 'NORMAL'], [180, 'FAST']],
+        parents: [[3, 'SLOW'], [10, 'NORMAL'], [30, 'FAST']]
       }[t];
       chips.push(...this.speedChips(t + 'Speed', sp, '#b026ff'));
       if (t === 'prov') {
@@ -1109,6 +1113,109 @@
       const P = this.M.prov; if (!P) return;
       if (type === 'down' && this.feedClick('prov', p, P)) return;
       if (this.penScrub('prov', type, p) === 'click' && P.hover >= 0) this.pin(P.rows[P.hover]);
+    }
+
+    // ============================================================
+    // VII — PARENTS
+    // Annie's own mother and father, and the money between them. 73 raw
+    // export rows (Aug 2025 -> Jul 2026) where she references her OWN mom/dad
+    // AND money. The pens are the role each row plays: she ASKS, they SEND,
+    // they REFUSE, she OWES (check / repay). The volume lane marks which
+    // parent — mom carries almost all of it. Every row is verbatim and
+    // click-to-source, like the other instruments.
+    // ============================================================
+    initParents() {
+      const rows = (window.ParentMoneyData || []).slice();
+      const nP = rows.length;
+      // order is already chronological (export order); bin by role
+      const lanes = [
+        ['ask', 'ANNIE ASKS HER PARENTS FOR MONEY', '#39ff14'],
+        ['send', 'THEY SEND / PAY / GIVE HER', '#00ffa3'],
+        ['refuse', 'THEY REFUSE TO SEND', '#e01aff'],
+        ['debt', 'SHE OWES / THEY WRITE THE CHECK', '#c77dff'],
+        ['asset', 'THE HOUSE / INHERITED ASSET', '#b026ff'],
+        ['mention', 'MENTIONED IN PASSING', '#6f8a5e']
+      ];
+      const bw = Math.max(1.2, nP / 8);
+      const series = {}, max = {};
+      for (const [k] of lanes) {
+        series[k] = density(nP, rows.map((r, i) => (r.k === k ? { pos: i, w: 1 } : null)).filter(Boolean), bw);
+        max[k] = maxOf(series[k]);
+      }
+      // volume lane marks which parent is in the row: mom = high, dad = low
+      const vol = new Float32Array(nP);
+      rows.forEach((r, i) => { vol[i] = /(^|\b)mom/.test(r.text.toLowerCase()) ? 1 : 0.18; });
+
+      this.M.parents = {
+        rows, nP, lanes, series, max, vol, hover: -1,
+        play: 0.001, scrub: false, scrubGeo: null,
+        frags: rows.map((r, i) => ({
+          pos: i, text: r.text, tag: stamp(r) + ' · ' + r.tag, shownAt: 0,
+          pen: { ask: '#39ff14', send: '#00ffa3', refuse: '#e01aff', debt: '#c77dff', asset: '#b026ff', mention: '#6f8a5e' }[r.k],
+          id: r
+        }))
+      };
+    }
+
+    draw_parents(ctx, W, H, dt) {
+      if (!this.M.parents) this.initParents();
+      const P = this.M.parents;
+      this.penInstrument(ctx, W, H, dt, {
+        id: 'parents', accent: '#00ffa3', title: 'PARENTS · THE MONEY BETWEEN THEM',
+        sub: this.fitSub(ctx, P.nP + ' RAW ROWS, AUG 2025 → JUL 2026 · ' + P.lanes.length + ' ROLES · SHE ASKS, THEY SEND, THEY REFUSE, SHE OWES'),
+        nP: P.nP, padL: 210, padT: 76, padB: 70, laneGap: 7,
+        lanes: P.lanes.map(([k, label, col]) => ({
+          data: P.series[k], label, unit: P.lanes.filter(l => l[0] === k).length ? 'ROWS' : 'ROWS', color: col, max: P.max[k]
+        })),
+        volume: { data: P.vol, max: 1, color: '#e0aaff', label: 'MOM (TALL) vs DAD (LOW)' },
+        frags: P.frags,
+        feedTitle: 'HER PARENTS AND THE MONEY, VERBATIM · CLICK ONE FOR ITS SOURCE ROW',
+        feed: { dy: -32, dh: -30 },
+        ribbon: (i, past) => hx('#00ffa3', past ? 0.85 : 0.18),
+        tickStep: Math.max(1, Math.ceil(P.nP / 9)),
+        tickLabel: (i) => stamp(P.rows[i]).replace(/^~/, ''),
+
+        readout: (g) => {
+          const r = P.rows[Math.min(P.nP - 1, Math.floor(P.play))];
+          ctx.font = '600 12px ' + this.MONO; ctx.fillStyle = '#00ffa3'; ctx.textAlign = 'right';
+          ctx.fillText(stamp(r) + ' · ' + r.tag, g.chartR - 20, 30);
+          ctx.font = '9px ' + this.MONO; ctx.fillStyle = COL.dim;
+          ctx.fillText(r.tier + ' · ' + r.src.slice(0, 38), g.chartR - 20, 46);
+          ctx.textAlign = 'left';
+        },
+
+        marker: (g) => {
+          const nMom = P.rows.filter(r => /(^|\b)mom/.test(r.text.toLowerCase())).length;
+          const nDad = P.rows.length - nMom;
+          ctx.font = '9px ' + this.MONO; ctx.fillStyle = hx('#e0aaff', 0.85); ctx.textAlign = 'left';
+          ctx.fillText('MOTHER: ' + nMom + ' ROWS · FATHER: ' + nDad + ' ROWS · SOURCE: imessage_export_2124702449_20260726041750..csv',
+            g.padL, g.botY + 44);
+          ctx.fillStyle = hx('#6f8a5e', 0.9);
+          ctx.fillText('DIRECTION IN THIS EXPORT: DAN = SENT, ANNIE = RECEIVED (verified against known lines — see "Goodbye forever").',
+            g.padL, g.botY + 58);
+        },
+
+        overlay: (g) => {
+          P.hover = -1;
+          const mx = this.mouse.x, my = this.mouse.y;
+          if (mx >= g.padL - 6 && mx <= g.chartR - 14 && my >= g.ribY - 6 && my <= g.botY + 6) {
+            P.hover = Math.max(0, Math.min(P.nP - 1, Math.round(((mx - g.padL) / (g.chartR - g.padL - 20)) * (P.nP - 1))));
+          }
+          if (P.hover >= 0) {
+            ctx.strokeStyle = 'rgba(232,230,225,0.22)'; ctx.setLineDash([2, 4]);
+            ctx.beginPath(); ctx.moveTo(g.xOf(P.hover), g.padT); ctx.lineTo(g.xOf(P.hover), g.botY); ctx.stroke();
+            ctx.setLineDash([]);
+            this.hoverCard(ctx, P.rows[P.hover], '#' + (P.hover + 1) + ' OF ' + P.nP);
+          }
+          this.cv.style.cursor = P.hover >= 0 ? 'pointer' : 'crosshair';
+        }
+      });
+    }
+
+    pt_parents(type, p) {
+      const P = this.M.parents; if (!P) return;
+      if (type === 'down' && this.feedClick('parents', p, P)) return;
+      if (this.penScrub('parents', type, p) === 'click' && P.hover >= 0) this.pin(P.rows[P.hover]);
     }
   }
 
