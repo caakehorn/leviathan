@@ -17,7 +17,8 @@ js/
   wiki-modules.js     # first-wave wiki visualizers (WEB, CLAIMS, MASS, …)
   wiki-analytics.js   # second-wave wiki instruments computed from page prose
   procurement-data.js # PROCUREMENT's evidence pool — citations, not claims
-  procurement.js      # PROCUREMENT's five instruments
+  procurement-asks.js # THE ASK's ledger, recounted from wiki-brain raw/
+  procurement.js      # PROCUREMENT's six instruments
 data/
   leviathan.enc       # AES-256-GCM encrypted content bundle (decrypted in-browser)
   wiki-data.json      # WIKI section dataset, built from github.com/caakehorn/wiki-brain
@@ -94,7 +95,7 @@ it would protect nothing and only make the citations harder to check.
 It shares no data layer with the rest of the site. `js/procurement-data.js` is
 the entire dataset — a hand-assembled pool of ~55 records, each one a quotation
 plus its source file, its row, its provenance tier and whatever caveat the wiki
-attached to it. The five instruments do nothing but order that pool, count it,
+attached to it. The six instruments do nothing but order that pool, count it,
 and read it back. Clicking any line in any feed pins the full source card.
 
 Because the pool is checked in rather than generated, editing it is editing the
@@ -102,6 +103,18 @@ page: add a record to the `R` array in `js/procurement-data.js` and every
 instrument picks it up on the next load. Records need `d` (ISO date at day,
 month or year precision), `lane`, `who`, `tier`, `tag`, `text`, `src`, `dir` and
 `page`; `note` and `approx` are optional, and `k` is the LEDGER sub-kind.
+
+**THE ASK** does not run on that pool. `js/procurement-asks.js` is a recount from
+primary sources: every Annie-thread export in
+[wiki-brain](https://github.com/caakehorn/wiki-brain)'s `raw/self/message-csv/`
+merged, the one UTC-stamped export converted to local time (it was minting
+phantom duplicates four hours off), deduplicated on text within a 120-second
+window, her side kept — 18,946 messages, 2025-02-01 to 2026-06-05, every month
+covered. Requests are classified by speech-act frame *plus* named object rather
+than by keyword, and every hit was then read by hand with the false positives
+struck; the surviving per-category precision ships in `meta.precision` and is
+displayed on the instrument. Regenerating it means re-running that merge — the
+file is a build artifact of the raw exports, not hand-authored like `R`.
 
 ## Keeping the WIKI section in sync
 

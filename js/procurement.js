@@ -16,6 +16,7 @@
 //   UNCONDITIONAL his hostility against his provision; the leverage lane is empty
 //   CLOCK         the dependency window, sized against the whole relationship
 //   PROVENANCE    the case re-sorted by how hard the evidence is
+//   THE ASK       her procurement messages recounted from raw, Feb 2025 on
 (function () {
   const D = window.ProcurementData;
 
@@ -76,6 +77,7 @@
         pinned: null,
         brief: false,
         agencyPlay: false, agencySpeed: 4,
+        askPlay: false, askSpeed: 60,
         ledgerPlay: false, ledgerSpeed: 2,
         uncondPlay: false, uncondSpeed: 3,
         clockPlay: false, clockSpeed: 9,
@@ -171,14 +173,16 @@
       ['ledger', 'II · LEDGER'],
       ['uncond', 'III · UNCONDITIONAL'],
       ['clock', 'IV · CLOCK'],
-      ['prov', 'V · PROVENANCE']
+      ['prov', 'V · PROVENANCE'],
+      ['ask', 'VI · THE ASK']
     ];
     HINTS = {
       agency: 'EVERY PROCUREMENT ACT IN THE RECORD, IN ORDER · PRESS ▶ · THE BOTTOM PEN IS SUPPLY WITHHELD AS LEVERAGE AND IT NEVER LEAVES THE FLOOR · CLICK ANY LINE FOR ITS SOURCE ROW',
       ledger: 'HER OWN DEALER, HER OWN RUNS, HER OWN MONEY — 2018–2019, SEVEN YEARS BEFORE HE WAS EVER HER SOURCE · CLICK ANY LINE FOR ITS SOURCE ROW',
       uncond: 'HIS HOSTILITY CLIMBS. THE SUPPLY NEVER MOVES WITH IT. THE LEVERAGE LANE IS EMPTY BECAUSE THE RECORD HAS NOTHING TO PUT IN IT · CLICK ANY LINE FOR ITS SOURCE',
       clock: 'THE WHOLE RELATIONSHIP AT MONTH RESOLUTION · THE SHADED WINDOW IS WHERE SHE SOURCED THROUGH HIM — ENTERED BY HER OWN MOVE, LEFT BY HER OWN JOB',
-      prov: 'THE SAME CASE RE-SORTED BY HOW HARD THE EVIDENCE IS · RAW EXPORT ROWS FIRST, DAN’S UNCORROBORATED WORD LAST · FILTER TO SEE WHAT SURVIVES WITHOUT HIM'
+      prov: 'THE SAME CASE RE-SORTED BY HOW HARD THE EVIDENCE IS · RAW EXPORT ROWS FIRST, DAN’S UNCORROBORATED WORD LAST · FILTER TO SEE WHAT SURVIVES WITHOUT HIM',
+      ask: 'RECOUNTED FROM THE RAW EXPORTS — 18,946 OF HER MESSAGES, FEB 2025 → JUN 2026 · SHE IS RAISING THE MONEY, NOT ASKING HIM FOR DRUGS · CLICK ANY LINE'
     };
 
     chip(label, on, tone, onClick) {
@@ -214,7 +218,8 @@
         ledger: [[0.8, 'SLOW'], [2, 'NORMAL'], [6, 'FAST']],
         uncond: [[1, 'SLOW'], [3, 'NORMAL'], [9, 'FAST']],
         clock: [[3, 'SLOW'], [9, 'NORMAL'], [26, 'FAST']],
-        prov: [[2, 'SLOW'], [5, 'NORMAL'], [15, 'FAST']]
+        prov: [[2, 'SLOW'], [5, 'NORMAL'], [15, 'FAST']],
+        ask: [[20, 'SLOW'], [60, 'NORMAL'], [180, 'FAST']]
       }[t];
       chips.push(...this.speedChips(t + 'Speed', sp, '#b026ff'));
       if (t === 'prov') {
@@ -918,6 +923,174 @@
           this.cv.style.cursor = P.hover >= 0 ? 'pointer' : 'crosshair';
         }
       });
+    }
+
+    // ============================================================
+    // VI — THE ASK
+    // Recounted from raw. Every Annie-thread export in wiki-brain merged, the
+    // UTC-stamped one converted to local (it was minting phantom duplicates
+    // four hours off), deduplicated, her side only: 18,946 messages across
+    // Feb 2025 → Jun 2026 with every month covered. Classified by speech-act
+    // frame plus named object, then every hit read by hand and the false
+    // positives struck. Per-category precision is on the page.
+    //
+    // The shape that came out is not the one the wiki's prose implies. She is
+    // overwhelmingly not asking him to hand her drugs — she is raising money
+    // and placing orders. The lanes are ordered so that reads top to bottom.
+    // ============================================================
+    initAsk() {
+      const A0 = window.ProcurementAsks;
+      const d0 = D.dayNum(A0.meta.from), d1 = D.dayNum(A0.meta.to);
+      const nP = d1 - d0 + 1;
+      const rows = A0.records.map(r => ({ ...r, day: D.dayNum(r.d), pos: D.dayNum(r.d) - d0 }))
+        .filter(r => r.pos >= 0 && r.pos < nP);
+      const LANES = [
+        // the order she names — "How much?" · "60" — is the top lane because it
+        // is the act the whole question turns on: she sets the size of the buy
+        ['denom', 'SHE NAMES THE NUMBER', '#39ff14', ['denom']],
+        ['order', 'SHE PLACES THE ORDER', '#00ffa3', ['order', 'chase']],
+        ['fund', 'SHE RAISES THE MONEY', '#b6ff8f', ['fund']],
+        ['ask', 'SHE ASKS HIM FOR IT', '#c77dff', ['askSupply', 'askMoney', 'askOther']],
+        ['fam', 'SHE ASKS HER FAMILY', '#b026ff', ['ask3p']]
+      ];
+      const series = {}, max = {}, counts = {};
+      for (const [k, , , kinds] of LANES) {
+        const hits = rows.filter(r => kinds.includes(r.k));
+        counts[k] = hits.length;
+        series[k] = density(nP, hits.map(r => ({ pos: r.pos, w: 1 })), 9);
+        max[k] = maxOf(series[k]);
+      }
+      const mx = Math.max(...Object.values(max));
+      for (const k of Object.keys(max)) max[k] = mx;
+
+      const total = rows.length;
+      const cum = new Float32Array(nP);
+      const byDay = {};
+      for (const r of rows) byDay[r.pos] = (byDay[r.pos] || 0) + 1;
+      let run = 0;
+      for (let i = 0; i < nP; i++) { run += byDay[i] || 0; cum[i] = run; }
+
+      const KTAG = {
+        denom: 'HE ASKS HOW MUCH \u2014 SHE NAMES THE NUMBER',
+        fund: 'SHE RAISES THE MONEY', order: 'SHE PLACES THE ORDER', chase: 'SHE CHASES THE SUPPLY',
+        askSupply: 'SHE ASKS HIM FOR SUPPLY', askMoney: 'SHE ASKS HIM FOR MONEY',
+        askOther: 'SHE ASKS HIM FOR SOMETHING', ask3p: 'SHE ASKS HER OWN FAMILY'
+      };
+      const KCOL = {
+        denom: '#39ff14', fund: '#b6ff8f', order: '#00ffa3', chase: '#00ffa3',
+        askSupply: '#c77dff', askMoney: '#c77dff', askOther: '#c77dff', ask3p: '#b026ff'
+      };
+
+      this.M.ask = {
+        rows, nP, d0, LANES, series, max, counts, cum, total, byDay, hover: -1,
+        meta: A0.meta,
+        play: 0.001, scrub: false, scrubGeo: null,
+        frags: rows.map(r => ({
+          pos: r.pos, text: r.x,
+          tag: r.d + ' ' + r.t + ' · ' + KTAG[r.k],
+          shownAt: 0, pen: KCOL[r.k],
+          id: {
+            tier: 'RAW-CSV', tag: KTAG[r.k], text: r.x,
+            src: 'wiki-brain raw/self/message-csv/ · merged Annie-thread exports',
+            dir: r.d + ' ' + r.t + ' | Received | +1 212 ··· 2449',
+            page: 'wiki/people/annie-ulmer', who: 'annie', day: r.day, approx: false,
+            note: 'Recounted from raw, not from the wiki\u2019s prose. Classified by speech-act frame plus named object, then hand-audited; this category held '
+              + (A0.meta.precision[r.k] || 100) + '% precision against a full manual read of every hit.'
+          }
+        }))
+      };
+    }
+
+    draw_ask(ctx, W, H, dt) {
+      if (!this.M.ask) this.initAsk();
+      const A = this.M.ask;
+      const dayOf = (i) => new Date((A.d0 + i) * 86400000);
+      const label = (i) => {
+        const t = dayOf(i);
+        return t.getUTCDate() === 1 ? MONTHS[t.getUTCMonth()] + (t.getUTCMonth() === 0 ? ' ' + t.getUTCFullYear() : '') : null;
+      };
+      const askShare = Math.round((A.counts.ask / A.total) * 100);
+
+      this.penInstrument(ctx, W, H, dt, {
+        id: 'ask', accent: '#39ff14', title: 'THE ASK',
+        sub: this.fitSub(ctx, A.total + ' PROCUREMENT MESSAGES · ' + A.counts.denom + ' TIMES SHE NAMES THE SIZE · ONLY ' + A.counts.ask + ' ASKING HIM'),
+        nP: A.nP, padL: 176, padT: 76, padB: 76, laneGap: 7,
+        lanes: A.LANES.map(([k, lab, col]) => ({
+          data: A.series[k], label: lab, unit: A.counts[k] + ' MESSAGES', color: col, max: A.max[k]
+        })),
+        volume: { data: A.cum, max: Math.max(1, A.total), color: '#e01aff', label: 'RUNNING TOTAL' },
+        frags: A.frags,
+        feedTitle: 'HER OWN WORDS, FROM THE RAW EXPORTS · CLICK FOR PROVENANCE',
+        feed: { dy: -32, dh: -30 },
+        ribbon: (i, past) => {
+          const n = A.byDay[i] || 0;
+          if (!n) return hx('#2a1245', past ? 0.4 : 0.12);
+          return hx('#39ff14', past ? Math.min(1, 0.5 + n * 0.25) : 0.25);
+        },
+        tickStep: 1,
+        tickLabel: label,
+
+        readout: (g) => {
+          const i = Math.min(A.nP - 1, Math.floor(A.play));
+          const t = dayOf(i);
+          ctx.font = '700 15px ' + this.MONO; ctx.fillStyle = '#e01aff'; ctx.textAlign = 'right';
+          ctx.fillText('RUNNING TOTAL: ' + A.cum[i], g.chartR - 20, 32);
+          ctx.font = '9px ' + this.MONO; ctx.fillStyle = COL.dim;
+          ctx.fillText(MONTHS[t.getUTCMonth()] + ' ' + t.getUTCDate() + ' ' + t.getUTCFullYear()
+            + ' · ' + (A.byDay[i] || 0) + ' THAT DAY', g.chartR - 20, 48);
+          ctx.textAlign = 'left';
+        },
+
+        marker: (g) => {
+          ctx.font = '9px ' + this.MONO; ctx.textAlign = 'left';
+          ctx.fillStyle = hx('#39ff14', 0.9);
+          ctx.fillText(A.meta.herMessages.toLocaleString('en-US') + ' OF HER MESSAGES READ, ' + A.meta.from + ' → ' + A.meta.to
+            + ' · EVERY MONTH COVERED · NO NARRATIVE GAPS TO EXPLAIN AWAY.', g.padL, g.botY + 40);
+          ctx.fillStyle = hx('#e0aaff', 0.9);
+          ctx.fillText('SHE STATES ' + A.meta.dollarMentions + ' DOLLAR AMOUNTS TOTALLING $' + A.meta.dollarsStated.toLocaleString('en-US')
+            + '. THE PROTOCOL IS HIS QUESTION AND HER NUMBER: \u201cHOW MUCH?\u201d \u2192 \u201c60\u201d. ' + askShare + '% ASK HIM FOR ANYTHING.', g.padL, g.botY + 54);
+        },
+
+        overlay: (g) => {
+          A.hover = -1;
+          const mx = this.mouse.x, my = this.mouse.y;
+          if (mx >= g.padL - 6 && mx <= g.chartR - 14 && my >= g.ribY - 6 && my <= g.botY + 6) {
+            A.hover = Math.max(0, Math.min(A.nP - 1, Math.round(((mx - g.padL) / (g.chartR - g.padL - 20)) * (A.nP - 1))));
+          }
+          if (A.hover >= 0) {
+            const i = A.hover, t = dayOf(i);
+            ctx.strokeStyle = 'rgba(232,230,225,0.22)'; ctx.setLineDash([2, 4]);
+            ctx.beginPath(); ctx.moveTo(g.xOf(i), g.padT); ctx.lineTo(g.xOf(i), g.botY); ctx.stroke();
+            ctx.setLineDash([]);
+            const near = A.rows.filter(r => Math.abs(r.pos - i) <= 5).sort((a, b) => Math.abs(a.pos - i) - Math.abs(b.pos - i));
+            const lines = [
+              [MONTHS[t.getUTCMonth()] + ' ' + t.getUTCDate() + ', ' + t.getUTCFullYear(), COL.txt, '600 12px ' + this.GROT],
+              [(A.byDay[i] || 0) + ' PROCUREMENT MESSAGE' + ((A.byDay[i] || 0) === 1 ? '' : 'S') + ' THAT DAY', '#39ff14', '9px ' + this.MONO],
+              ['RUNNING TOTAL HERE: ' + A.cum[i] + ' OF ' + A.total, '#e01aff', '9px ' + this.MONO]
+            ];
+            for (const r of near.slice(0, 3)) {
+              lines.push([r.d + ' ' + r.t, COL.dim, '9px ' + this.MONO]);
+              for (const ln of this.wrap(ctx, '\u201c' + r.x.slice(0, 140) + '\u201d', 380).slice(0, 3)) lines.push([ln, COL.txt, '11px ' + this.GROT]);
+            }
+            if (near.length) lines.push(['CLICK TO OPEN THE NEAREST ROW', COL.dim, '8.5px ' + this.MONO]);
+            this.card(ctx, mx, my, lines);
+          }
+          this.cv.style.cursor = A.hover >= 0 ? 'pointer' : 'crosshair';
+        }
+      });
+    }
+
+    pt_ask(type, p) {
+      const A = this.M.ask; if (!A) return;
+      if (type === 'down' && this.feedClick('ask', p, A)) return;
+      if (this.penScrub('ask', type, p) === 'click' && A.hover >= 0) {
+        const near = A.rows.filter(r => Math.abs(r.pos - A.hover) <= 5)
+          .sort((a, b) => Math.abs(a.pos - A.hover) - Math.abs(b.pos - A.hover));
+        if (near.length) {
+          const f = A.frags.find(x => x.id && x.id.text === near[0].x);
+          if (f) this.pin(f.id);
+        }
+      }
     }
 
     pt_prov(type, p) {

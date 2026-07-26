@@ -54,12 +54,12 @@
       });
     },
 
-    drawVolumeLane(ctx, geo, y0, data, max, playPos, color) {
+    drawVolumeLane(ctx, geo, y0, data, max, playPos, color, label) {
       const C = this.COL;
       ctx.fillStyle = 'rgba(13,17,24,0.6)';
       ctx.fillRect(geo.x0, y0, geo.x1 - geo.x0, geo.laneH);
       ctx.font = '9px ' + this.MONO; ctx.fillStyle = color; ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
-      ctx.fillText('VOLUME', geo.x0 - 12, y0 + geo.laneH / 2);
+      ctx.fillText(label || 'VOLUME', geo.x0 - 12, y0 + geo.laneH / 2);
       ctx.textAlign = 'left';
       const n = data.length;
       const bw = Math.max(1.4, (geo.x1 - geo.x0) / n - 1);
@@ -194,7 +194,7 @@
 
       // ---- the pens, and the mass under them ----
       this.drawPenLanes(ctx, geo, cfg.lanes, M.play, st[sk + 'Play']);
-      if (cfg.volume) this.drawVolumeLane(ctx, geo, vy0, cfg.volume.data, cfg.volume.max, M.play, cfg.volume.color);
+      if (cfg.volume) this.drawVolumeLane(ctx, geo, vy0, cfg.volume.data, cfg.volume.max, M.play, cfg.volume.color, cfg.volume.label);
 
       // ---- needle ----
       ctx.strokeStyle = 'rgba(232,230,225,0.5)'; ctx.lineWidth = 1;
