@@ -14,3 +14,4 @@ Disallow: /data/
 # quotes is already public in data/wiki-data.json), just not advertised.
 Disallow: /procurement.html
 Disallow: /ledger.html
+Disallow: /money.html
