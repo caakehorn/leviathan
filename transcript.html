@@ -6,27 +6,28 @@
 <title>THE TRANSCRIPT — the complete message record</title>
 <meta name="robots" content="noindex, nofollow">
 <meta name="referrer" content="no-referrer">
-<meta name="theme-color" content="#10001f">
+<meta name="theme-color" content="#041206">
 <link rel="icon" href="data:,">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous">
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&amp;family=IBM+Plex+Mono:wght@400;600&amp;display=swap" rel="stylesheet">
+<link rel="stylesheet" href="./css/slime.css">
 <style>
-  *{box-sizing:border-box} html,body{margin:0;padding:0;background:#10001f;color:#e9ffe6;font-family:'IBM Plex Mono',ui-monospace,monospace}
-  ::selection{background:#b026ff;color:#10001f}
+  *{box-sizing:border-box} html,body{margin:0;padding:0;background:#041206;color:#e9ffe6;font-family:'IBM Plex Mono',ui-monospace,monospace}
+  ::selection{background:#b026ff;color:#041206}
   .wrap{max-width:1120px;margin:0 auto;padding:0 20px 80px}
-  header{border-bottom:1px solid #2a1245;padding:22px 0 14px}
+  header{border-bottom:1px solid #14471f;padding:22px 0 14px}
   h1{font-family:'Space Grotesk',sans-serif;font-size:24px;letter-spacing:.12em;color:#39ff14;margin:0 0 6px;font-weight:700}
   .sub{font-size:11.5px;letter-spacing:.14em;color:#8fae7c}
   a{color:#39ff14}
 
   /* control bar */
-  .bar{position:sticky;top:0;z-index:5;background:rgba(16,0,31,.96);border-bottom:1px solid #2a1245;
+  .bar{position:sticky;top:0;z-index:5;background:rgba(4,18,6,.96);border-bottom:1px solid #14471f;
        padding:10px 0;display:flex;flex-wrap:wrap;gap:8px;align-items:center}
-  .bar input[type=search]{flex:1 1 280px;min-width:200px;background:#170a2b;border:1px solid #3a1c5e;color:#e9ffe6;
+  .bar input[type=search]{flex:1 1 280px;min-width:200px;background:#0a2410;border:1px solid #1c6b2e;color:#e9ffe6;
        font-family:inherit;font-size:13px;padding:8px 10px;border-radius:3px;outline:none}
   .bar input[type=search]:focus{border-color:#b026ff}
-  .btn{background:#170a2b;border:1px solid #3a1c5e;color:#cfe6c4;font-family:inherit;font-size:11px;
+  .btn{background:#0a2410;border:1px solid #1c6b2e;color:#cfe6c4;font-family:inherit;font-size:11px;
        letter-spacing:.08em;padding:8px 10px;border-radius:3px;cursor:pointer}
   .btn:hover{border-color:#b026ff;color:#e9ffe6}
   .btn[aria-pressed=true]{border-color:#39ff14;color:#39ff14}
@@ -37,35 +38,35 @@
           font-family:'Space Grotesk',sans-serif;font-size:13px;color:#cfe6c4}
   .legend b{font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.1em;
             padding:3px 8px;border-radius:3px;font-weight:600}
-  .key-dan{background:#0d2b06;color:#39ff14;border:1px solid #39ff14}
-  .key-annie{background:#2b0733;color:#ff5cf0;border:1px solid #e01aff}
+  .key-dan{background:#0d3308;color:#39ff14;border:1px solid #39ff14}
+  .key-annie{background:#0b2f12;color:#ff86c9;border:1px solid #ff2f9d}
 
   /* rows */
   #doc{padding-top:10px}
-  .row{display:grid;grid-template-columns:58px 112px 78px 1fr;gap:10px;padding:7px 0;border-bottom:1px solid #1b0b2e;
+  .row{display:grid;grid-template-columns:58px 112px 78px 1fr;gap:10px;padding:7px 0;border-bottom:1px solid #082310;
        content-visibility:auto;contain-intrinsic-size:auto 40px}
   .row.hide{display:none}
-  .ln{color:#4b3a63;font-size:11px;text-align:right;padding-top:3px;user-select:none;
+  .ln{color:#2f6b45;font-size:11px;text-align:right;padding-top:3px;user-select:none;
       text-decoration:none;display:block}
   .ln:hover{color:#39ff14;text-decoration:underline}
   .ts{color:#6f8a5e;font-size:11px;padding-top:3px;white-space:nowrap}
   .who{font-size:12px;font-weight:600;letter-spacing:.09em;padding-top:2px;white-space:nowrap}
   .row.tx-sent .who{color:#39ff14}
-  .row.rx .who{color:#ff5cf0}
+  .row.rx .who{color:#ff86c9}
   .tx{font-family:'Space Grotesk',sans-serif;font-size:15.5px;line-height:1.58;white-space:pre-wrap;
       overflow-wrap:anywhere;color:#e9ffe6}
-  .row.rx .tx{color:#f3dcf0}
+  .row.rx .tx{color:#ffe1f2}
   .row.tx-sent .tx{border-left:3px solid #39ff14;padding-left:11px}
-  .row.rx .tx{border-left:3px solid #e01aff;padding-left:11px}
+  .row.rx .tx{border-left:3px solid #ff2f9d;padding-left:11px}
   .row.att .ts::after{content:' ATT';color:#b026ff;font-size:9px}
   .row.tap{opacity:.6}
-  .row.cur{background:#26103d;outline:1px solid #b026ff;outline-offset:2px}
-  .row.cur .ln{color:#e01aff;font-weight:600}
+  .row.cur{background:#0d3315;outline:1px solid #b026ff;outline-offset:2px}
+  .row.cur .ln{color:#ff2f9d;font-weight:600}
   /* arrived here from a link on an evidence page — say so, once */
   .row.landed{position:relative}
   .row.landed::before{content:'LINKED HERE';position:absolute;left:0;top:-9px;font-size:8.5px;
-      letter-spacing:.16em;color:#10001f;background:#e01aff;padding:1px 6px;border-radius:2px}
-  mark{background:#b026ff;color:#10001f;padding:0 1px}
+      letter-spacing:.16em;color:#041206;background:#ff2f9d;padding:1px 6px;border-radius:2px}
+  mark{background:#b026ff;color:#041206;padding:0 1px}
   .note{font-size:12.5px;line-height:1.6;font-family:'Space Grotesk',sans-serif;color:#9db38f;
         padding:16px 0;max-width:80ch}
   #more{width:100%;margin:18px 0;padding:12px;text-align:center}
@@ -78,6 +79,19 @@
 </style>
 </head>
 <body>
+<!-- ── slime drips: the theme layer's ooze, both edges ── -->
+<div class="sl-drips l" aria-hidden="true">
+  <i style="left:2px;--h:210px;--dur:15s;--del:0s"></i>
+  <i class="pink" style="left:10px;--h:128px;--dur:19s;--del:3.5s"></i>
+  <i style="left:6px;--h:300px;--dur:23s;--del:8s"></i>
+  <i class="cer" style="left:13px;--h:96px;--dur:12.5s;--del:6.2s"></i>
+</div>
+<div class="sl-drips r" aria-hidden="true">
+  <i style="right:3px;--h:250px;--dur:17s;--del:1.4s"></i>
+  <i class="cer" style="right:11px;--h:110px;--dur:21s;--del:5s"></i>
+  <i style="right:7px;--h:168px;--dur:13.5s;--del:9.5s"></i>
+  <i class="pink" style="right:14px;--h:340px;--dur:26s;--del:12s"></i>
+</div>
 <div class="wrap">
 <header>
   <h1>THE TRANSCRIPT</h1>

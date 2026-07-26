@@ -4,17 +4,17 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>VOID + LEVIATHAN — @danfrank</title>
-<meta name="description" content="Recursive self-analysis, adversarial imagination, and bespoke machine builds. @danfrank — Unique AI Solutions.">
-<meta name="theme-color" content="#10001f">
+<meta name="description" content="VOID + LEVIATHAN — the archive console. One subject, six corpora, 2011–2026.">
+<meta name="theme-color" content="#041206">
 <link rel="icon" href="data:,">
 
 <meta property="og:type" content="website">
 <meta property="og:title" content="VOID + LEVIATHAN — @danfrank">
-<meta property="og:description" content="Recursive self-analysis, adversarial imagination, and bespoke machine builds.">
+<meta property="og:description" content="The archive console. One subject, six corpora, 2011–2026.">
 <meta property="og:site_name" content="VOID + LEVIATHAN">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="VOID + LEVIATHAN — @danfrank">
-<meta name="twitter:description" content="Recursive self-analysis, adversarial imagination, and bespoke machine builds.">
+<meta name="twitter:description" content="The archive console. One subject, six corpora, 2011–2026.">
 
 <!-- Nothing renders until React lands (support.js ends with loadReactUmd().then(init)),
      so the handshake to unpkg belongs here rather than in <helmet>, which the runtime
@@ -52,11 +52,28 @@
        visitor stares at for the whole unpkg round-trip. It must match the
        #static-void backdrop, not the neon accent — otherwise cold loads flash
        full-viewport #39ff14 and then hard-cut to the dark palette. */
-    html, body { margin: 0; padding: 0; background: #10001f; color: #e9ffe6; }
+    /* ══ SLIME ══
+       Radioactive green is the ground, not the accent: the ink itself is a
+       green-black (#041206) lit from underneath, purple is the counter-hue,
+       and hot pink / cerulean are the two spot channels. Every colour on the
+       site resolves to one of these five. */
+    :root {
+      --slime: #39ff14; --slime-hi: #b6ff8f; --acid: #ccff00; --mint: #00ffa3;
+      --purple: #b026ff; --violet: #7b2dff; --purple-hi: #e0aaff;
+      --pink: #ff2f9d; --pink-hi: #ff86c9;
+      --cerulean: #00b7ff; --cerulean-hi: #7fe3ff;
+      --ink: #041206; --ink-2: #0a2410; --line: #14471f; --txt: #e9ffe6;
+    }
+    html, body { margin: 0; padding: 0; background: #041206; color: #e9ffe6; }
     body { overflow-x: hidden; font-family: 'IBM Plex Mono', monospace; }
     * { box-sizing: border-box; }
-    ::selection { background: #b026ff; color: #10001f; }
-    textarea::placeholder { color: #4d4774; }
+    ::selection { background: #39ff14; color: #041206; text-shadow: none; }
+    textarea::placeholder { color: #3d7a52; }
+    ::-webkit-scrollbar { width: 10px; height: 10px; }
+    ::-webkit-scrollbar-track { background: #041206; }
+    ::-webkit-scrollbar-thumb { background: linear-gradient(180deg, #39ff14, #00ffa3 45%, #b026ff); }
+    ::-webkit-scrollbar-thumb:hover { background: linear-gradient(180deg, #b6ff8f, #39ff14 55%, #ff2f9d); }
+    :focus-visible { outline: 2px solid #00b7ff; outline-offset: 2px; }
     @keyframes blink { 0%, 49% { opacity: 1; } 50%, 100% { opacity: 0; } }
     @keyframes floaty { 0%, 100% { transform: translate(-50%, 0); } 50% { transform: translate(-50%, 10px); } }
     @keyframes glitch1 {
@@ -71,10 +88,41 @@
       88% { opacity: 0.12; } 100% { opacity: 0; }
     }
     @keyframes pulseglow {
-      0%, 100% { box-shadow: 0 0 22px rgba(176,38,255,0.8), 0 0 90px rgba(123,45,255,0.45); }
-      50% { box-shadow: 0 0 44px rgba(57,255,20,0.85), 0 0 130px rgba(176,38,255,0.5); }
+      0%, 100% { box-shadow: 0 0 26px rgba(57,255,20,0.95), 0 0 90px rgba(57,255,20,0.5), 0 0 150px rgba(176,38,255,0.4); }
+      50% { box-shadow: 0 0 60px rgba(57,255,20,1), 0 0 150px rgba(0,255,163,0.6), 0 0 200px rgba(255,47,157,0.35); }
     }
     @keyframes ticker { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+
+    /* ── slime drips: ooze creeping down both edges of the whole site ──
+       Each strand carries its own length, offset, duration and delay through
+       custom properties, so they never march in step. */
+    .sl-drips { position: fixed; top: 0; bottom: 0; width: 22px; z-index: 3; pointer-events: none; overflow: hidden; }
+    .sl-drips.l { left: 0; } .sl-drips.r { right: 0; }
+    .sl-drips i { position: absolute; top: -4px; width: 6px; height: 0; border-radius: 0 0 8px 8px;
+      background: linear-gradient(180deg, #39ff14, #00ffa3 40%, #b026ff);
+      box-shadow: 0 0 14px #39ff14, 0 0 34px rgba(57,255,20,0.6), 0 0 70px rgba(176,38,255,0.35);
+      animation: slDrip var(--dur, 16s) cubic-bezier(.35,0,.25,1) var(--del, 0s) infinite; }
+    .sl-drips i::after { content: ''; position: absolute; left: 50%; bottom: -7px; transform: translateX(-50%);
+      width: 14px; height: 15px; border-radius: 0 0 50% 50% / 0 0 60% 60%;
+      background: radial-gradient(circle at 50% 35%, #b6ff8f, #39ff14 55%, #00ffa3);
+      box-shadow: 0 0 18px #39ff14, 0 0 40px rgba(57,255,20,0.65); }
+    .sl-drips i.pink { background: linear-gradient(180deg, #ff86c9, #ff2f9d 45%, #b026ff);
+      box-shadow: 0 0 14px #ff2f9d, 0 0 34px rgba(255,47,157,0.55); }
+    .sl-drips i.pink::after { background: radial-gradient(circle at 50% 35%, #ffd7ec, #ff2f9d 55%, #b026ff);
+      box-shadow: 0 0 18px #ff2f9d, 0 0 40px rgba(255,47,157,0.6); }
+    .sl-drips i.cer { background: linear-gradient(180deg, #7fe3ff, #00b7ff 45%, #39ff14);
+      box-shadow: 0 0 14px #00b7ff, 0 0 34px rgba(0,183,255,0.55); }
+    .sl-drips i.cer::after { background: radial-gradient(circle at 50% 35%, #d3f4ff, #00b7ff 55%, #39ff14);
+      box-shadow: 0 0 18px #00b7ff, 0 0 40px rgba(0,183,255,0.6); }
+    @keyframes slDrip {
+      0%, 6% { height: 0; opacity: 0; } 10% { opacity: 1; }
+      60%, 86% { height: var(--h, 200px); opacity: 1; }
+      100% { height: var(--h, 200px); opacity: 0; }
+    }
+    @keyframes slBreathe {
+      0%, 100% { opacity: 0.55; } 50% { opacity: 1; }
+    }
+    @media (prefers-reduced-motion: reduce) { .sl-drips { display: none; } }
     @keyframes lvShimmer { 0% { transform: translateX(-100%); } 100% { transform: translateX(340px); } }
     @keyframes lvBlink { 0%, 100% { opacity: 1; } 50% { opacity: 0.25; } }
 
@@ -100,26 +148,47 @@
      static-void: zero-cost CSS nebula, always on (void + archive phases)
      galaxy-bg:   live particle sim, SPLASH ONLY — paused + hidden elsewhere -->
 <div id="static-void" style="position: fixed; inset: 0; z-index: 0; pointer-events: none; background:
-  radial-gradient(ellipse 70% 55% at 22% 28%, rgba(36,8,66,0.55) 0%, transparent 60%),
-  radial-gradient(ellipse 60% 50% at 78% 70%, rgba(8,38,58,0.5) 0%, transparent 60%),
-  radial-gradient(ellipse 40% 35% at 60% 15%, rgba(60,8,44,0.35) 0%, transparent 65%),
-  radial-gradient(ellipse 90% 80% at 50% 50%, rgba(10,4,26,0.8) 0%, #10001f 100%),
-  #10001f;">
+  radial-gradient(ellipse 75% 60% at 22% 28%, rgba(57,255,20,0.20) 0%, rgba(57,255,20,0.05) 38%, transparent 66%),
+  radial-gradient(ellipse 55% 45% at 80% 72%, rgba(0,255,163,0.16) 0%, transparent 62%),
+  radial-gradient(ellipse 45% 40% at 62% 14%, rgba(255,47,157,0.14) 0%, transparent 64%),
+  radial-gradient(ellipse 40% 34% at 12% 82%, rgba(0,183,255,0.13) 0%, transparent 62%),
+  radial-gradient(ellipse 60% 50% at 50% 50%, rgba(176,38,255,0.14) 0%, transparent 70%),
+  radial-gradient(ellipse 95% 85% at 50% 50%, rgba(3,14,7,0.72) 0%, #041206 100%),
+  #041206;">
   <div style="position: absolute; inset: 0; opacity: 0.5; background-image:
-    radial-gradient(1px 1px at 12% 22%, #aee9ff 50%, transparent 51%),
-    radial-gradient(1px 1px at 34% 71%, #cdb7ff 50%, transparent 51%),
-    radial-gradient(1.5px 1.5px at 57% 38%, #ffffff 50%, transparent 51%),
-    radial-gradient(1px 1px at 73% 81%, #9fdcff 50%, transparent 51%),
-    radial-gradient(1px 1px at 88% 14%, #ffc4e3 50%, transparent 51%),
-    radial-gradient(1.5px 1.5px at 45% 90%, #ffffff 50%, transparent 51%),
-    radial-gradient(1px 1px at 8% 64%, #b7f5ff 50%, transparent 51%),
-    radial-gradient(1px 1px at 66% 6%, #e2d6ff 50%, transparent 51%),
+    radial-gradient(1px 1px at 12% 22%, #b6ff8f 50%, transparent 51%),
+    radial-gradient(1px 1px at 34% 71%, #e0aaff 50%, transparent 51%),
+    radial-gradient(1.5px 1.5px at 57% 38%, #39ff14 50%, transparent 51%),
+    radial-gradient(1px 1px at 73% 81%, #7fe3ff 50%, transparent 51%),
+    radial-gradient(1px 1px at 88% 14%, #ff86c9 50%, transparent 51%),
+    radial-gradient(1.5px 1.5px at 45% 90%, #ccff00 50%, transparent 51%),
+    radial-gradient(1px 1px at 8% 64%, #00ffa3 50%, transparent 51%),
+    radial-gradient(1px 1px at 66% 6%, #b026ff 50%, transparent 51%),
     radial-gradient(1px 1px at 25% 47%, #ffffff 50%, transparent 51%),
-    radial-gradient(1.5px 1.5px at 93% 55%, #a9c9ff 50%, transparent 51%);
+    radial-gradient(1.5px 1.5px at 93% 55%, #00b7ff 50%, transparent 51%);
     background-size: 520px 520px, 460px 460px, 610px 610px, 380px 380px, 700px 700px, 540px 540px, 430px 430px, 650px 650px, 490px 490px, 570px 570px;"></div>
 </div>
 <galaxy-cluster id="galaxy-bg" paused intensity="1" style="position: fixed; inset: 0; z-index: 0;"></galaxy-cluster>
-<div style="position: fixed; inset: 0; z-index: 1; pointer-events: none; background: repeating-linear-gradient(0deg, rgba(0,0,8,0.18) 0px, rgba(0,0,8,0.18) 1px, transparent 1px, transparent 3px);"></div>
+<!-- scanlines, then a slime bloom over everything: the whole page reads as if it
+     is lit from inside a tank of the stuff -->
+<div style="position: fixed; inset: 0; z-index: 1; pointer-events: none; background: repeating-linear-gradient(0deg, rgba(0,7,2,0.22) 0px, rgba(0,7,2,0.22) 1px, rgba(57,255,20,0.035) 1px, transparent 3px);"></div>
+<div style="position: fixed; inset: 0; z-index: 1; pointer-events: none; mix-blend-mode: screen; background:
+  radial-gradient(ellipse 120% 60% at 50% 108%, rgba(57,255,20,0.16) 0%, transparent 62%),
+  radial-gradient(ellipse 100% 50% at 50% -8%, rgba(176,38,255,0.13) 0%, transparent 60%);"></div>
+
+<!-- ── slime drips (both edges, whole site) ── -->
+<div class="sl-drips l" aria-hidden="true">
+  <i style="left: 2px;  --h: 210px; --dur: 15s;   --del: 0s;"></i>
+  <i class="pink" style="left: 10px; --h: 128px; --dur: 19s; --del: 3.5s;"></i>
+  <i style="left: 6px;  --h: 300px; --dur: 23s;   --del: 8s;"></i>
+  <i class="cer" style="left: 13px; --h: 96px;  --dur: 12.5s; --del: 6.2s;"></i>
+</div>
+<div class="sl-drips r" aria-hidden="true">
+  <i style="right: 3px;  --h: 250px; --dur: 17s;   --del: 1.4s;"></i>
+  <i class="cer" style="right: 11px; --h: 110px; --dur: 21s; --del: 5s;"></i>
+  <i style="right: 7px;  --h: 168px; --dur: 13.5s; --del: 9.5s;"></i>
+  <i class="pink" style="right: 14px; --h: 340px; --dur: 26s; --del: 12s;"></i>
+</div>
 
 <sc-if value="{{ flash }}" hint-placeholder-val="{{ false }}">
   <div style="position: fixed; inset: 0; z-index: 90; pointer-events: none; background: #ffffff; animation: enterflash 0.9s steps(1) forwards;"></div>
@@ -134,164 +203,128 @@
     </div>
 
     <div style="position: fixed; left: 50%; bottom: 92px; transform: translateX(-50%); z-index: 10; pointer-events: none; display: flex; flex-direction: column; align-items: center; gap: 18px;">
-      <button onClick="{{ enterVoid }}" style="pointer-events: auto; cursor: pointer; position: relative; font-family: 'Unbounded', sans-serif; font-weight: 900; font-size: 16px; letter-spacing: 0.16em; color: #10001f; background: #39ff14; border: none; border-radius: 999px; padding: 18px 42px; animation: pulseglow 2.6s ease-in-out infinite;" style-hover="background: #b026ff; color: #ffffff;">ENTER THE VOID ►</button>
+      <button onClick="{{ enterVoid }}" style="pointer-events: auto; cursor: pointer; position: relative; font-family: 'Unbounded', sans-serif; font-weight: 900; font-size: 16px; letter-spacing: 0.16em; color: #041206; background: #39ff14; border: none; border-radius: 999px; padding: 18px 42px; animation: pulseglow 2.6s ease-in-out infinite;" style-hover="background: #b026ff; color: #ffffff;">ENTER THE VOID ►</button>
       <button onClick="{{ enterArchive }}" style="pointer-events: auto; cursor: pointer; background: none; border: 1px solid rgba(57,255,20,0.7); font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.3em; color: #39ff14; padding: 9px 18px;" style-hover="background: rgba(57,255,20,0.14); box-shadow: 0 0 30px rgba(57,255,20,0.35);">SKIP STRAIGHT TO THE DATA ARCHIVE ▸</button>
     </div>
 
     <div style="position: fixed; bottom: 0; left: 0; right: 0; z-index: 10; pointer-events: none; display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 0 24px 18px; text-align: center;">
-      <div style="font-size: 12px; letter-spacing: 0.22em; color: #e6e0ff; text-shadow: 0 0 10px rgba(123,45,255,0.9);">GRAB THE GALAXY · CLICK = SHOCKWAVE · HOLD = VORTEX · ENTER WHENEVER YOU'RE READY</div>
+      <div style="font-size: 12px; letter-spacing: 0.22em; color: #e4ffe9; text-shadow: 0 0 10px rgba(123,45,255,0.9);">GRAB THE GALAXY · CLICK = SHOCKWAVE · HOLD = VORTEX · ENTER WHENEVER YOU'RE READY</div>
       <div style="font-size: 10px; letter-spacing: 0.14em; color: #ff7fba;">⚠ photosensitivity advisory</div>
     </div>
   </div>
 </sc-if>
 
-<!-- ════════ PHASE 01 — THE VOID CONSOLE (consultancy) ════════ -->
+<!-- ════════ PHASE 01 — THE VOID GATE ════════
+     The consultancy pitch that used to stand here is gone: no philosophy
+     essay, no eight-card service menu, no slogan ticker. What is left is the
+     gate itself — the wordmark, the way into the archive, and one channel
+     out. Type styles are untouched: Unbounded 900 for display, Space Grotesk
+     for the few sentences that remain, IBM Plex Mono for all chrome. -->
 <sc-if value="{{ isVoid }}" hint-placeholder-val="{{ false }}">
-  <div data-screen-label="Main — The Void Console">
-    <div style="position: fixed; inset: 0; z-index: 2; pointer-events: none; background: radial-gradient(ellipse at 50% 50%, transparent 48%, rgba(2,0,8,0.5) 100%);"></div>
+  <div data-screen-label="Main — The Void Gate">
+    <div style="position: fixed; inset: 0; z-index: 2; pointer-events: none; background: radial-gradient(ellipse at 50% 50%, transparent 44%, rgba(1,8,3,0.62) 100%);"></div>
 
-    <div style="position: fixed; top: 0; left: 0; right: 0; z-index: 60; display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 14px 22px; background: linear-gradient(180deg, rgba(2,0,8,0.85), transparent);">
-      <div style="font-size: 12px; font-weight: 700; letter-spacing: 0.3em; color: #ffffff;">@danfrank<span style="color: #b026ff; animation: blink 1.1s steps(1) infinite;">_</span></div>
+    <div style="position: fixed; top: 0; left: 0; right: 0; z-index: 60; display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 14px 22px; background: linear-gradient(180deg, rgba(1,8,3,0.9), transparent); border-bottom: 1px solid rgba(57,255,20,0.14);">
+      <div style="font-size: 12px; font-weight: 700; letter-spacing: 0.3em; color: #ffffff; text-shadow: 0 0 16px rgba(57,255,20,0.85);">@danfrank<span style="color: #b026ff; animation: blink 1.1s steps(1) infinite;">_</span></div>
       <div style="display: flex; gap: 22px; align-items: center; font-size: 10px; letter-spacing: 0.25em; text-transform: uppercase;">
-        <a href="#philosophy" style="color: #39ff14; text-decoration: none;" style-hover="color: #ffffff; text-shadow: 0 0 12px #39ff14;">philosophy</a>
-        <a href="#capabilities" style="color: #b026ff; text-decoration: none;" style-hover="color: #ffffff; text-shadow: 0 0 12px #b026ff;">capabilities</a>
-        <a href="#transmit" style="color: #00ffa3; text-decoration: none;" style-hover="color: #ffffff; text-shadow: 0 0 12px #00ffa3;">transmit</a>
-        <button onClick="{{ enterArchive }}" style="cursor: pointer; background: rgba(57,255,20,0.1); border: 1px solid rgba(57,255,20,0.75); color: #39ff14; font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.25em; text-transform: uppercase; padding: 7px 14px;" style-hover="background: rgba(57,255,20,0.22); box-shadow: 0 0 26px rgba(57,255,20,0.4);">⬢ archive</button>
+        <a href="#gate" style="color: #39ff14; text-decoration: none;" style-hover="color: #ffffff; text-shadow: 0 0 12px #39ff14;">the archive</a>
+        <a href="#transmit" style="color: #00b7ff; text-decoration: none;" style-hover="color: #ffffff; text-shadow: 0 0 12px #00b7ff;">transmit</a>
+        <button onClick="{{ enterArchive }}" style="cursor: pointer; background: rgba(57,255,20,0.12); border: 1px solid rgba(57,255,20,0.8); color: #39ff14; font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.25em; text-transform: uppercase; padding: 7px 14px;" style-hover="background: rgba(57,255,20,0.28); color: #041206; box-shadow: 0 0 30px rgba(57,255,20,0.55);">⬢ enter</button>
       </div>
     </div>
 
     <main style="position: relative; z-index: 10;">
 
-      <section data-screen-label="Hero" style="min-height: 100vh; position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 90px 24px 70px; pointer-events: none;">
+      <!-- The wordmark's particles settle well outside the canvas box, so the
+           label stack is pinned to the bottom of the viewport rather than
+           stacked directly under it — otherwise the ooze of glyphs and the
+           type collide in the middle of the screen. -->
+      <section data-screen-label="Hero" style="min-height: 100vh; position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 90px 24px 240px; pointer-events: none;">
         <x-import component-from-global-scope="particle-type" text="@danfrank" style="width: min(94vw, 1320px); height: clamp(150px, 32vh, 340px); pointer-events: auto;" hint-size="100%,300px"></x-import>
-        <div style="margin-top: 8px; font-size: clamp(11px, 1.4vw, 15px); letter-spacing: 0.46em; color: #ffffff; text-transform: uppercase; text-shadow: 0 0 22px rgba(123,45,255,1), 0 0 60px rgba(176,38,255,0.7);">unique · ai · solutions</div>
-        <div style="margin-top: 22px; font-size: 11px; letter-spacing: 0.3em; color: #39ff14; text-shadow: 0 0 12px rgba(57,255,20,0.8);">◉ CLICK IT — SHOCKWAVE · HOLD IT — VORTEX · IT'S ALIVE</div>
-        <div style="margin-top: 18px; max-width: 700px; text-align: center; font-size: 13px; line-height: 2.1; color: #b3abdd;">recursive self-analysis · adversarial imagination · bespoke machine builds<br>a consultancy for weirdos, by a weirdo.</div>
-        <div style="position: absolute; bottom: 26px; left: 50%; font-size: 11px; letter-spacing: 0.4em; color: #39ff14; text-shadow: 0 0 14px #39ff14; animation: floaty 2.4s ease-in-out infinite;">▼ DESCEND ▼</div>
+        <div style="position: absolute; left: 0; right: 0; bottom: 68px; display: flex; flex-direction: column; align-items: center; gap: 18px; padding: 0 24px; text-align: center;">
+          <div style="font-size: clamp(11px, 1.4vw, 15px); letter-spacing: 0.46em; color: #ffffff; text-transform: uppercase; text-shadow: 0 0 22px rgba(57,255,20,1), 0 0 60px rgba(57,255,20,0.6), 0 0 110px rgba(176,38,255,0.7);">void &nbsp;//&nbsp; leviathan</div>
+          <div style="font-size: 11px; letter-spacing: 0.3em; color: #39ff14; text-shadow: 0 0 12px rgba(57,255,20,0.9);">◉ CLICK IT — SHOCKWAVE · HOLD IT — VORTEX · IT'S ALIVE</div>
+          <div style="display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; font-size: 9px; letter-spacing: 0.32em; text-transform: uppercase;">
+            <span style="color: #39ff14; border: 1px solid rgba(57,255,20,0.55); padding: 5px 11px; background: rgba(4,18,8,0.55);">2011 — 2026</span>
+            <span style="color: #b026ff; border: 1px solid rgba(176,38,255,0.55); padding: 5px 11px; background: rgba(4,18,8,0.55);">six corpora</span>
+            <span style="color: #ff2f9d; border: 1px solid rgba(255,47,157,0.55); padding: 5px 11px; background: rgba(4,18,8,0.55);">one subject</span>
+            <span style="color: #00b7ff; border: 1px solid rgba(0,183,255,0.55); padding: 5px 11px; background: rgba(4,18,8,0.55);">37 instruments</span>
+          </div>
+        </div>
+        <div style="position: absolute; bottom: 26px; left: 50%; transform: translateX(-50%); font-size: 11px; letter-spacing: 0.4em; color: #39ff14; text-shadow: 0 0 14px #39ff14; animation: floaty 2.4s ease-in-out infinite;">▼ DESCEND ▼</div>
       </section>
 
-      <section id="philosophy" data-screen-label="Philosophy" style="position: relative; padding: 150px 24px 110px; display: flex; justify-content: center;">
-        <div style="max-width: 880px; display: flex; flex-direction: column; gap: 40px;">
-          <div style="font-size: 11px; letter-spacing: 0.45em; color: #00ffa3; text-shadow: 0 0 12px rgba(0,255,163,0.8);">/// 01 — THE PHILOSOPHY</div>
-          <h2 style="margin: 0; font-family: 'Unbounded', sans-serif; font-weight: 900; font-size: clamp(30px, 5vw, 58px); line-height: 1.14; color: #ffffff; text-wrap: balance; animation: glitch1 5.6s steps(1) infinite;">YOU'VE BEEN GENERATING THE DATASET YOUR ENTIRE LIFE.</h2>
-          <p style="margin: 0; font-size: 14px; line-height: 2.2; color: #c5bee8; text-wrap: pretty;">Years of texts. Search histories. Notes, drafts, arguments, 3am voice memos. That isn't clutter — it's the highest-fidelity record of a mind that has ever existed, and it's yours. Most people let it rot in the cloud.</p>
-          <p style="margin: 0; font-size: 14px; line-height: 2.2; color: #c5bee8; text-wrap: pretty;">I anchor frontier models to that record and run recursion on it: deep analysis, passed across multiple tools, with prompting tuned until the outputs stop being generic and start being <em style="color: #b026ff; font-style: normal; text-shadow: 0 0 14px rgba(176,38,255,0.9);">yours</em>. The results read less like a report and more like a mirror with opinions.</p>
-          <p style="margin: 0; font-size: 14px; line-height: 2.2; color: #c5bee8; text-wrap: pretty;">No CS degree. No pedigree. A childhood G4 tower, a pathological refusal to accept default settings, and an unreasonable number of hours spent finding out what these models actually do when you stop asking them normal questions.</p>
-          <div style="display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin-top: 10px; font-family: 'Unbounded', sans-serif; font-weight: 700; font-size: clamp(13px, 2vw, 19px);">
-            <span style="color: #39ff14; text-shadow: 0 0 22px rgba(57,255,20,1);">EXCAVATE</span>
-            <span style="color: #5e5880;">→</span>
-            <span style="color: #7b2dff; text-shadow: 0 0 22px rgba(123,45,255,1);">ANCHOR</span>
-            <span style="color: #5e5880;">→</span>
-            <span style="color: #b026ff; text-shadow: 0 0 22px rgba(176,38,255,1);">RECURSE</span>
-            <span style="color: #5e5880;">→</span>
-            <span style="color: #00ffa3; text-shadow: 0 0 22px rgba(0,255,163,1);">ILLUMINATE</span>
+      <section id="gate" data-screen-label="The Archive" style="position: relative; padding: 150px 24px 110px; display: flex; justify-content: center;">
+        <div style="max-width: 880px; width: 100%; display: flex; flex-direction: column; gap: 36px;">
+          <div style="font-size: 11px; letter-spacing: 0.45em; color: #00ffa3; text-shadow: 0 0 12px rgba(0,255,163,0.85);">/// 01 — THE ARCHIVE</div>
+          <h2 style="margin: 0; font-family: 'Unbounded', sans-serif; font-weight: 900; font-size: clamp(30px, 5vw, 58px); line-height: 1.14; color: #ffffff; text-wrap: balance; animation: glitch1 5.6s steps(1) infinite;">LEVIATHAN</h2>
+
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px;">
+            <div style="border: 1px solid rgba(57,255,20,0.45); background: rgba(4,18,8,0.72); backdrop-filter: blur(6px); padding: 16px 18px;" style-hover="border-color: #39ff14; box-shadow: 0 0 46px rgba(57,255,20,0.35);">
+              <div style="font-family: 'Unbounded', sans-serif; font-weight: 700; font-size: 22px; color: #39ff14; text-shadow: 0 0 20px rgba(57,255,20,0.85);">181,650</div>
+              <div style="margin-top: 6px; font-size: 9px; letter-spacing: 0.24em; color: #6f8a5e;">MESSAGES</div>
+            </div>
+            <div style="border: 1px solid rgba(176,38,255,0.5); background: rgba(4,18,8,0.72); backdrop-filter: blur(6px); padding: 16px 18px;" style-hover="border-color: #b026ff; box-shadow: 0 0 46px rgba(176,38,255,0.35);">
+              <div style="font-family: 'Unbounded', sans-serif; font-weight: 700; font-size: 22px; color: #b026ff; text-shadow: 0 0 20px rgba(176,38,255,0.85);">6,185</div>
+              <div style="margin-top: 6px; font-size: 9px; letter-spacing: 0.24em; color: #6f8a5e;">LOCATION FIXES</div>
+            </div>
+            <div style="border: 1px solid rgba(255,47,157,0.5); background: rgba(4,18,8,0.72); backdrop-filter: blur(6px); padding: 16px 18px;" style-hover="border-color: #ff2f9d; box-shadow: 0 0 46px rgba(255,47,157,0.35);">
+              <div style="font-family: 'Unbounded', sans-serif; font-weight: 700; font-size: 22px; color: #ff2f9d; text-shadow: 0 0 20px rgba(255,47,157,0.85);">12,863</div>
+              <div style="margin-top: 6px; font-size: 9px; letter-spacing: 0.24em; color: #6f8a5e;">WATCHES</div>
+            </div>
+            <div style="border: 1px solid rgba(0,183,255,0.5); background: rgba(4,18,8,0.72); backdrop-filter: blur(6px); padding: 16px 18px;" style-hover="border-color: #00b7ff; box-shadow: 0 0 46px rgba(0,183,255,0.35);">
+              <div style="font-family: 'Unbounded', sans-serif; font-weight: 700; font-size: 22px; color: #00b7ff; text-shadow: 0 0 20px rgba(0,183,255,0.85);">1,121</div>
+              <div style="margin-top: 6px; font-size: 9px; letter-spacing: 0.24em; color: #6f8a5e;">RATED WORKS</div>
+            </div>
           </div>
-          <div style="margin-top: 6px; border: 1px solid rgba(57,255,20,0.5); background: rgba(10,6,24,0.7); backdrop-filter: blur(6px); padding: 22px 24px; display: flex; flex-direction: column; gap: 12px;" style-hover="border-color: #39ff14; box-shadow: 0 0 60px rgba(57,255,20,0.3);">
-            <div style="font-size: 10px; letter-spacing: 0.3em; color: #39ff14;">PROOF OF WORK</div>
-            <div style="font-family: 'Unbounded', sans-serif; font-weight: 700; font-size: 16px; color: #ffffff; line-height: 1.4;">I RAN THE FULL RECURSION ON MYSELF.</div>
-            <div style="font-size: 12px; line-height: 1.95; color: #a89fd0;">181,650 messages · 6,185 location fixes · 12,863 watches · 1,121 rated works · 15 years. Nine interactive instruments, one subject. The LEVIATHAN archive is the live demo of everything described above.</div>
-            <button onClick="{{ enterArchive }}" style="align-self: flex-start; cursor: pointer; font-family: 'IBM Plex Mono', monospace; font-size: 11px; font-weight: 700; letter-spacing: 0.22em; padding: 12px 20px; color: #10001f; background: #39ff14; border: 1px solid #39ff14;" style-hover="background: #b6ff8f; box-shadow: 0 0 40px rgba(57,255,20,0.5);">OPEN THE LEVIATHAN ARCHIVE ►</button>
+
+          <div style="border: 1px solid rgba(57,255,20,0.55); background: rgba(4,18,8,0.75); backdrop-filter: blur(6px); padding: 24px; display: flex; flex-direction: column; gap: 16px; box-shadow: 0 0 70px rgba(57,255,20,0.16);" style-hover="border-color: #39ff14; box-shadow: 0 0 90px rgba(57,255,20,0.4);">
+            <div style="font-size: 10px; letter-spacing: 0.3em; color: #39ff14;">37 INSTRUMENTS · 2 SECTIONS · ENCRYPTED AT REST</div>
+            <div style="display: flex; flex-wrap: wrap; gap: 12px; align-items: center; font-family: 'Unbounded', sans-serif; font-weight: 700; font-size: clamp(13px, 2vw, 19px);">
+              <span style="color: #39ff14; text-shadow: 0 0 22px rgba(57,255,20,1);">CORPUS</span>
+              <span style="color: #4f8a63;">→</span>
+              <span style="color: #b026ff; text-shadow: 0 0 22px rgba(176,38,255,1);">WIKI</span>
+              <span style="color: #4f8a63;">→</span>
+              <span style="color: #ff2f9d; text-shadow: 0 0 22px rgba(255,47,157,1);">READER</span>
+              <span style="color: #4f8a63;">→</span>
+              <span style="color: #00b7ff; text-shadow: 0 0 22px rgba(0,183,255,1);">RECORD</span>
+            </div>
+            <button onClick="{{ enterArchive }}" style="align-self: flex-start; cursor: pointer; font-family: 'IBM Plex Mono', monospace; font-size: 12px; font-weight: 700; letter-spacing: 0.22em; padding: 14px 24px; color: #041206; background: #39ff14; border: 1px solid #39ff14; animation: pulseglow 3.2s ease-in-out infinite;" style-hover="background: #b6ff8f;">OPEN THE LEVIATHAN ARCHIVE ►</button>
           </div>
         </div>
       </section>
 
-      <section id="capabilities" data-screen-label="Capabilities" style="position: relative; padding: 110px 24px; display: flex; justify-content: center;">
-        <div style="max-width: 1240px; width: 100%; display: flex; flex-direction: column; gap: 42px;">
-          <div style="display: flex; flex-direction: column; gap: 18px;">
-            <div style="font-size: 11px; letter-spacing: 0.45em; color: #b026ff; text-shadow: 0 0 12px rgba(176,38,255,0.8);">/// 02 — CAPABILITIES</div>
-            <h2 style="margin: 0; font-family: 'Unbounded', sans-serif; font-weight: 900; font-size: clamp(28px, 4.4vw, 50px); color: #ffffff; animation: glitch1 7.2s steps(1) infinite;">THE MENU</h2>
-          </div>
-          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 18px;">
-
-            <div style="background: rgba(10,6,24,0.74); border: 1px solid rgba(57,255,20,0.55); backdrop-filter: blur(6px); padding: 26px; display: flex; flex-direction: column; gap: 12px; transition: all 0.25s ease;" style-hover="border-color: #39ff14; transform: translateY(-5px); box-shadow: 0 0 60px rgba(57,255,20,0.4);">
-              <div style="font-size: 10px; letter-spacing: 0.3em; color: #39ff14;">SVC/01</div>
-              <div style="font-family: 'Unbounded', sans-serif; font-weight: 700; font-size: 16px; color: #ffffff; line-height: 1.4;">PERSONALITY CARTOGRAPHY</div>
-              <div style="font-size: 12px; line-height: 1.95; color: #a89fd0; text-wrap: pretty;">Deep-structure analysis of how you actually think — patterns, contradictions, blind spots — sourced from your own words, not a twelve-question quiz.</div>
-            </div>
-
-            <div style="background: rgba(10,6,24,0.74); border: 1px solid rgba(123,45,255,0.6); backdrop-filter: blur(6px); padding: 26px; display: flex; flex-direction: column; gap: 12px; transition: all 0.25s ease;" style-hover="border-color: #7b2dff; transform: translateY(-5px); box-shadow: 0 0 60px rgba(123,45,255,0.45);">
-              <div style="font-size: 10px; letter-spacing: 0.3em; color: #9d6bff;">SVC/02</div>
-              <div style="font-family: 'Unbounded', sans-serif; font-weight: 700; font-size: 16px; color: #ffffff; line-height: 1.4;">BIOGRAPHICAL EXCAVATION</div>
-              <div style="font-size: 12px; line-height: 1.95; color: #a89fd0; text-wrap: pretty;">Compiling the scattered archive of your life — texts, emails, histories, ephemera — into a coherent corpus a model can actually reason over.</div>
-            </div>
-
-            <div style="background: rgba(10,6,24,0.74); border: 1px solid rgba(176,38,255,0.6); backdrop-filter: blur(6px); padding: 26px; display: flex; flex-direction: column; gap: 12px; transition: all 0.25s ease;" style-hover="border-color: #b026ff; transform: translateY(-5px); box-shadow: 0 0 60px rgba(176,38,255,0.42);">
-              <div style="font-size: 10px; letter-spacing: 0.3em; color: #b026ff;">SVC/03</div>
-              <div style="font-family: 'Unbounded', sans-serif; font-weight: 700; font-size: 16px; color: #ffffff; line-height: 1.4;">INTERPERSONAL SIGNAL SYNTHESIS</div>
-              <div style="font-size: 12px; line-height: 1.95; color: #a89fd0; text-wrap: pretty;">Communication analysis and generation: how you talk, how they talk, what is actually being said, and what to say next.</div>
-            </div>
-
-            <div style="background: rgba(10,6,24,0.74); border: 1px solid rgba(0,255,163,0.55); backdrop-filter: blur(6px); padding: 26px; display: flex; flex-direction: column; gap: 12px; transition: all 0.25s ease;" style-hover="border-color: #00ffa3; transform: translateY(-5px); box-shadow: 0 0 60px rgba(0,255,163,0.4);">
-              <div style="font-size: 10px; letter-spacing: 0.3em; color: #00ffa3;">SVC/04</div>
-              <div style="font-family: 'Unbounded', sans-serif; font-weight: 700; font-size: 16px; color: #ffffff; line-height: 1.4;">FULL SYSTEM BUILDS</div>
-              <div style="font-size: 12px; line-height: 1.95; color: #a89fd0; text-wrap: pretty;">End-to-end custom AI systems designed around exactly one user: you. Not a SaaS subscription — a machine with your name on it.</div>
-            </div>
-
-            <div style="background: rgba(10,6,24,0.74); border: 1px solid rgba(57,255,20,0.55); backdrop-filter: blur(6px); padding: 26px; display: flex; flex-direction: column; gap: 12px; transition: all 0.25s ease;" style-hover="border-color: #39ff14; transform: translateY(-5px); box-shadow: 0 0 60px rgba(57,255,20,0.4);">
-              <div style="font-size: 10px; letter-spacing: 0.3em; color: #39ff14;">SVC/05</div>
-              <div style="font-family: 'Unbounded', sans-serif; font-weight: 700; font-size: 16px; color: #ffffff; line-height: 1.4;">CONTEXT MEMORY ARCHITECTURE</div>
-              <div style="font-size: 12px; line-height: 1.95; color: #a89fd0; text-wrap: pretty;">Persistent memory setups so your tools stop meeting you for the first time every single morning.</div>
-            </div>
-
-            <div style="background: rgba(10,6,24,0.74); border: 1px solid rgba(176,38,255,0.6); backdrop-filter: blur(6px); padding: 26px; display: flex; flex-direction: column; gap: 12px; transition: all 0.25s ease;" style-hover="border-color: #b026ff; transform: translateY(-5px); box-shadow: 0 0 60px rgba(176,38,255,0.42);">
-              <div style="display: flex; justify-content: space-between; align-items: center;">
-                <div style="font-size: 10px; letter-spacing: 0.3em; color: #b026ff;">SVC/06</div>
-                <div style="font-size: 9px; letter-spacing: 0.2em; color: #10001f; background: #b026ff; padding: 3px 8px;">ADVERSARIAL</div>
-              </div>
-              <div style="font-family: 'Unbounded', sans-serif; font-weight: 700; font-size: 16px; color: #ffffff; line-height: 1.4;">HOSTILE CURIOSITY // TEXT</div>
-              <div style="font-size: 12px; line-height: 1.95; color: #a89fd0; text-wrap: pretty;">I push language models until they say the quiet part — stress-testing guardrails, failure modes, and the places the rules bend. Before someone less polite does.</div>
-            </div>
-
-            <div style="background: rgba(10,6,24,0.74); border: 1px solid rgba(123,45,255,0.6); backdrop-filter: blur(6px); padding: 26px; display: flex; flex-direction: column; gap: 12px; transition: all 0.25s ease;" style-hover="border-color: #7b2dff; transform: translateY(-5px); box-shadow: 0 0 60px rgba(123,45,255,0.45);">
-              <div style="display: flex; justify-content: space-between; align-items: center;">
-                <div style="font-size: 10px; letter-spacing: 0.3em; color: #9d6bff;">SVC/07</div>
-                <div style="font-size: 9px; letter-spacing: 0.2em; color: #10001f; background: #9d6bff; padding: 3px 8px;">ADVERSARIAL</div>
-              </div>
-              <div style="font-family: 'Unbounded', sans-serif; font-weight: 700; font-size: 16px; color: #ffffff; line-height: 1.4;">HOSTILE CURIOSITY // VISUAL</div>
-              <div style="font-size: 12px; line-height: 1.95; color: #a89fd0; text-wrap: pretty;">The same energy pointed at image and video systems — finding what the filters miss, and documenting exactly how they missed it.</div>
-            </div>
-
-            <div style="background: rgba(10,6,24,0.74); border: 1px solid rgba(0,255,163,0.55); backdrop-filter: blur(6px); padding: 26px; display: flex; flex-direction: column; gap: 12px; transition: all 0.25s ease;" style-hover="border-color: #00ffa3; transform: translateY(-5px); box-shadow: 0 0 60px rgba(0,255,163,0.4);">
-              <div style="font-size: 10px; letter-spacing: 0.3em; color: #00ffa3;">SVC/08</div>
-              <div style="font-family: 'Unbounded', sans-serif; font-weight: 700; font-size: 16px; color: #ffffff; line-height: 1.4;">TECHNICAL PLUS-UP</div>
-              <div style="font-size: 12px; line-height: 1.95; color: #a89fd0; text-wrap: pretty;">Terminal literacy, coding tools, custom instructions, workflow surgery. I learned this the stupid hard way so you don't have to.</div>
-            </div>
-
-          </div>
-        </div>
-      </section>
-
-      <section id="transmit" data-screen-label="Transmit" style="position: relative; padding: 150px 24px 90px; display: flex; justify-content: center;">
+      <section id="transmit" data-screen-label="Transmit" style="position: relative; padding: 110px 24px 90px; display: flex; justify-content: center;">
         <div style="max-width: 760px; width: 100%; display: flex; flex-direction: column; gap: 28px;">
-          <div style="font-size: 11px; letter-spacing: 0.45em; color: #39ff14; text-shadow: 0 0 12px rgba(57,255,20,0.8);">/// 03 — OPEN A CHANNEL</div>
+          <div style="font-size: 11px; letter-spacing: 0.45em; color: #39ff14; text-shadow: 0 0 12px rgba(57,255,20,0.85);">/// 02 — OPEN A CHANNEL</div>
           <h2 style="margin: 0; font-family: 'Unbounded', sans-serif; font-weight: 900; font-size: clamp(28px, 4.4vw, 50px); color: #ffffff; animation: glitch1 6.4s steps(1) infinite;">TRANSMIT</h2>
-          <p style="margin: 0; font-size: 13px; line-height: 2.1; color: #a89fd0; text-wrap: pretty;">The composer below fires from <em style="font-style: normal; color: #39ff14;">your</em> account on X — straight into my mentions, which I actually watch. This is the fastest known path to a reply.</p>
+          <p style="margin: 0; font-family: 'Space Grotesk', sans-serif; font-size: 13px; line-height: 2.1; color: #a8d9b8; text-wrap: pretty;">Fires from <em style="font-style: normal; color: #39ff14;">your</em> account on X, into my mentions.</p>
 
-          <div style="border: 1px solid rgba(57,255,20,0.65); background: rgba(2,8,16,0.82); backdrop-filter: blur(8px); padding: 22px; display: flex; flex-direction: column; gap: 16px; box-shadow: 0 0 80px rgba(57,255,20,0.18);">
+          <div style="border: 1px solid rgba(57,255,20,0.65); background: rgba(3,13,7,0.86); backdrop-filter: blur(8px); padding: 22px; display: flex; flex-direction: column; gap: 16px; box-shadow: 0 0 80px rgba(57,255,20,0.22);">
             <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
-              <div style="font-size: 11px; letter-spacing: 0.3em; color: #4d8fa0;">── TRANSMISSION COMPOSER ──</div>
-              <div style="font-size: 11px; letter-spacing: 0.2em; color: #10001f; background: #39ff14; padding: 4px 10px; font-weight: 700;">TO: @danfrank</div>
+              <div style="font-size: 11px; letter-spacing: 0.3em; color: #00b7ff;">── TRANSMISSION COMPOSER ──</div>
+              <div style="font-size: 11px; letter-spacing: 0.2em; color: #041206; background: #39ff14; padding: 4px 10px; font-weight: 700;">TO: @danfrank</div>
             </div>
-            <textarea value="{{ msg }}" onChange="{{ setMsg }}" aria-label="Describe what you want built, broken, or understood" placeholder="describe the weird thing you want built / broken / understood…" style="width: 100%; min-height: 130px; background: transparent; border: 1px dashed rgba(57,255,20,0.5); color: #d9f6ff; font-family: 'IBM Plex Mono', monospace; font-size: 13px; line-height: 1.9; padding: 14px; resize: vertical;"></textarea>
+            <textarea value="{{ msg }}" onChange="{{ setMsg }}" aria-label="Message to transmit" placeholder="say the thing…" style="width: 100%; min-height: 130px; background: transparent; border: 1px dashed rgba(57,255,20,0.5); color: #e9ffe6; font-family: 'IBM Plex Mono', monospace; font-size: 13px; line-height: 1.9; padding: 14px; resize: vertical;"></textarea>
             <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
               <div style="font-size: 11px; letter-spacing: 0.15em; color: {{ charColor }};">{{ charsLeft }} CHARS REMAIN</div>
-              <button onClick="{{ transmit }}" style="cursor: pointer; font-family: 'IBM Plex Mono', monospace; font-size: 13px; font-weight: 700; letter-spacing: 0.18em; padding: 14px 24px; color: #10001f; background: #39ff14; border: 1px solid #39ff14; animation: pulseglow 3s ease-in-out infinite;" style-hover="background: #b026ff; border-color: #b026ff;">TRANSMIT VIA X ►</button>
+              <button onClick="{{ transmit }}" style="cursor: pointer; font-family: 'IBM Plex Mono', monospace; font-size: 13px; font-weight: 700; letter-spacing: 0.18em; padding: 14px 24px; color: #041206; background: #39ff14; border: 1px solid #39ff14; animation: pulseglow 3s ease-in-out infinite;" style-hover="background: #ff2f9d; border-color: #ff2f9d; color: #ffffff;">TRANSMIT VIA X ►</button>
             </div>
           </div>
 
-          <div style="display: flex; align-items: center; gap: 14px; color: #5e5880; font-size: 11px; letter-spacing: 0.3em;">
-            <div style="flex: 1; height: 1px; background: rgba(94,88,128,0.5);"></div>
+          <div style="display: flex; align-items: center; gap: 14px; color: #4f8a63; font-size: 11px; letter-spacing: 0.3em;">
+            <div style="flex: 1; height: 1px; background: linear-gradient(90deg, transparent, rgba(57,255,20,0.5));"></div>
             <div>OR</div>
-            <div style="flex: 1; height: 1px; background: rgba(94,88,128,0.5);"></div>
+            <div style="flex: 1; height: 1px; background: linear-gradient(90deg, rgba(176,38,255,0.5), transparent);"></div>
           </div>
 
-          <a href="{{ mailto }}" style="display: block; text-decoration: none; border: 1px solid rgba(94,88,128,0.5); background: rgba(10,6,24,0.6); padding: 18px 22px; color: #a89fd0; font-size: 12px; line-height: 2;" style-hover="border-color: #7b2dff; color: #ddd5fa; box-shadow: 0 0 40px rgba(123,45,255,0.3);">route to the dead-letter inbox → dfrank88@gmail.com<br><span style="font-size: 10px; color: #5e5880;">checked approximately never. expected latency: weeks → ∞. you were warned.</span></a>
+          <a href="{{ mailto }}" style="display: block; text-decoration: none; border: 1px solid rgba(79,138,99,0.5); background: rgba(4,18,8,0.6); padding: 18px 22px; color: #a8d9b8; font-size: 12px; line-height: 2;" style-hover="border-color: #00b7ff; color: #dcffe6; box-shadow: 0 0 40px rgba(0,183,255,0.3);">dead-letter inbox → dfrank88@gmail.com<br><span style="font-size: 10px; color: #4f8a63;">latency: weeks → ∞</span></a>
         </div>
       </section>
 
-      <footer style="position: relative; border-top: 1px solid rgba(123,45,255,0.5); overflow: hidden; background: rgba(2,0,8,0.6);">
-        <div style="display: flex; white-space: nowrap; animation: ticker 22s linear infinite; font-size: 11px; letter-spacing: 0.32em; color: #9d6bff; padding: 16px 0;">
-          <span>@DANFRANK · UNIQUE AI SOLUTIONS · FOR WEIRDOS, BY WEIRDOS · NO COOKIES · NO TRACKERS · ALL SIGNAL · EST. SOMEWHERE IN THE VOID · </span><span>@DANFRANK · UNIQUE AI SOLUTIONS · FOR WEIRDOS, BY WEIRDOS · NO COOKIES · NO TRACKERS · ALL SIGNAL · EST. SOMEWHERE IN THE VOID · </span>
+      <footer style="position: relative; border-top: 1px solid rgba(57,255,20,0.45); overflow: hidden; background: rgba(1,8,3,0.7); box-shadow: 0 -20px 60px rgba(57,255,20,0.12) inset;">
+        <div style="display: flex; white-space: nowrap; animation: ticker 22s linear infinite; font-size: 11px; letter-spacing: 0.32em; color: #39ff14; text-shadow: 0 0 14px rgba(57,255,20,0.55); padding: 16px 0;">
+          <span>@DANFRANK · VOID // LEVIATHAN · TOTAL RECORD 2011—2026 · SIX CORPORA, ONE SUBJECT · NO COOKIES · NO TRACKERS · ALL SIGNAL · </span><span>@DANFRANK · VOID // LEVIATHAN · TOTAL RECORD 2011—2026 · SIX CORPORA, ONE SUBJECT · NO COOKIES · NO TRACKERS · ALL SIGNAL · </span>
         </div>
       </footer>
 
@@ -304,12 +337,12 @@
 <div data-screen-label="LEVIATHAN console" style="position: fixed; inset: 0; z-index: 20; display: flex; flex-direction: column; background: transparent; color: #e9ffe6; font-family: 'Space Grotesk', sans-serif; user-select: none; -webkit-user-select: none;">
 
   <!-- ======== HEADER ======== -->
-  <div style="display: flex; align-items: stretch; gap: 24px; padding: 14px 22px 10px 22px; border-bottom: 3px solid #b026ff; flex-wrap: wrap; background: linear-gradient(180deg,#240046,#10001f);">
+  <div style="display: flex; align-items: stretch; gap: 24px; padding: 14px 22px 10px 22px; border-bottom: 3px solid transparent; border-image: linear-gradient(90deg,#39ff14,#00ffa3 24%,#b026ff 52%,#ff2f9d 76%,#00b7ff) 1; box-shadow: 0 2px 26px rgba(57,255,20,0.22); flex-wrap: wrap; background: linear-gradient(180deg,#0a2c11,#041206);">
     <div style="display: flex; flex-direction: column; justify-content: center; gap: 2px; min-width: 235px;">
       <div style="display: flex; align-items: baseline; gap: 8px;">
         <div style="font-size: 23px; font-weight: 700; letter-spacing: 0.22em;">LEVIATHAN</div>
         <div style="width: 8px; height: 8px; background: #39ff14; transform: rotate(45deg); animation: lvBlink 2.4s infinite;"></div>
-        <button onClick="{{ exitArchive }}" style="margin-left: 10px; cursor: pointer; background: none; border: 1px solid #5b1a8f; color: #6b7484; font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: 0.22em; padding: 5px 10px;" style-hover="color: #39ff14; border-color: #39ff14;">◂ VOID</button>
+        <button onClick="{{ exitArchive }}" style="margin-left: 10px; cursor: pointer; background: none; border: 1px solid #1d8a34; color: #4f9fb8; font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: 0.22em; padding: 5px 10px;" style-hover="color: #39ff14; border-color: #39ff14;">◂ VOID</button>
       </div>
       <div style="font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: 0.18em; color: #6f8a5e;">TOTAL RECORD &middot; 2011&ndash;2026 &middot; SIX CORPORA, ONE SUBJECT</div>
     </div>
@@ -346,10 +379,10 @@
   <!-- wraps rather than scrolls: with 17 wiki / 19 corpus modules a single
        nowrap row pushes the last several tabs past the right edge, where the
        horizontal scroll gives no visible affordance to find them -->
-  <div style="display: flex; flex-wrap: wrap; gap: 6px; padding: 8px 22px; border-bottom: 3px solid #b026ff; align-items: center; background: linear-gradient(180deg,#240046,#10001f);">
+  <div style="display: flex; flex-wrap: wrap; gap: 6px; padding: 8px 22px; border-bottom: 3px solid transparent; border-image: linear-gradient(90deg,#39ff14,#00ffa3 24%,#b026ff 52%,#ff2f9d 76%,#00b7ff) 1; box-shadow: 0 2px 26px rgba(57,255,20,0.22); align-items: center; background: linear-gradient(180deg,#0a2c11,#041206);">
     <div onClick="{{ toCorpus }}" style="{{ corpusBtnStyle }}">◈ CORPUS</div>
     <div onClick="{{ toWiki }}" style="{{ wikiBtnStyle }}">◈ WIKI</div>
-    <div style="width: 1px; align-self: stretch; background: #5b1a8f; margin: 2px 8px;"></div>
+    <div style="width: 1px; align-self: stretch; background: #1d8a34; margin: 2px 8px;"></div>
     <sc-for list="{{ tabs }}" as="t" hint-placeholder-count="6">
       <div onClick="{{ t.onClick }}" style="{{ t.style }}">
         <span style="opacity: 0.55; margin-right: 7px;">{{ t.num }}</span>{{ t.label }}
@@ -377,9 +410,9 @@
 
     <!-- loading overlay -->
     <sc-if value="{{ loading }}" hint-placeholder-val="{{ true }}">
-      <div style="position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; background: rgba(7,9,13,0.92);">
+      <div style="position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; background: rgba(2,10,5,0.92);">
         <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.3em; color: #39ff14;">DECOMPRESSING CORPUS</div>
-        <div style="width: 340px; height: 2px; background: #1a2029; overflow: hidden; position: relative;">
+        <div style="width: 340px; height: 2px; background: #0a2410; overflow: hidden; position: relative;">
           <div style="position: absolute; top: 0; left: 0; width: 120px; height: 100%; background: linear-gradient(90deg, transparent, #39ff14, transparent); animation: lvShimmer 1.1s linear infinite;"></div>
         </div>
         <div style="font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: 0.16em; color: #6f8a5e; text-align: center; line-height: 1.9;">181,650 MESSAGES &middot; 6,185 LOCATION FIXES &middot; 12,863 WATCHES<br>1,121 RATED WORKS &middot; 2,210 DAYS OF RHETORIC &middot; 41,971 KM &middot; 343 WIKI PAGES</div>
@@ -388,8 +421,8 @@
   </div>
 
   <!-- ======== FOOTER ======== -->
-  <div style="display: flex; align-items: center; gap: 16px; padding: 7px 22px; border-top: 1px solid #3d0a63; background: linear-gradient(180deg,#240046,#10001f);">
-    <div style="font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; letter-spacing: 0.12em; color: #6b7484;">{{ hint }}</div>
+  <div style="display: flex; align-items: center; gap: 16px; padding: 7px 22px; border-top: 1px solid transparent; border-image: linear-gradient(90deg,#00b7ff,#b026ff 40%,#39ff14) 1; background: linear-gradient(180deg,#0a2c11,#041206);">
+    <div style="font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; letter-spacing: 0.12em; color: #4f9fb8;">{{ hint }}</div>
     <div style="flex: 1;"></div>
     <div style="font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: 0.14em; color: #3d5230;">LEVIATHAN CORPUS &middot; SEMANTIC LOCATION &middot; FINALFAVS &middot; @danfrank</div>
   </div>
@@ -470,14 +503,18 @@ class Component extends DCLogic {
   };
 
   // ---------- constants ----------
-  // SLIME — purple × green. The semantic names are kept so every module keeps
-  // reading the same channel it always did; only the hues move. "amber" is now
-  // the lime channel and "cyan" the purple one.
+  // SLIME — radioactive green on green-black, with purple as the counter-hue
+  // and hot pink / cerulean as the two spot channels. The semantic names are
+  // kept so every module keeps reading the same channel it always did; only
+  // the hues move. "amber" is the slime channel, "cyan" the purple one, "red"
+  // the hot-pink one. `pink` and `blue` are the two channels added by the
+  // expansion — nothing is forced to use them, but every new mark should.
   COL = {
-    bg: '#10001f', panel: '#10001f', line: '#2a1245', grid: '#170a2a',
+    bg: '#041206', panel: '#041206', line: '#14471f', grid: '#0a2410',
     txt: '#e9ffe6', dim: '#6f8a5e', faint: '#3d5230',
     amber: '#39ff14', amberHi: '#b6ff8f', cyan: '#b026ff', cyanHi: '#e0aaff',
-    red: '#e01aff', green: '#00ffa3', rose: '#c77dff', violet: '#7b2dff', violetHi: '#cfa8ff'
+    red: '#ff2f9d', green: '#00ffa3', rose: '#ff86c9', violet: '#7b2dff', violetHi: '#cfa8ff',
+    acid: '#ccff00', pink: '#ff2f9d', pinkHi: '#ff86c9', blue: '#00b7ff', blueHi: '#7fe3ff'
   };
   MONO = "'IBM Plex Mono', monospace";
   GROT = "'Space Grotesk', sans-serif";
@@ -631,18 +668,18 @@ class Component extends DCLogic {
   _showGate() {
     if (this._gateEl) { this._gateEl.style.display = 'flex'; setTimeout(() => this._gateInput.focus(), 30); return; }
     const ov = document.createElement('div');
-    ov.style.cssText = "position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:rgba(2,0,8,0.92);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);font-family:'IBM Plex Mono',monospace;";
+    ov.style.cssText = "position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:rgba(1,8,3,0.92);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);font-family:'IBM Plex Mono',monospace;";
     const box = document.createElement('div');
-    box.style.cssText = 'width:min(420px,86vw);border:1px solid rgba(57,255,20,0.5);background:rgba(8,8,18,0.96);padding:30px 28px;box-shadow:0 0 60px rgba(57,255,20,0.18);';
+    box.style.cssText = 'width:min(420px,86vw);border:1px solid rgba(57,255,20,0.5);background:rgba(3,12,6,0.96);padding:30px 28px;box-shadow:0 0 60px rgba(57,255,20,0.18);';
     box.innerHTML =
       '<div style="font-size:11px;letter-spacing:0.3em;color:#39ff14;margin-bottom:6px;">⬢ LEVIATHAN ARCHIVE</div>'
-      + '<div style="font-size:12px;line-height:1.7;color:#a89fd0;margin-bottom:18px;">This archive is encrypted. Enter the passphrase to decrypt and view the data.</div>'
+      + '<div style="font-size:12px;line-height:1.7;color:#a8d9b8;margin-bottom:18px;">This archive is encrypted. Enter the passphrase to decrypt and view the data.</div>'
       + '<input type="password" autocomplete="off" aria-label="Archive passphrase" placeholder="passphrase" style="width:100%;box-sizing:border-box;background:rgba(0,0,0,0.5);border:1px solid rgba(57,255,20,0.4);color:#b6ff8f;font-family:inherit;font-size:13px;padding:11px 12px;letter-spacing:0.05em;outline:none;">'
       // role=alert so the failure is announced; without it a screen reader user
       // gets no feedback at all on a wrong passphrase.
       + '<div data-err role="alert" style="min-height:16px;font-size:10px;letter-spacing:0.1em;color:#b026ff;margin:8px 2px 0;"></div>'
-      + '<button data-go style="width:100%;margin-top:10px;cursor:pointer;background:#39ff14;border:1px solid #39ff14;color:#10001f;font-family:inherit;font-weight:700;font-size:11px;letter-spacing:0.22em;padding:12px;">DECRYPT ►</button>'
-      + '<button data-cancel style="width:100%;margin-top:8px;cursor:pointer;background:none;border:1px solid rgba(160,200,140,0.3);color:#a89fd0;font-family:inherit;font-size:10px;letter-spacing:0.2em;padding:9px;">CANCEL</button>';
+      + '<button data-go style="width:100%;margin-top:10px;cursor:pointer;background:#39ff14;border:1px solid #39ff14;color:#041206;font-family:inherit;font-weight:700;font-size:11px;letter-spacing:0.22em;padding:12px;">DECRYPT ►</button>'
+      + '<button data-cancel style="width:100%;margin-top:8px;cursor:pointer;background:none;border:1px solid rgba(150,220,120,0.3);color:#a8d9b8;font-family:inherit;font-size:10px;letter-spacing:0.2em;padding:9px;">CANCEL</button>';
     ov.appendChild(box);
     document.body.appendChild(ov);
     const input = box.querySelector('input');
@@ -768,7 +805,7 @@ class Component extends DCLogic {
     ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
     // translucent wash instead of opaque fill — the galaxy void bleeds through the stage
     ctx.clearRect(0, 0, this.W, this.H);
-    ctx.fillStyle = 'rgba(16,0,31,0.94)';
+    ctx.fillStyle = 'rgba(4,18,6,0.94)';
     ctx.fillRect(0, 0, this.W, this.H);
     if (!this.D || this.state.loading) return;
     const fn = this['draw_' + this.state.tab];
@@ -796,7 +833,7 @@ class Component extends DCLogic {
     if (bx + w > this.W - 8) bx = x - w - 14;
     if (by < 8) by = y + 16;
     if (bx < 8) bx = 8;
-    ctx.fillStyle = 'rgba(13,17,24,0.94)';
+    ctx.fillStyle = 'rgba(4,18,8,0.94)';
     ctx.strokeStyle = o.border || this.COL.line;
     ctx.beginPath(); ctx.rect(bx, by, w, h); ctx.fill(); ctx.stroke();
     lines.forEach(([txt, color, font], i) => {
@@ -876,7 +913,7 @@ class Component extends DCLogic {
         const i = this.d2i(y + '-' + String(m + 1).padStart(2, '0') + '-01') - D.day0;
         const x = xOf(i);
         if (x < 0 || x > W) continue;
-        ctx.strokeStyle = 'rgba(20,26,35,0.7)';
+        ctx.strokeStyle = 'rgba(7,24,12,0.7)';
         ctx.beginPath(); ctx.moveTo(x, mid - half * 0.5); ctx.lineTo(x, mid + half * 0.5); ctx.stroke();
         if (span < 420) {
           ctx.font = '8px ' + this.MONO; ctx.fillStyle = C.faint;
@@ -886,7 +923,7 @@ class Component extends DCLogic {
     }
 
     // midline
-    ctx.strokeStyle = '#5b1a8f'; ctx.lineWidth = 1;
+    ctx.strokeStyle = '#1d8a34'; ctx.lineWidth = 1;
     ctx.beginPath(); ctx.moveTo(0, mid); ctx.lineTo(W, mid); ctx.stroke();
 
     // waveform columns
@@ -945,7 +982,7 @@ class Component extends DCLogic {
     if (mx >= 0 && my > wTop && my < wBot && !P.drag) {
       const di = Math.floor(iOf(mx));
       if (di >= 0 && di < D.N) {
-        ctx.strokeStyle = 'rgba(232,230,225,0.25)';
+        ctx.strokeStyle = 'rgba(214,255,208,0.25)';
         ctx.setLineDash([3, 4]);
         ctx.beginPath(); ctx.moveTo(mx, wTop); ctx.lineTo(mx, wBot); ctx.stroke();
         ctx.setLineDash([]);
@@ -987,7 +1024,7 @@ class Component extends DCLogic {
       this._miniCache = { w: W, cols };
     }
     const { cols } = this._miniCache;
-    ctx.fillStyle = '#12001f';
+    ctx.fillStyle = '#041206';
     ctx.fillRect(0, y, W, h);
     const midm = y + h / 2;
     for (let x = 0; x < W; x += 1) {
@@ -998,9 +1035,9 @@ class Component extends DCLogic {
     }
     // view window
     const x0 = (P.a / D.N) * W, x1 = (P.b / D.N) * W;
-    ctx.fillStyle = 'rgba(232,230,225,0.07)';
+    ctx.fillStyle = 'rgba(214,255,208,0.07)';
     ctx.fillRect(x0, y, x1 - x0, h);
-    ctx.strokeStyle = 'rgba(232,230,225,0.4)'; ctx.lineWidth = 1;
+    ctx.strokeStyle = 'rgba(214,255,208,0.4)'; ctx.lineWidth = 1;
     ctx.strokeRect(x0 + 0.5, y + 0.5, Math.max(3, x1 - x0) - 1, h - 1);
   }
 
@@ -1128,7 +1165,7 @@ class Component extends DCLogic {
 
     // center readout plate
     ctx.beginPath(); ctx.arc(cx, cy, R * 0.10 - 3, 0, Math.PI * 2);
-    ctx.fillStyle = '#12001f'; ctx.fill();
+    ctx.fillStyle = '#041206'; ctx.fill();
     const hv = hourly[needleHour];
     ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
     ctx.font = '600 30px ' + this.MONO; ctx.fillStyle = C.txt;
@@ -1208,7 +1245,7 @@ class Component extends DCLogic {
     const C = this.COL, O = this.M.orbits, cx = W / 2, cy = H / 2;
     dt = Math.min(dt, 0.03);
     // guide rings
-    ctx.strokeStyle = 'rgba(34,42,55,0.5)'; ctx.lineWidth = 1;
+    ctx.strokeStyle = 'rgba(12,40,19,0.5)'; ctx.lineWidth = 1;
     const maxR = Math.min(W, H) * 0.42;
     for (let r = 80; r <= maxR; r += (maxR - 80) / 3) { ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.stroke(); }
     ctx.font = '8px ' + this.MONO; ctx.fillStyle = C.faint; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
@@ -1244,7 +1281,7 @@ class Component extends DCLogic {
       g.addColorStop(1, 'rgba(' + base + ',0)');
       ctx.fillStyle = g;
       ctx.beginPath(); ctx.arc(b.px, b.py, b.size * (lit ? 1.2 : 1), 0, Math.PI * 2); ctx.fill();
-      ctx.fillStyle = named ? '#b6ff8f' : '#dfe8f2';
+      ctx.fillStyle = named ? '#b6ff8f' : '#d6ffc7';
       ctx.beginPath(); ctx.arc(b.px, b.py, Math.max(2, b.size * 0.3), 0, Math.PI * 2); ctx.fill();
       if (b.size > 15 || lit) {
         ctx.font = '600 ' + (b.size > 22 ? 11 : 9) + 'px ' + this.MONO;
@@ -1255,9 +1292,9 @@ class Component extends DCLogic {
     // sun
     const pulse = 1 + Math.sin(performance.now() / 600) * 0.05;
     const sg = ctx.createRadialGradient(cx, cy, 2, cx, cy, 38 * pulse);
-    sg.addColorStop(0, '#fff4e0'); sg.addColorStop(0.45, '#39ff14'); sg.addColorStop(1, 'rgba(57,255,20,0)');
+    sg.addColorStop(0, '#eaffd6'); sg.addColorStop(0.45, '#39ff14'); sg.addColorStop(1, 'rgba(57,255,20,0)');
     ctx.fillStyle = sg; ctx.beginPath(); ctx.arc(cx, cy, 38 * pulse, 0, Math.PI * 2); ctx.fill();
-    ctx.fillStyle = '#10001f'; ctx.font = '700 11px ' + this.MONO; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillStyle = '#041206'; ctx.font = '700 11px ' + this.MONO; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     ctx.fillText('DAN', cx, cy);
 
     // hover detect
@@ -1272,7 +1309,7 @@ class Component extends DCLogic {
   drawDossier(ctx, b, pinned) {
     const C = this.COL, t = b.t;
     const x = 18, y = 64, w = 256, h = 158;
-    ctx.fillStyle = 'rgba(13,17,24,0.95)'; ctx.strokeStyle = pinned ? C.amber : C.line; ctx.lineWidth = 1;
+    ctx.fillStyle = 'rgba(4,18,8,0.95)'; ctx.strokeStyle = pinned ? C.amber : C.line; ctx.lineWidth = 1;
     ctx.beginPath(); ctx.rect(x, y, w, h); ctx.fill(); ctx.stroke();
     ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
     ctx.font = '700 15px ' + this.GROT; ctx.fillStyle = t.name ? C.amberHi : C.txt;
@@ -1358,26 +1395,26 @@ class Component extends DCLogic {
                [38.30,-77.00],[38.90,-77.12],[39.60,-77.47]] }
     ],
     rivers: [
-      { name: 'HUDSON',      w: 1.8, col: 'rgba(64,140,210,0.50)',
+      { name: 'HUDSON',      w: 1.8, col: 'rgba(0,183,255,0.50)',
         path: [[40.70,-74.02],[40.80,-73.97],[40.92,-73.95],
                [41.25,-73.97],[41.52,-73.97],[41.71,-73.95],
                [42.02,-73.89],[42.64,-73.76],[42.76,-73.64],
                [43.09,-73.70],[43.27,-73.66],[43.52,-73.37],
                [44.19,-73.33],[44.73,-73.45],[45.00,-73.34]] },
-      { name: 'DELAWARE',    w: 1.4, col: 'rgba(64,140,210,0.42)',
+      { name: 'DELAWARE',    w: 1.4, col: 'rgba(0,183,255,0.42)',
         path: [[42.00,-75.34],[41.50,-74.87],[41.16,-74.88],
                [40.80,-75.03],[40.55,-75.15],[40.30,-74.92],
                [40.14,-74.94],[39.88,-75.18],[39.55,-75.56],
                [39.20,-75.32],[38.80,-75.05]] },
-      { name: 'SUSQUEHANNA', w: 1.4, col: 'rgba(64,140,210,0.38)',
+      { name: 'SUSQUEHANNA', w: 1.4, col: 'rgba(0,183,255,0.38)',
         path: [[42.00,-76.83],[41.65,-76.46],[41.27,-76.52],
                [40.97,-76.46],[40.87,-76.85],[40.55,-76.98],
                [40.35,-76.75],[40.27,-76.72],[39.97,-76.44],
                [39.72,-76.40]] },
-      { name: 'ALLEGHENY',   w: 1.2, col: 'rgba(64,140,210,0.35)',
+      { name: 'ALLEGHENY',   w: 1.2, col: 'rgba(0,183,255,0.35)',
         path: [[41.50,-79.30],[40.88,-79.60],[40.78,-79.78],
                [40.55,-80.05],[40.44,-80.02]] },
-      { name: 'MONONGAHELA', w: 1.2, col: 'rgba(64,140,210,0.35)',
+      { name: 'MONONGAHELA', w: 1.2, col: 'rgba(0,183,255,0.35)',
         path: [[39.82,-79.95],[39.97,-79.90],[40.10,-79.87],
                [40.25,-79.90],[40.44,-80.02]] }
     ],
@@ -1411,7 +1448,7 @@ class Component extends DCLogic {
       ctx.beginPath();
       s.poly.forEach(([la, ln], i) => i ? ctx.lineTo(px(ln), py(la)) : ctx.moveTo(px(ln), py(la)));
       ctx.closePath();
-      ctx.fillStyle = 'rgba(18,26,40,0.70)';
+      ctx.fillStyle = 'rgba(6,22,11,0.70)';
       ctx.fill();
     }
 
@@ -1440,7 +1477,7 @@ class Component extends DCLogic {
     // highways — dim dashed lines
     ctx.setLineDash([5, 7]);
     ctx.lineWidth = 0.8;
-    ctx.strokeStyle = 'rgba(52,66,92,0.32)';
+    ctx.strokeStyle = 'rgba(26,74,110,0.32)';
     for (const rd of GEO.roads) {
       ctx.beginPath();
       rd.path.forEach(([la, ln], i) => i ? ctx.lineTo(px(ln), py(la)) : ctx.moveTo(px(ln), py(la)));
@@ -1455,7 +1492,7 @@ class Component extends DCLogic {
       if (!s.label) continue;
       const x = px(s.label[1]), y = py(s.label[0]);
       if (x < 0 || x > W || y < 0 || y > H) continue;
-      ctx.fillStyle = 'rgba(68,88,124,0.60)';
+      ctx.fillStyle = 'rgba(46,104,140,0.60)';
       ctx.fillText(s.name, x, y);
     }
 
@@ -1465,7 +1502,7 @@ class Component extends DCLogic {
       const mid = r.path[Math.floor(r.path.length / 2)];
       const x = px(mid[1]), y = py(mid[0]);
       if (x < 10 || x > W - 10 || y < 10 || y > H - 60) continue;
-      ctx.fillStyle = 'rgba(50,82,128,0.50)';
+      ctx.fillStyle = 'rgba(30,100,150,0.50)';
       ctx.textAlign = 'center';
       ctx.fillText(r.name, x, y - 7);
     }
@@ -1547,8 +1584,8 @@ class Component extends DCLogic {
 
     // graticule \u2014 slightly more subtle when map is showing
     const gAlpha = this.state.atlasMap ? 0.5 : 0.9;
-    ctx.strokeStyle = `rgba(22,28,38,${gAlpha})`; ctx.lineWidth = 1;
-    ctx.font = '8px ' + this.MONO; ctx.fillStyle = 'rgba(61,69,84,0.7)'; ctx.textAlign = 'left'; ctx.textBaseline = 'bottom';
+    ctx.strokeStyle = `rgba(8,26,13,${gAlpha})`; ctx.lineWidth = 1;
+    ctx.font = '8px ' + this.MONO; ctx.fillStyle = 'rgba(40,86,102,0.7)'; ctx.textAlign = 'left'; ctx.textBaseline = 'bottom';
     const latStep = v.zoom > 2000 ? 0.1 : 0.5, lngStep = v.zoom > 2000 ? 0.1 : 1;
     for (let lat = 38; lat <= 43; lat += latStep) { const y = py(lat); if (y < 0 || y > H) continue; ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke(); if (!this.state.atlasMap) ctx.fillText(lat.toFixed(1) + '\u00b0N', 6, y - 2); }
     for (let lng = -81; lng <= -72; lng += lngStep) { const x = px(lng); if (x < 0 || x > W) continue; ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke(); }
@@ -1609,7 +1646,7 @@ class Component extends DCLogic {
         const cosLc = Math.cos(v.lat * Math.PI / 180);
         const cLat = v.lat - (y - cy) / v.zoom, cLng = v.lng + (x - cx) / (v.zoom * cosLc);
         ctx.font = '8px ' + this.MONO; ctx.textAlign = 'left'; ctx.textBaseline = 'bottom';
-        ctx.fillStyle = 'rgba(255,210,138,0.55)';
+        ctx.fillStyle = 'rgba(182,255,143,0.55)';
         ctx.fillText(Math.abs(cLat).toFixed(3) + '°N  ' + Math.abs(cLng).toFixed(3) + '°W', x + 14, y - 4);
       }
     }
@@ -1627,7 +1664,7 @@ class Component extends DCLogic {
       const MO = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
       const dateStr = MO[dd.getUTCMonth()] + ' ' + String(dd.getUTCDate()).padStart(2,'0') + ' ' + dd.getUTCFullYear();
       // badge background
-      ctx.fillStyle = 'rgba(8,12,22,0.78)';
+      ctx.fillStyle = 'rgba(3,13,7,0.78)';
       ctx.fillRect(W - 210, 14, 196, 48);
       ctx.strokeStyle = 'rgba(176,38,255,0.45)'; ctx.lineWidth = 1;
       ctx.strokeRect(W - 210 + 0.5, 14.5, 195, 47);
@@ -1658,7 +1695,7 @@ class Component extends DCLogic {
       if (pl[i].c < 100 || A.heat[i] === 0) continue;
       const x = A.screen[i * 2], y = A.screen[i * 2 + 1];
       if (x < 30 || x > W - 30 || y < 20 || y > H) continue;
-      ctx.fillStyle = 'rgba(232,230,225,0.5)';
+      ctx.fillStyle = 'rgba(214,255,208,0.5)';
       ctx.fillText(((pl[i].n || (pl[i].a || '').split(',')[0]) + '').slice(0, 24), x, y - 9);
     }
 
@@ -1687,7 +1724,7 @@ class Component extends DCLogic {
     const C = this.COL, A = this.M.atlas;
     const x = 20, w = W - 40, y = H - 34, h = 6;
     A.scrubGeo = { x, w, y };
-    ctx.fillStyle = '#2a0a45'; ctx.fillRect(x, y, w, h);
+    ctx.fillStyle = '#0d3315'; ctx.fillRect(x, y, w, h);
     const f = A.playDay / A.maxDay;
     ctx.fillStyle = 'rgba(57,255,20,0.85)'; ctx.fillRect(x, y, w * f, h);
     ctx.fillStyle = C.amberHi; ctx.beginPath(); ctx.arc(x + w * f, y + h / 2, 7, 0, Math.PI * 2); ctx.fill();
@@ -1823,7 +1860,7 @@ class Component extends DCLogic {
   lexSeismograph(ctx, W, H) {
     const C = this.COL, D = this.D, L = this.M.lexicon;
     const sy = H - L.seisH, sh = L.seisH;
-    ctx.fillStyle = '#1a0033'; ctx.fillRect(0, sy, W, sh);
+    ctx.fillStyle = '#082310'; ctx.fillRect(0, sy, W, sh);
     ctx.strokeStyle = C.grid; ctx.beginPath(); ctx.moveTo(0, sy + 0.5); ctx.lineTo(W, sy + 0.5); ctx.stroke();
     const caps = D.msg.caps;
     if (!caps || !caps.length) return;
@@ -1840,7 +1877,7 @@ class Component extends DCLogic {
       const x = (i / span) * W, bw = Math.max(1.5, W / span - 1);
       const hh = Math.pow(c / mx, 0.6) * (sh - 26);
       const isH = i === hoverI;
-      ctx.fillStyle = isH ? C.amberHi : 'rgba(224,26,255,' + (0.35 + (c / mx) * 0.6).toFixed(2) + ')';
+      ctx.fillStyle = isH ? C.amberHi : 'rgba(255,47,157,' + (0.35 + (c / mx) * 0.6).toFixed(2) + ')';
       ctx.fillRect(x, base - hh, bw, hh);
       if (isH) {
         this.card(ctx, this.mouse.x, sy - 4, [
@@ -1879,7 +1916,7 @@ class Component extends DCLogic {
   // ============================================================
   // MODULE 06 — SHELF  (1,121 rated works: him vs the world)
   // ============================================================
-  CAT_COLORS = { Music: '#39ff14', Book: '#b026ff', Movie: '#e01aff', Art: '#00ffa3', Other: '#7b2dff' };
+  CAT_COLORS = { Music: '#39ff14', Book: '#b026ff', Movie: '#ff2f9d', Art: '#00ffa3', Other: '#7b2dff' };
   catOf(c) {
     if (/music|album|song/i.test(c)) return 'Music';
     if (/book|lit/i.test(c)) return 'Book';
@@ -1916,19 +1953,19 @@ class Component extends DCLogic {
       ctx.textAlign = 'right'; ctx.textBaseline = 'middle'; ctx.fillText(String(v), padL - 8, Y(v));
     }
     // agreement diagonal
-    ctx.strokeStyle = 'rgba(232,230,225,0.22)'; ctx.setLineDash([4, 5]);
+    ctx.strokeStyle = 'rgba(214,255,208,0.22)'; ctx.setLineDash([4, 5]);
     ctx.beginPath(); ctx.moveTo(X(1), Y(1)); ctx.lineTo(X(10), Y(10)); ctx.stroke();
     ctx.setLineDash([]);
     ctx.font = '9px ' + this.MONO; ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
     ctx.save();
     ctx.translate(X(5.4), Y(5.9)); ctx.rotate(-Math.atan2(ph / 9, pw / 9));
-    ctx.fillStyle = 'rgba(232,230,225,0.35)';
+    ctx.fillStyle = 'rgba(214,255,208,0.35)';
     ctx.fillText('PERFECT AGREEMENT WITH THE WORLD', 0, -6);
     ctx.restore();
     // zone labels
     ctx.fillStyle = 'rgba(0,255,163,0.5)'; ctx.font = '10px ' + this.MONO;
     ctx.fillText('DEFENDED \u2014 LOVED MORE THAN THE WORLD DID', padL + 10, padT + 16);
-    ctx.fillStyle = 'rgba(224,26,255,0.5)'; ctx.textAlign = 'right';
+    ctx.fillStyle = 'rgba(255,47,157,0.5)'; ctx.textAlign = 'right';
     ctx.fillText('BETRAYED \u2014 THE WORLD OVERRATES THESE', padL + pw - 6, padT + ph - 10);
     ctx.textAlign = 'left';
     // axis titles
@@ -1960,7 +1997,7 @@ class Component extends DCLogic {
       const pop = Math.min(1, (S.reveal - it.born) * 8);
       const r = (lit ? 6.5 : 2.6 + (it.n > 1000 ? 1.2 : 0)) * pop;
       ctx.beginPath(); ctx.arc(it._x, it._y, r, 0, Math.PI * 2);
-      if (!on) { ctx.fillStyle = 'rgba(60,68,82,0.25)'; }
+      if (!on) { ctx.fillStyle = 'rgba(38,84,100,0.25)'; }
       else if (lit) { ctx.fillStyle = '#ffffff'; }
       else {
         const dev = it.m - it.g; // + defended, - betrayed
@@ -2001,8 +2038,8 @@ class Component extends DCLogic {
   // MODULE 07 — WEATHER  (rhetorical climate streamgraph + lightning)
   // ============================================================
   WLAYERS = [
-    ['love', 'LOVE', '#c77dff'],
-    ['prof', 'PROFANITY', '#e01aff'],
+    ['love', 'LOVE', '#ff86c9'],
+    ['prof', 'PROFANITY', '#ff2f9d'],
     ['sorry', 'APOLOGY', '#00ffa3'],
     ['qual', 'HEDGING', '#b026ff'],
     ['imp', 'COMMAND', '#39ff14'],
@@ -2100,7 +2137,7 @@ class Component extends DCLogic {
       const near = Math.abs(this.mouse.x - x) < 8 && this.mouse.y < mid;
       if (near) Wt.hoverEv = { ...ev, x };
       const flick = near ? 1 : (0.55 + 0.45 * Math.sin(performance.now() / 300 + ev.w));
-      ctx.strokeStyle = 'rgba(255,235,180,' + (0.25 + inten * 0.6) * flick + ')';
+      ctx.strokeStyle = 'rgba(214,255,140,' + (0.25 + inten * 0.6) * flick + ')';
       ctx.lineWidth = near ? 2 : 1 + inten;
       ctx.beginPath();
       let yy = topY, xx = x;
@@ -2118,7 +2155,7 @@ class Component extends DCLogic {
     ctx.textBaseline = 'middle'; ctx.font = '9px ' + this.MONO; ctx.textAlign = 'left';
     for (const [k, label, col] of this.WLAYERS) {
       const onL = st.weatherLayers[k];
-      ctx.fillStyle = onL ? col : '#2a3240';
+      ctx.fillStyle = onL ? col : '#123a1c';
       ctx.fillRect(lx, 22, 9, 9);
       ctx.fillStyle = onL ? C.dim : C.faint;
       ctx.fillText(label, lx + 14, 27);
@@ -2139,7 +2176,7 @@ class Component extends DCLogic {
     } else if (mxx >= 0 && myy > padT && myy < H - padB) {
       const wi = Math.round(Wt.a + (mxx / W) * span);
       if (wi >= 0 && wi < Wt.nW) {
-        ctx.strokeStyle = 'rgba(232,230,225,0.2)'; ctx.setLineDash([3, 4]);
+        ctx.strokeStyle = 'rgba(214,255,208,0.2)'; ctx.setLineDash([3, 4]);
         ctx.beginPath(); ctx.moveTo(mxx, padT); ctx.lineTo(mxx, H - padB); ctx.stroke();
         ctx.setLineDash([]);
         const d = this.i2d(Wt.day0 + wi * 7);
@@ -2187,8 +2224,8 @@ class Component extends DCLogic {
   // same Annie-pattern pens, every thread, 181,650 messages)
   // ============================================================
   APENS = [
-    ['love', 'LOVE', '#c77dff'],
-    ['prof', 'PROFANITY', '#e01aff'],
+    ['love', 'LOVE', '#ff86c9'],
+    ['prof', 'PROFANITY', '#ff2f9d'],
     ['sorry', 'APOLOGY', '#00ffa3'],
     ['caps', 'SHOUT', '#e9ffe6']
   ];
@@ -2285,7 +2322,7 @@ class Component extends DCLogic {
     this.drawVolumeLane(ctx, geo, vy0, An.vol, An.maxVol, An.play, C.amber);
 
     // playhead needle
-    ctx.strokeStyle = 'rgba(232,230,225,0.5)'; ctx.lineWidth = 1;
+    ctx.strokeStyle = 'rgba(214,255,208,0.5)'; ctx.lineWidth = 1;
     ctx.beginPath(); ctx.moveTo(playX, padT - 6); ctx.lineTo(playX, vy0 + laneH + 8); ctx.stroke();
     // year ticks
     ctx.font = '9px ' + this.MONO; ctx.fillStyle = C.dim; ctx.textAlign = 'center'; ctx.textBaseline = 'top';
@@ -2364,7 +2401,7 @@ class Component extends DCLogic {
       if (y % 2 === 0) { ctx.fillStyle = C.faint; ctx.fillText("'" + String(y).slice(2), x, specB + 4); }
     }
     // midline
-    ctx.strokeStyle = '#5b1a8f'; ctx.beginPath(); ctx.moveTo(14, midY); ctx.lineTo(W - 14, midY); ctx.stroke();
+    ctx.strokeStyle = '#1d8a34'; ctx.beginPath(); ctx.moveTo(14, midY); ctx.lineTo(W - 14, midY); ctx.stroke();
     // hover month
     let hoverI = -1;
     if (this.mouse.x >= 14 && this.mouse.x <= W - 14 && this.mouse.y > padT - 10 && this.mouse.y < specB) {
@@ -2411,7 +2448,7 @@ class Component extends DCLogic {
 
     // ---- TUNER ----
     const dy = H - dialH;
-    ctx.fillStyle = '#1a0033'; ctx.fillRect(0, dy, W, dialH);
+    ctx.fillStyle = '#082310'; ctx.fillRect(0, dy, W, dialH);
     ctx.strokeStyle = C.line; ctx.beginPath(); ctx.moveTo(0, dy + 0.5); ctx.lineTo(W, dy + 0.5); ctx.stroke();
     const cx = W / 2;
     const spacing = 150;
@@ -2426,7 +2463,7 @@ class Component extends DCLogic {
     const cur = S.stations[Math.max(0, Math.min(n - 1, Math.round(S.pos)))];
     // frequency ruler
     const rulerY = dy + 118;
-    ctx.strokeStyle = '#5b1a8f'; ctx.beginPath(); ctx.moveTo(0, rulerY); ctx.lineTo(W, rulerY); ctx.stroke();
+    ctx.strokeStyle = '#1d8a34'; ctx.beginPath(); ctx.moveTo(0, rulerY); ctx.lineTo(W, rulerY); ctx.stroke();
     for (let i = 0; i < n; i++) {
       const x = cx + (i - S.pos) * spacing;
       if (x < -spacing || x > W + spacing) continue;
@@ -2438,11 +2475,11 @@ class Component extends DCLogic {
       ctx.beginPath(); ctx.moveTo(x, rulerY - 8 - a * 10); ctx.lineTo(x, rulerY + 8 + a * 10); ctx.stroke();
       // name
       ctx.font = (d < 0.5 ? '700 13px ' : '500 10px ') + this.GROT;
-      ctx.fillStyle = d < 0.5 ? C.violetHi : 'rgba(139,148,164,' + a + ')';
+      ctx.fillStyle = d < 0.5 ? C.violetHi : 'rgba(96,160,182,' + a + ')';
       ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
       ctx.fillText(S.stations[i].name.slice(0, 24), x, rulerY - 16 - a * 8);
       // count
-      ctx.font = '8px ' + this.MONO; ctx.fillStyle = 'rgba(91,100,114,' + a + ')';
+      ctx.font = '8px ' + this.MONO; ctx.fillStyle = 'rgba(60,120,140,' + a + ')';
       ctx.fillText(S.stations[i].count + ' WATCHES', x, rulerY + 22);
     }
     // center needle
@@ -2482,7 +2519,7 @@ class Component extends DCLogic {
   // MODULE 10 — MIRROR  (he becomes who he talks to)
   // ============================================================
   MMODES = {
-    affection: { x: 'prof', y: 'love', xl: 'PROFANITY PER 100 SENT \u2192', yl: 'AFFECTION PER 100 SENT', xc: '#e01aff', yc: '#c77dff' },
+    affection: { x: 'prof', y: 'love', xl: 'PROFANITY PER 100 SENT \u2192', yl: 'AFFECTION PER 100 SENT', xc: '#ff2f9d', yc: '#ff86c9' },
     ego: { x: 'you', y: 'i', xl: '\u201cYOU\u201d PER 100 SENT \u2192', yl: '\u201cI\u201d PER 100 SENT', xc: '#b026ff', yc: '#39ff14', diag: true },
     caution: { x: 'imp', y: 'qual', xl: 'COMMANDS PER 100 SENT \u2192', yl: 'HEDGES PER 100 SENT', xc: '#39ff14', yc: '#b026ff' }
   };
@@ -2529,11 +2566,11 @@ class Component extends DCLogic {
     // medians
     const med = (key) => { const a = Mi.items.map(x => x[key]).sort((p, q) => p - q); return a[Math.floor(a.length / 2)]; };
     const mX = med(mode.x), mY = med(mode.y);
-    ctx.setLineDash([3, 5]); ctx.strokeStyle = 'rgba(232,230,225,0.18)';
+    ctx.setLineDash([3, 5]); ctx.strokeStyle = 'rgba(214,255,208,0.18)';
     ctx.beginPath(); ctx.moveTo(X(mX), padT); ctx.lineTo(X(mX), padT + ph); ctx.stroke();
     ctx.beginPath(); ctx.moveTo(padL, Y(mY)); ctx.lineTo(padL + pw, Y(mY)); ctx.stroke();
     ctx.setLineDash([]);
-    ctx.font = '8px ' + this.MONO; ctx.fillStyle = 'rgba(232,230,225,0.3)';
+    ctx.font = '8px ' + this.MONO; ctx.fillStyle = 'rgba(214,255,208,0.3)';
     ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
     ctx.fillText('MEDIAN', X(mX) + 5, padT + 12);
     ctx.fillText('MEDIAN', padL + 6, Y(mY) - 5);
@@ -2577,9 +2614,9 @@ class Component extends DCLogic {
       const r = (3 + Math.sqrt(it.t.total / Mi.maxTot) * 14) * Math.min(1, Mi.reveal * 2);
       ctx.beginPath(); ctx.arc(it._x, it._y, lit ? r + 2.5 : r, 0, Math.PI * 2);
       if (lit) ctx.fillStyle = '#ffffff';
-      else if (isAnnie) ctx.fillStyle = 'rgba(199,125,255,0.95)';
+      else if (isAnnie) ctx.fillStyle = 'rgba(255,134,201,0.95)';
       else if (it.name) ctx.fillStyle = 'rgba(57,255,20,0.85)';
-      else ctx.fillStyle = 'rgba(124,152,182,0.55)';
+      else ctx.fillStyle = 'rgba(90,170,205,0.55)';
       ctx.fill();
       if (lit) { ctx.strokeStyle = isAnnie ? C.rose : C.amber; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(it._x, it._y, r + 6, 0, Math.PI * 2); ctx.stroke(); }
       if ((it.t.total > 8000 || lit) && r > 3) {
@@ -2681,11 +2718,11 @@ class Component extends DCLogic {
     // edges
     for (const e of G.edges) {
       const lit = focus && (e.a === focus || e.b === focus);
-      ctx.strokeStyle = lit ? 'rgba(57,255,20,' + (0.25 + e.sim * 0.6).toFixed(3) + ')' : 'rgba(124,152,182,' + (0.05 + e.sim * 0.22).toFixed(3) + ')';
+      ctx.strokeStyle = lit ? 'rgba(57,255,20,' + (0.25 + e.sim * 0.6).toFixed(3) + ')' : 'rgba(90,170,205,' + (0.05 + e.sim * 0.22).toFixed(3) + ')';
       ctx.lineWidth = lit ? 1 + e.sim * 2.4 : 0.7 + e.sim * 1.4;
       ctx.beginPath(); ctx.moveTo(e.a.x, e.a.y); ctx.lineTo(e.b.x, e.b.y); ctx.stroke();
       if (lit) {
-        ctx.font = '8px ' + this.MONO; ctx.fillStyle = 'rgba(255,210,138,0.85)'; ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
+        ctx.font = '8px ' + this.MONO; ctx.fillStyle = 'rgba(182,255,143,0.85)'; ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
         ctx.fillText(Math.round(e.sim * 100) + '%', (e.a.x + e.b.x) / 2, (e.a.y + e.b.y) / 2 - 3);
       }
     }
@@ -2700,11 +2737,11 @@ class Component extends DCLogic {
       g.addColorStop(1, 'rgba(' + base + ',0)');
       ctx.fillStyle = g;
       ctx.beginPath(); ctx.arc(n.x, n.y, n.r * (lit ? 1.25 : 1), 0, Math.PI * 2); ctx.fill();
-      ctx.fillStyle = n.named ? '#b6ff8f' : '#dfe8f2';
+      ctx.fillStyle = n.named ? '#b6ff8f' : '#d6ffc7';
       ctx.beginPath(); ctx.arc(n.x, n.y, Math.max(2, n.r * 0.28), 0, Math.PI * 2); ctx.fill();
       if (n.r > 13 || lit || neighbor) {
         ctx.font = (lit ? '600 10px ' : '9px ') + this.MONO;
-        ctx.fillStyle = lit ? C.txt : neighbor ? '#aeb7c6' : C.dim;
+        ctx.fillStyle = lit ? C.txt : neighbor ? '#7fe3ff' : C.dim;
         ctx.textAlign = 'center'; ctx.textBaseline = 'top';
         ctx.fillText(n.label, n.x, n.y + n.r + 3);
       }
@@ -2752,8 +2789,8 @@ class Component extends DCLogic {
   FLANES = [
     ['plead', 'PLEADING', '#39ff14'],
     ['apol', 'APOLOGY', '#00ffa3'],
-    ['bomb', 'LOVE-BOMB', '#c77dff'],
-    ['den', 'DENIAL', '#e01aff']
+    ['bomb', 'LOVE-BOMB', '#ff86c9'],
+    ['den', 'DENIAL', '#ff2f9d']
   ];
   initForensic() {
     const cross = this.D.cross;
@@ -2799,7 +2836,7 @@ class Component extends DCLogic {
     // lanes
     lanesOn.forEach(([k, label, col], li) => {
       const y0 = padT + li * (laneH + laneGap), base = y0 + laneH - 2;
-      ctx.fillStyle = 'rgba(13,17,24,0.6)';
+      ctx.fillStyle = 'rgba(4,18,8,0.6)';
       ctx.fillRect(padL, y0, cw, laneH);
       ctx.strokeStyle = C.grid; ctx.strokeRect(padL + 0.5, y0 + 0.5, cw, laneH);
       ctx.font = '9px ' + this.MONO; ctx.fillStyle = col; ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
@@ -2832,7 +2869,7 @@ class Component extends DCLogic {
     }
     if (F.hover >= 0) {
       const x = xOf(F.hover);
-      ctx.strokeStyle = 'rgba(232,230,225,0.25)'; ctx.setLineDash([3, 4]);
+      ctx.strokeStyle = 'rgba(214,255,208,0.25)'; ctx.setLineDash([3, 4]);
       ctx.beginPath(); ctx.moveTo(x, padT); ctx.lineTo(x, H - padB); ctx.stroke();
       ctx.setLineDash([]);
       const d = F.rec[F.hover];
@@ -2859,7 +2896,7 @@ class Component extends DCLogic {
   forensicEvidence(ctx, W, H, evH) {
     const C = this.COL, F = this.M.forensic, d = F.rec[F.pin];
     const y0 = H - 44 - evH + 4, x0 = 16, w = W - 32, h = evH - 8;
-    ctx.fillStyle = 'rgba(11,15,21,0.92)';
+    ctx.fillStyle = 'rgba(3,14,7,0.92)';
     ctx.fillRect(x0, y0, w, h);
     ctx.strokeStyle = 'rgba(57,255,20,0.4)'; ctx.lineWidth = 1; ctx.strokeRect(x0 + 0.5, y0 + 0.5, w, h);
     ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
@@ -2875,7 +2912,7 @@ class Component extends DCLogic {
     frags.forEach((f, i) => {
       const fx = x0 + 14 + i * (colW + 18);
       let fy = y0 + 44;
-      ctx.font = '11.5px ' + this.GROT; ctx.fillStyle = 'rgba(232,230,225,0.92)';
+      ctx.font = '11.5px ' + this.GROT; ctx.fillStyle = 'rgba(214,255,208,0.92)';
       const words = ('\u201c' + f + '\u201d').split(' ');
       let line = '';
       let clipped = false;
@@ -2973,7 +3010,7 @@ class Component extends DCLogic {
     for (let k = 0; k < Rg.nY; k++) {
       const r = g.rMin + (k + 0.5) * g.ringW;
       ctx.beginPath(); ctx.arc(g.cx, g.cy, r, 0, Math.PI * 2);
-      ctx.strokeStyle = 'rgba(20,26,35,0.9)'; ctx.lineWidth = g.ringW * 0.8; ctx.stroke();
+      ctx.strokeStyle = 'rgba(7,24,12,0.9)'; ctx.lineWidth = g.ringW * 0.8; ctx.stroke();
     }
     // day arcs
     const mode = st.ringsMode;
@@ -3092,7 +3129,7 @@ class Component extends DCLogic {
     ctx.font = '8px ' + this.MONO; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     for (const er of D.eras) {
       const x0 = X(er.i0), x1 = X(er.i1);
-      ctx.fillStyle = er.tone === 'amber' ? 'rgba(57,255,20,0.07)' : 'rgba(91,100,114,0.07)';
+      ctx.fillStyle = er.tone === 'amber' ? 'rgba(57,255,20,0.07)' : 'rgba(60,120,140,0.07)';
       ctx.fillRect(x0, 8, x1 - x0, 18);
       ctx.fillStyle = er.tone === 'amber' ? 'rgba(57,255,20,0.6)' : C.dim;
       if (x1 - x0 > 60) ctx.fillText(er.label, (x0 + x1) / 2, 17);
@@ -3175,7 +3212,7 @@ class Component extends DCLogic {
   // ============================================================
   // MODULE 15 — PSYCHE  (56 rated works × the language around them)
   // ============================================================
-  PSY_COLORS = { prof: '#e01aff', love: '#c77dff', both: '#7b2dff', quiet: '#6f8a5e' };
+  PSY_COLORS = { prof: '#ff2f9d', love: '#ff86c9', both: '#7b2dff', quiet: '#6f8a5e' };
   PSY_LABELS = { prof: 'PROFANE', love: 'TENDER', both: 'CHARGED BOTH WAYS', quiet: 'QUIET' };
   initPsyche() {
     const D = this.D;
@@ -3210,7 +3247,7 @@ class Component extends DCLogic {
     for (let y = 2023; y <= 2025; y++) {
       const i = this.d2i(y + '-01-01') - D.day0;
       if (i < P.i0 || i > P.i1) continue;
-      ctx.strokeStyle = 'rgba(29,36,48,0.9)';
+      ctx.strokeStyle = 'rgba(10,34,16,0.9)';
       ctx.beginPath(); ctx.moveTo(X(i), padT); ctx.lineTo(X(i), padT + ph); ctx.stroke();
       ctx.fillStyle = C.dim; ctx.fillText(String(y), X(i), padT + ph + 10);
     }
@@ -3245,7 +3282,7 @@ class Component extends DCLogic {
       const pop = Math.min(1, (P.reveal - it.born) * 8);
       if (!it._on) {
         ctx.beginPath(); ctx.arc(it._x, it._y, 2.5 * pop, 0, Math.PI * 2);
-        ctx.fillStyle = 'rgba(60,68,82,0.25)'; ctx.fill();
+        ctx.fillStyle = 'rgba(38,84,100,0.25)'; ctx.fill();
         continue;
       }
       // charge halo
@@ -3288,11 +3325,11 @@ class Component extends DCLogic {
     ['i', 'FIRST PERSON', '#39ff14'],
     ['you', 'SECOND PERSON', '#b026ff'],
     ['qual', 'HEDGES', '#7b2dff'],
-    ['imp', 'COMMANDS', '#e01aff'],
+    ['imp', 'COMMANDS', '#ff2f9d'],
     ['q', 'QUESTIONS', '#00ffa3'],
     ['ex', 'EXCLAMATION', '#b6ff8f'],
-    ['prof', 'PROFANITY', '#e01aff'],
-    ['love', 'LOVE', '#c77dff'],
+    ['prof', 'PROFANITY', '#ff2f9d'],
+    ['love', 'LOVE', '#ff86c9'],
     ['sorry', 'APOLOGY', '#e0aaff'],
     ['caps', 'ALL-CAPS', '#cfa8ff']
   ];
@@ -3400,7 +3437,7 @@ class Component extends DCLogic {
   syncPanel(ctx, W, H, it) {
     const C = this.COL;
     const px = W - 324, py = 40, pwid = 304, ph = H - 96;
-    ctx.fillStyle = 'rgba(13,17,24,0.96)';
+    ctx.fillStyle = 'rgba(4,18,8,0.96)';
     ctx.strokeStyle = C.line;
     ctx.beginPath(); ctx.rect(px, py, pwid, ph); ctx.fill(); ctx.stroke();
     ctx.font = '700 13px ' + this.GROT; ctx.fillStyle = it.named ? C.amberHi : C.txt;
@@ -3517,7 +3554,7 @@ class Component extends DCLogic {
       if (y !== lastY) {
         lastY = y;
         const t = (i / nM) * size;
-        ctx.strokeStyle = 'rgba(7,9,13,0.55)';
+        ctx.strokeStyle = 'rgba(2,10,5,0.55)';
         ctx.beginPath(); ctx.moveTo(ox + t, oy); ctx.lineTo(ox + t, oy + size); ctx.stroke();
         ctx.beginPath(); ctx.moveTo(ox, oy + t); ctx.lineTo(ox + size, oy + t); ctx.stroke();
         ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
@@ -3554,7 +3591,7 @@ class Component extends DCLogic {
       const cs = size / nM;
       ctx.strokeStyle = C.txt; ctx.lineWidth = 1;
       ctx.strokeRect(ox + j * cs, oy + i * cs, cs, cs);
-      ctx.strokeStyle = 'rgba(232,230,225,0.25)';
+      ctx.strokeStyle = 'rgba(214,255,208,0.25)';
       ctx.strokeRect(ox, oy + i * cs, size, cs);
       ctx.strokeRect(ox + j * cs, oy, cs, size);
       const s = Dr.sim[i * nM + j];
@@ -3588,8 +3625,8 @@ class Component extends DCLogic {
   chipStyle(on, tone) {
     return {
       fontFamily: "'IBM Plex Mono', monospace", fontSize: '9.5px', letterSpacing: '0.14em',
-      padding: '5px 11px', cursor: 'pointer', border: '1px solid ' + (on ? (tone || '#39ff14') : '#5b1a8f'),
-      color: on ? (tone || '#39ff14') : '#6b7484', background: on ? 'rgba(57,255,20,0.08)' : 'rgba(13,17,24,0.85)',
+      padding: '5px 11px', cursor: 'pointer', border: '1px solid ' + (on ? (tone || '#39ff14') : '#1d8a34'),
+      color: on ? (tone || '#39ff14') : '#4f9fb8', background: on ? 'rgba(57,255,20,0.08)' : 'rgba(4,18,8,0.85)',
       transition: 'all 120ms ease', whiteSpace: 'nowrap'
     };
   }
@@ -3657,11 +3694,11 @@ class Component extends DCLogic {
   // ============================================================
   WPENS = [
     ['cold', 'COLD', '#b026ff'],
-    ['hot', 'HOT', '#e01aff'],
+    ['hot', 'HOT', '#ff2f9d'],
     ['precip', 'PRECIP', '#7b2dff'],
     ['travel', 'TRAVEL', '#00ffa3']
   ];
-  SEASON_COL = { winter: '#b026ff', spring: '#00ffa3', summer: '#e01aff', fall: '#39ff14' };
+  SEASON_COL = { winter: '#b026ff', spring: '#00ffa3', summer: '#ff2f9d', fall: '#39ff14' };
 
   initWeather07() {
     const wx = this.D.wx || {};
@@ -3774,7 +3811,7 @@ class Component extends DCLogic {
     ctx.fillText(MN[mo] + ' ' + d.getUTCFullYear() + ' · ' + this.fmt(X.msgs[wi]) + ' MSGS', chartR - 86, 32);
     ctx.fillStyle = sCol;
     ctx.fillRect(chartR - 78, 21, 58, 14);
-    ctx.fillStyle = '#10001f'; ctx.font = '600 8px ' + this.MONO; ctx.textAlign = 'center';
+    ctx.fillStyle = '#041206'; ctx.font = '600 8px ' + this.MONO; ctx.textAlign = 'center';
     ctx.fillText(season.toUpperCase(), chartR - 49, 31);
     ctx.textAlign = 'left';
 
@@ -3786,7 +3823,7 @@ class Component extends DCLogic {
     this.drawVolumeLane(ctx, geo, vy0, X.msgs, X.maxMsgs, X.play, C.amber);
 
     // playhead needle
-    ctx.strokeStyle = 'rgba(232,230,225,0.5)'; ctx.lineWidth = 1;
+    ctx.strokeStyle = 'rgba(214,255,208,0.5)'; ctx.lineWidth = 1;
     ctx.beginPath(); ctx.moveTo(playX, padT - 6); ctx.lineTo(playX, vy0 + laneH + 8); ctx.stroke();
     // year ticks
     ctx.font = '9px ' + this.MONO; ctx.fillStyle = C.dim; ctx.textAlign = 'center'; ctx.textBaseline = 'top';
@@ -3804,7 +3841,7 @@ class Component extends DCLogic {
       const near = Math.abs(this.mouse.x - x) < 7 && this.mouse.y < padT;
       if (near) X.hoverBolt = { ...b, x };
       const flick = near ? 1 : (0.5 + 0.5 * Math.sin(performance.now() / 280 + b.pos));
-      ctx.strokeStyle = 'rgba(255,235,180,' + (0.35 + 0.55 * flick) + ')';
+      ctx.strokeStyle = 'rgba(214,255,140,' + (0.35 + 0.55 * flick) + ')';
       ctx.lineWidth = near ? 2 : 1.2;
       ctx.beginPath();
       ctx.moveTo(x, padT - 22); ctx.lineTo(x - 3, padT - 13); ctx.lineTo(x + 2, padT - 11); ctx.lineTo(x, padT - 4);
@@ -3824,7 +3861,7 @@ class Component extends DCLogic {
     const fx = chartR + 8, fw = W - fx - 16;
     // conditions
     const cy0 = padT - 22, ch = 128;
-    ctx.fillStyle = 'rgba(11,15,21,0.85)';
+    ctx.fillStyle = 'rgba(3,14,7,0.85)';
     ctx.fillRect(fx, cy0, fw, ch);
     ctx.strokeStyle = C.line; ctx.strokeRect(fx + 0.5, cy0 + 0.5, fw, ch);
     ctx.font = '9px ' + this.MONO; ctx.fillStyle = C.faint;
@@ -3842,7 +3879,7 @@ class Component extends DCLogic {
     const rv = X.rhetInt[wi] / X.maxRhet;
     ctx.font = '8px ' + this.MONO; ctx.fillStyle = C.dim;
     ctx.fillText('RHETORICAL PRESSURE', fx + 14, cy0 + 78);
-    ctx.fillStyle = '#1a2029'; ctx.fillRect(fx + 14, cy0 + 84, fw - 28, 5);
+    ctx.fillStyle = '#0a2410'; ctx.fillRect(fx + 14, cy0 + 84, fw - 28, 5);
     ctx.fillStyle = C.red; ctx.fillRect(fx + 14, cy0 + 84, (fw - 28) * Math.min(1, rv), 5);
     // location lean bar NYC ↔ UT
     const nycV = X.locNyc[wi], utV = X.locUt[wi];
@@ -3850,7 +3887,7 @@ class Component extends DCLogic {
     ctx.fillStyle = C.dim;
     ctx.fillText('UNIONTOWN', fx + 14, cy0 + 104);
     ctx.textAlign = 'right'; ctx.fillText('NYC', fx + fw - 14, cy0 + 104); ctx.textAlign = 'left';
-    ctx.fillStyle = '#1a2029'; ctx.fillRect(fx + 14, cy0 + 110, fw - 28, 5);
+    ctx.fillStyle = '#0a2410'; ctx.fillRect(fx + 14, cy0 + 110, fw - 28, 5);
     ctx.fillStyle = C.amber;
     ctx.fillRect(fx + 14 + (fw - 28) * lean - 2, cy0 + 109, 4, 7);
 
@@ -3862,7 +3899,7 @@ class Component extends DCLogic {
 
     // analysis strip: seasonal means + correlations from the one-pass
     const ay0 = fgy + fgh + 10;
-    ctx.fillStyle = 'rgba(11,15,21,0.85)';
+    ctx.fillStyle = 'rgba(3,14,7,0.85)';
     ctx.fillRect(fx, ay0, fw, analysisH);
     ctx.strokeStyle = C.line; ctx.strokeRect(fx + 0.5, ay0 + 0.5, fw, analysisH);
     ctx.font = '9px ' + this.MONO; ctx.fillStyle = C.faint;
@@ -3916,11 +3953,11 @@ class Component extends DCLogic {
   // of parallel lanes — one hexagon per month, ghosted trail behind it)
   // ============================================================
   OPENS = [
-    ['love', 'LOVE', '#c77dff'],
+    ['love', 'LOVE', '#ff86c9'],
     ['sorry', 'APOLOGY', '#00ffa3'],
     ['qual', 'HEDGE', '#b026ff'],
     ['imp', 'COMMAND', '#39ff14'],
-    ['prof', 'PROFANITY', '#e01aff'],
+    ['prof', 'PROFANITY', '#ff2f9d'],
     ['caps', 'SHOUT', '#e9ffe6']
   ];
   initOracle() {
@@ -3997,7 +4034,7 @@ class Component extends DCLogic {
     }
     this.OPENS.forEach(([k, label, col], i) => {
       const a = angleOf(i);
-      ctx.strokeStyle = 'rgba(232,230,225,0.12)';
+      ctx.strokeStyle = 'rgba(214,255,208,0.12)';
       ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(cx + Math.cos(a) * R, cy + Math.sin(a) * R); ctx.stroke();
       const lx = cx + Math.cos(a) * (R + 14), ly = cy + Math.sin(a) * (R + 14);
       ctx.font = '9px ' + this.MONO; ctx.fillStyle = col;
@@ -4050,7 +4087,7 @@ class Component extends DCLogic {
     }, stripY - 12, stripY + geo.laneH);
     this.drawVolumeLane(ctx, geo, stripY, Or.vol, Or.maxVol, Or.play, C.violet);
     const playX = geo.xOf(Or.play);
-    ctx.strokeStyle = 'rgba(232,230,225,0.5)'; ctx.lineWidth = 1;
+    ctx.strokeStyle = 'rgba(214,255,208,0.5)'; ctx.lineWidth = 1;
     ctx.beginPath(); ctx.moveTo(playX, stripY - 6); ctx.lineTo(playX, stripY + geo.laneH + 4); ctx.stroke();
     Or.scrubGeo = { x0: geo.x0, x1: geo.x1, y1: stripY + geo.laneH };
 
@@ -4160,14 +4197,14 @@ class Component extends DCLogic {
 
     // diverging balance lane — amber up (asserting), cyan down (deferring)
     const balY0 = padT + 2 * (laneH + laneGap);
-    ctx.fillStyle = 'rgba(13,17,24,0.6)';
+    ctx.fillStyle = 'rgba(4,18,8,0.6)';
     ctx.fillRect(geo.x0, balY0, geo.x1 - geo.x0, laneH);
     ctx.strokeStyle = C.grid; ctx.strokeRect(geo.x0 + 0.5, balY0 + 0.5, geo.x1 - geo.x0, laneH);
     ctx.font = '9px ' + this.MONO; ctx.fillStyle = C.dim; ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
     ctx.fillText('BALANCE', geo.x0 - 12, balY0 + laneH / 2);
     ctx.textAlign = 'left';
     const midY = balY0 + laneH / 2;
-    ctx.strokeStyle = 'rgba(232,230,225,0.2)';
+    ctx.strokeStyle = 'rgba(214,255,208,0.2)';
     ctx.beginPath(); ctx.moveTo(geo.x0, midY); ctx.lineTo(geo.x1, midY); ctx.stroke();
     const n = Au.nM, bw = Math.max(1.4, (geo.x1 - geo.x0) / n - 1);
     for (let i = 0; i < n; i++) {
@@ -4185,7 +4222,7 @@ class Component extends DCLogic {
     const vy0 = padT + 3 * (laneH + laneGap);
     this.drawVolumeLane(ctx, geo, vy0, Au.vol, Au.maxVol, Au.play, C.faint);
 
-    ctx.strokeStyle = 'rgba(232,230,225,0.5)'; ctx.lineWidth = 1;
+    ctx.strokeStyle = 'rgba(214,255,208,0.5)'; ctx.lineWidth = 1;
     ctx.beginPath(); ctx.moveTo(playX, padT - 6); ctx.lineTo(playX, vy0 + laneH + 8); ctx.stroke();
     ctx.font = '9px ' + this.MONO; ctx.fillStyle = C.dim; ctx.textAlign = 'center'; ctx.textBaseline = 'top';
     for (let i = 0; i < Au.nM; i++) {
@@ -4222,9 +4259,9 @@ class Component extends DCLogic {
       style: {
         fontFamily: "'IBM Plex Mono', monospace", fontSize: '10.5px', letterSpacing: '0.16em',
         padding: '6px 14px', cursor: 'pointer',
-        color: s.tab === id ? '#10001f' : '#8fa878',
+        color: s.tab === id ? '#041206' : '#8fa878',
         background: s.tab === id ? ACC : 'transparent',
-        border: '1px solid ' + (s.tab === id ? ACC : '#4a0080'),
+        border: '1px solid ' + (s.tab === id ? ACC : '#127020'),
         fontWeight: s.tab === id ? 600 : 400,
         transition: 'all 130ms ease',
         whiteSpace: 'nowrap'
@@ -4387,12 +4424,12 @@ class Component extends DCLogic {
       msg,
       setMsg: (e) => this.setState({ msg: e.target.value.slice(0, 270) }),
       charsLeft,
-      charColor: charsLeft < 40 ? '#b026ff' : '#4d8fa0',
+      charColor: charsLeft < 40 ? '#ff2f9d' : '#00b7ff',
       transmit: () => {
-        const body = msg.trim() || 'i found the void console. let’s talk.';
+        const body = msg.trim() || 'i found the void console.';
         window.open('https://twitter.com/intent/tweet?text=' + encodeURIComponent('@danfrank ' + body), '_blank');
       },
-      mailto: 'mailto:dfrank88@gmail.com?subject=' + encodeURIComponent('[SIGNAL] consult request from the void'),
+      mailto: 'mailto:dfrank88@gmail.com?subject=' + encodeURIComponent('[SIGNAL] from the void'),
       // console
       loading: s.loading,
       tabs, chips,

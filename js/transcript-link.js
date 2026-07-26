@@ -19,13 +19,13 @@
 
   const CSS = `
 .tlink{display:inline-flex;align-items:center;gap:7px;margin:8px 0 2px;padding:5px 11px;
-  border:1px solid #39ff14;border-radius:3px;background:#0d2b06;color:#39ff14;
+  border:1px solid #39ff14;border-radius:3px;background:#0d3308;color:#39ff14;
   font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11px;font-weight:600;
   letter-spacing:.09em;text-decoration:none;cursor:pointer;transition:background .12s}
-.tlink:hover{background:#39ff14;color:#0a1f04}
+.tlink:hover{background:#39ff14;color:#0a2605}
 .tlink .tln{opacity:.78;font-weight:400}
-.tlink.day{border-color:#b026ff;background:#1d0a2b;color:#e0a3ff}
-.tlink.day:hover{background:#b026ff;color:#12001f}
+.tlink.day{border-color:#b026ff;background:#082510;color:#e0a3ff}
+.tlink.day:hover{background:#b026ff;color:#041206}
 .tnone{display:inline-block;margin:8px 0 2px;padding:5px 0;color:#6f8a5e;
   font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:10.5px;letter-spacing:.06em}`;
 

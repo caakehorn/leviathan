@@ -11,6 +11,8 @@ ledger.html           # THE DRUG LEDGER — day by day, both directions
 money.html            # THE FAMILY LEDGER — where the money came from
 transcript.html       # THE TRANSCRIPT — the complete message record, searchable
 404.html              # static not-found page (deep links into wiki page ids can go stale)
+css/
+  slime.css           # SLIME: the theme layer the standalone pages share
 js/
   support.js          # runtime: custom <x-dc> template engine, resource loading
   pen-core.js         # the pen scaffold: lanes, volume, playhead, verbatim feed
@@ -47,6 +49,41 @@ robots.txt            # advisory: keeps crawlers off the bulk data/ blobs
     pages.yml         # GitHub Actions workflow that deploys to Pages
     sync-wiki.yml     # hourly rebuild of wiki-data.json from wiki-brain
 ```
+
+## SLIME — the palette
+
+Radioactive green is the ground, not the accent. The ink is a green-black
+(`#041206`) lit from underneath by pools of `#39ff14`; purple is the
+counter-hue, and hot pink and cerulean are the two spot channels. Nothing on
+the site sits outside these five families:
+
+| channel | hex | where |
+| --- | --- | --- |
+| slime | `#39ff14` · hi `#b6ff8f` · acid `#ccff00` | primary — every default mark, rule and label |
+| mint | `#00ffa3` | the second green, for a lane that must not read as the first |
+| purple | `#b026ff` · violet `#7b2dff` · light `#e0aaff` | the counter-hue: structure, second series, pinned state |
+| hot pink | `#ff2f9d` · light `#ff86c9` | contradiction, adverse counts, the other side of a two-party record |
+| cerulean | `#00b7ff` · light `#7fe3ff` | the cold channel: muted chrome, focus rings, rivers, deferral |
+
+`index.html` carries them in `COL` (the console's canvas palette, with the
+legacy semantic names — `amber` is the slime channel, `cyan` the purple one,
+`red` the hot-pink one) and again as CSS custom properties for the markup.
+The standalone pages get them from `css/slime.css`, which also supplies the
+backdrop, the scanlines, and the ooze creeping down both edges. That
+stylesheet only ever *adds* atmosphere — layout, type scale and typeface stay
+with the page that loads it.
+
+The particle engines are on the same four stops: `neon()` in the WebGL path
+and `neonRGB()` in the CPU fallback (`js/galaxy-cluster.js`), and `pal()` in
+`js/void-engine.js`, all run slime → cerulean → purple → hot pink → slime.
+
+## The three phases
+
+`index.html` is one page in three states. **PHASE 00** is the splash — the
+gravity well, a live particle cluster you can grab. **PHASE 01** is the gate:
+the wordmark, the way into the archive, and one channel out. **PHASE 02** is
+the LEVIATHAN console itself, 37 instruments over two sections. Phase 01 is
+deliberately thin — it is a door, not a page with an argument to make.
 
 The page renders through a small client-side template engine (the `<x-dc>` element
 and `{{ ... }}` bindings). React and ReactDOM are loaded at runtime from the unpkg

@@ -6,7 +6,7 @@
 <title>PROCUREMENT — a third section</title>
 <meta name="robots" content="noindex, nofollow">
 <meta name="referrer" content="no-referrer">
-<meta name="theme-color" content="#10001f">
+<meta name="theme-color" content="#041206">
 <link rel="icon" href="data:,">
 
 <!-- Unlinked from the rest of the site, and unencrypted on purpose: every line
@@ -19,20 +19,21 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous">
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&amp;family=IBM+Plex+Mono:wght@400;600;700&amp;display=swap" rel="stylesheet">
 
+<link rel="stylesheet" href="./css/slime.css">
 <style>
   * { box-sizing: border-box; }
   html, body {
     margin: 0; padding: 0; height: 100%;
-    background: #10001f; color: #e9ffe6;
+    background: #041206; color: #e9ffe6;
     font-family: 'IBM Plex Mono', ui-monospace, monospace;
     overflow: hidden;
   }
-  ::selection { background: #b026ff; color: #10001f; }
+  ::selection { background: #b026ff; color: #041206; }
 
   #app { display: flex; flex-direction: column; height: 100%; }
 
   header {
-    border-bottom: 1px solid #2a1245;
+    border-bottom: 1px solid #14471f;
     padding: 12px 18px 10px;
     display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px 16px;
     flex: 0 0 auto;
@@ -48,13 +49,13 @@
     display: flex; flex-wrap: wrap; gap: 6px;
     padding: 8px 18px; flex: 0 0 auto;
   }
-  nav { border-bottom: 1px solid #170a2a; }
-  #chips { border-bottom: 1px solid #170a2a; }
+  nav { border-bottom: 1px solid #0a2410; }
+  #chips { border-bottom: 1px solid #0a2410; }
 
   .chip {
     font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; letter-spacing: 0.14em;
-    padding: 5px 11px; cursor: pointer; border: 1px solid #5b1a8f;
-    color: #6b7484; background: rgba(13,17,24,0.85);
+    padding: 5px 11px; cursor: pointer; border: 1px solid #1d8a34;
+    color: #4f9fb8; background: rgba(4,18,8,0.85);
     transition: all 120ms ease; white-space: nowrap;
   }
   .chip:hover { color: #b6ff8f; border-color: #39ff14; }
@@ -62,7 +63,7 @@
 
   #hint {
     padding: 7px 18px; font-size: 8.5px; letter-spacing: 0.16em;
-    color: #6f8a5e; border-bottom: 1px solid #170a2a; flex: 0 0 auto;
+    color: #6f8a5e; border-bottom: 1px solid #0a2410; flex: 0 0 auto;
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }
 
@@ -78,7 +79,7 @@
   #source {
     position: absolute; left: 18px; bottom: 18px; width: min(560px, calc(100% - 36px));
     max-height: calc(100% - 36px); overflow: auto;
-    background: rgba(11,4,22,0.97); border: 1px solid #2a1245;
+    background: rgba(4,16,7,0.97); border: 1px solid #14471f;
     padding: 14px 16px 16px; box-shadow: 0 0 40px rgba(176,38,255,0.25);
   }
   #source[hidden] { display: none; }
@@ -97,7 +98,7 @@
   dl.meta dd { margin: 0; font-size: 10px; color: #6f8a5e; word-break: break-word; }
   .note {
     font-family: 'Space Grotesk', sans-serif; font-size: 11.5px; line-height: 1.5;
-    color: #c77dff; border-left: 2px solid #7b2dff; padding-left: 10px; margin-bottom: 10px;
+    color: #ff86c9; border-left: 2px solid #7b2dff; padding-left: 10px; margin-bottom: 10px;
   }
   #source a {
     font-size: 9px; letter-spacing: 0.14em; color: #b026ff; text-decoration: none;
@@ -108,7 +109,7 @@
   /* the written brief */
   #brief {
     position: absolute; inset: 0; overflow: auto;
-    background: rgba(9,3,18,0.975); padding: 28px min(6vw, 60px) 60px;
+    background: rgba(3,13,6,0.975); padding: 28px min(6vw, 60px) 60px;
   }
   #brief[hidden] { display: none; }
   #brief .inner { max-width: 760px; margin: 0 auto; }
@@ -128,7 +129,7 @@
   #brief ul { margin: 0 0 12px; padding-left: 18px; }
   #brief li { margin-bottom: 7px; }
   #brief em { color: #b6ff8f; font-style: normal; }
-  #brief .caveat { border-left: 2px solid #e01aff; padding-left: 12px; color: #e0aaff; }
+  #brief .caveat { border-left: 2px solid #ff2f9d; padding-left: 12px; color: #e0aaff; }
   #brief code {
     font-family: 'IBM Plex Mono', monospace; font-size: 11.5px; color: #00ffa3;
   }
@@ -147,6 +148,19 @@
 </style>
 </head>
 <body>
+<!-- ── slime drips: the theme layer's ooze, both edges ── -->
+<div class="sl-drips l" aria-hidden="true">
+  <i style="left:2px;--h:210px;--dur:15s;--del:0s"></i>
+  <i class="pink" style="left:10px;--h:128px;--dur:19s;--del:3.5s"></i>
+  <i style="left:6px;--h:300px;--dur:23s;--del:8s"></i>
+  <i class="cer" style="left:13px;--h:96px;--dur:12.5s;--del:6.2s"></i>
+</div>
+<div class="sl-drips r" aria-hidden="true">
+  <i style="right:3px;--h:250px;--dur:17s;--del:1.4s"></i>
+  <i class="cer" style="right:11px;--h:110px;--dur:21s;--del:5s"></i>
+  <i style="right:7px;--h:168px;--dur:13.5s;--del:9.5s"></i>
+  <i class="pink" style="right:14px;--h:340px;--dur:26s;--del:12s"></i>
+</div>
 <div id="app">
   <header>
     <h1>PROCUREMENT</h1>
