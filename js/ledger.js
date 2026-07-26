@@ -94,12 +94,17 @@
           if (q.tag) m.append(el('span', 'qtag ' + (q.tag === 'UPSELL' || q.tag === 'CONDITION' ? 'bad' : ''), q.tag));
           line.append(m);
           line.append(el('div', 'qx', '“' + q.x + '”'));
+          if (window.TranscriptLink) {
+            line.append(window.TranscriptLink.el(
+              { d: x.d, t: q.t, who: q.w === 'HER' ? 'A' : 'D', text: q.x }));
+          }
           row.append(line);
         }
         const src = el('div', 'src');
-        src.textContent = 'VERIFY: search the full export for ' + x.d
-          + ' — ' + x.her + ' supply-context messages from her, ' + x.his + ' from him, that day.';
+        src.textContent = 'VERIFY: ' + x.her + ' supply-context messages from her, '
+          + x.his + ' from him, on ' + x.d + '. Every quote above links to the line it came from.';
         body.append(src);
+        if (window.TranscriptLink) body.append(window.TranscriptLink.dayEl(x.d));
         row.append(body);
       }
       host.append(row);

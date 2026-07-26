@@ -7,6 +7,9 @@ A self-contained static site — the combined **VOID + LEVIATHAN** project — s
 ```
 index.html            # entry point + inline styles and template markup
 procurement.html      # PROCUREMENT — an unlisted third section (see below)
+ledger.html           # THE DRUG LEDGER — day by day, both directions
+money.html            # THE FAMILY LEDGER — where the money came from
+transcript.html       # THE TRANSCRIPT — the complete message record, searchable
 404.html              # static not-found page (deep links into wiki page ids can go stale)
 js/
   support.js          # runtime: custom <x-dc> template engine, resource loading
@@ -19,11 +22,20 @@ js/
   procurement-data.js # PROCUREMENT's evidence pool — citations, not claims
   procurement-asks.js # THE ASK's ledger, recounted from wiki-brain raw/
   procurement.js      # PROCUREMENT's six instruments
+  ledger-data.js      # THE DRUG LEDGER's rows
+  ledger.js           # THE DRUG LEDGER's renderer
+  money-data.js       # THE FAMILY LEDGER's events
+  money.js            # THE FAMILY LEDGER's renderer
+  transcript-index.js # quote → transcript line lookup (generated)
+  transcript-link.js  # turns a quote on any evidence page into a link into the record
 data/
   leviathan.enc       # AES-256-GCM encrypted content bundle (decrypted in-browser)
   wiki-data.json      # WIKI section dataset, built from github.com/caakehorn/wiki-brain
+  transcript.json     # the message record behind transcript.html, built from a CSV export
 tools/
   build-wiki-data.py  # regenerates data/wiki-data.json from a wiki-brain checkout
+  build-transcript.py # regenerates data/transcript.json from an iMessage CSV export
+  build-transcript-index.js # regenerates js/transcript-index.js from the two above
 .nojekyll             # disables GitHub's Jekyll build (see below)
 .gitignore            # ignores the transient .wiki-brain/ checkout
 .gitattributes        # LF endings; marks the data files binary / generated
