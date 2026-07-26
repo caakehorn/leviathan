@@ -6,14 +6,18 @@ A self-contained static site — the combined **VOID + LEVIATHAN** project — s
 
 ```
 index.html            # entry point + inline styles and template markup
+procurement.html      # PROCUREMENT — an unlisted third section (see below)
 404.html              # static not-found page (deep links into wiki page ids can go stale)
 js/
   support.js          # runtime: custom <x-dc> template engine, resource loading
+  pen-core.js         # the pen scaffold: lanes, volume, playhead, verbatim feed
   galaxy-cluster.js   # particle background simulation
   void-engine.js      # VOID visual layer
   wiki-reader.js      # WIKI reader: markdown rendering, search, page navigation
   wiki-modules.js     # first-wave wiki visualizers (WEB, CLAIMS, MASS, …)
   wiki-analytics.js   # second-wave wiki instruments computed from page prose
+  procurement-data.js # PROCUREMENT's evidence pool — citations, not claims
+  procurement.js      # PROCUREMENT's five instruments
 data/
   leviathan.enc       # AES-256-GCM encrypted content bundle (decrypted in-browser)
   wiki-data.json      # WIKI section dataset, built from github.com/caakehorn/wiki-brain
@@ -65,6 +69,39 @@ silently gutting the CLAIMS / HEALTH / EVIDENCE / GENESIS / SCHEMA views. The
 script therefore refuses to run without it, and also refuses to overwrite the
 existing dataset if a rebuild loses more than 20% of its pages, words, or edges
 (override with `--allow-shrink` when a large deletion is genuine).
+
+## The pen scaffold
+
+`js/pen-core.js` holds the shape most of the analytic views reduce to: several
+pens tracing frequencies over an *ordering* of the corpus, a volume lane
+grounding them in raw mass, a scrubbable playhead, and a feed of the records
+that registered on each pen, verbatim. POLYGRAPH, WEATHER, EPISTEME and
+CRUCIBLE all compose it, and so does every instrument on the PROCUREMENT page.
+
+A host mixes it in with `Object.assign` and supplies `COL` / `MONO` / `GROT` /
+`W` / `H` / `mouse` / `state` / `M` / `setState`. The console (`index.html`)
+does this from `componentDidMount`; `js/procurement.js` does it in a plain class
+constructor with no React underneath it at all.
+
+## PROCUREMENT — the unlisted third section
+
+`procurement.html` is a standalone page, reachable only by typing its URL.
+Nothing on the site links to it and it carries `noindex`. Unlike the corpus
+console it needs **no passphrase**: every line it quotes is already published
+unencrypted, in `data/wiki-data.json` and upstream in wiki-brain, so encrypting
+it would protect nothing and only make the citations harder to check.
+
+It shares no data layer with the rest of the site. `js/procurement-data.js` is
+the entire dataset — a hand-assembled pool of ~55 records, each one a quotation
+plus its source file, its row, its provenance tier and whatever caveat the wiki
+attached to it. The five instruments do nothing but order that pool, count it,
+and read it back. Clicking any line in any feed pins the full source card.
+
+Because the pool is checked in rather than generated, editing it is editing the
+page: add a record to the `R` array in `js/procurement-data.js` and every
+instrument picks it up on the next load. Records need `d` (ISO date at day,
+month or year precision), `lane`, `who`, `tier`, `tag`, `text`, `src`, `dir` and
+`page`; `note` and `approx` are optional, and `k` is the LEDGER sub-kind.
 
 ## Keeping the WIKI section in sync
 
