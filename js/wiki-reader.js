@@ -416,7 +416,15 @@
 
       const input = el.querySelector('.rdr-srch input');
       input.value = this._rdrQ || '';
-      input.addEventListener('input', (e) => { this._rdrQ = e.target.value; this.rdrRenderNav(); });
+      // Every keystroke re-ran the whole nav render, and past three characters
+      // that means a full-text pass over the corpus. At typing speed most of
+      // those results are thrown away before anyone reads them, so coalesce —
+      // the query itself stays current for anything else that reads _rdrQ.
+      input.addEventListener('input', (e) => {
+        this._rdrQ = e.target.value;
+        clearTimeout(this._rdrSrchT);
+        this._rdrSrchT = setTimeout(() => this.rdrRenderNav(), 120);
+      });
 
       // one delegated click for nav items, folder toggles, wikilinks and chips
       el.addEventListener('click', (e) => {
@@ -608,8 +616,16 @@
         || (p.tags || []).some(t => t.toLowerCase().includes(q))
         || (p.aliases || []).some(a => a.toLowerCase().includes(q)));
       const seen = new Set(meta.map(p => p.id));
+      // The body pass used to lowercase all 319 pages — about 1.9 MB — on
+      // every search. Fold the corpus once and hang it off WK, so it is
+      // rebuilt only when the data is.
+      let lc = WK._lcText;
+      if (q.length >= 3 && !lc) {
+        lc = WK._lcText = {};
+        for (const p of WK.pages) lc[p.id] = (this.WT[p.id] || '').toLowerCase();
+      }
       const body = q.length >= 3
-        ? WK.pages.filter(p => !seen.has(p.id) && (this.WT[p.id] || '').toLowerCase().includes(q))
+        ? WK.pages.filter(p => !seen.has(p.id) && lc[p.id].includes(q))
         : [];
       let html = '';
       if (!meta.length && !body.length) {

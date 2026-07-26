@@ -58,7 +58,7 @@
       if (s.tab === 'episteme') {
         return [
           { label: s.epistemePlay ? '❚❚ PAUSE' : '▶ PLAY', onClick: () => this.setState(st => ({ epistemePlay: !st.epistemePlay })), style: cs(s.epistemePlay, '#7b2dff') },
-          { label: '↺ RESTART', onClick: () => this.epistemeRestart(), style: cs(false) },
+          { label: '↺ RESTART', onClick: () => this.penRestart('episteme', 'epistemePlay'), style: cs(false) },
           ...[[1.5, 'SLOW'], [5, 'NORMAL'], [16, 'FAST']].map(([v, l]) => ({
             label: l, onClick: () => this.setState({ epistemeSpeed: v }), style: cs(s.epistemeSpeed === v, '#7b2dff')
           })),
@@ -75,7 +75,7 @@
           })),
           ...(pen ? [
             { label: s.attentionPlay ? '\u275a\u275a PAUSE' : '\u25b6 PLAY', onClick: () => this.setState(st => ({ attentionPlay: !st.attentionPlay })), style: cs(s.attentionPlay, '#39ff14') },
-            { label: '\u21ba RESTART', onClick: () => this.attentionRestart(), style: cs(false) },
+            { label: '\u21ba RESTART', onClick: () => this.penRestart('attentionPen', 'attentionPlay'), style: cs(false) },
             ...[[1, 'SLOW'], [4, 'NORMAL'], [12, 'FAST']].map(([v, l]) => ({
               label: l, onClick: () => this.setState({ attentionSpeed: v }), style: cs(s.attentionSpeed === v, '#39ff14')
             }))
@@ -92,7 +92,7 @@
           })),
           ...(pen ? [
             { label: s.dictionPlay ? '\u275a\u275a PAUSE' : '\u25b6 PLAY', onClick: () => this.setState(st => ({ dictionPlay: !st.dictionPlay })), style: cs(s.dictionPlay, '#39ff14') },
-            { label: '\u21ba RESTART', onClick: () => this.dictionRestart(), style: cs(false) },
+            { label: '\u21ba RESTART', onClick: () => this.penRestart('dictionPen', 'dictionPlay'), style: cs(false) },
             ...[[0.6, 'SLOW'], [2, 'NORMAL'], [6, 'FAST']].map(([v, l]) => ({
               label: l, onClick: () => this.setState({ dictionSpeed: v }), style: cs(s.dictionSpeed === v, '#39ff14')
             }))
@@ -115,7 +115,7 @@
       if (s.tab === 'crucible') {
         return [
           { label: s.cruciblePlay ? '❚❚ PAUSE' : '▶ PLAY', onClick: () => this.setState(st => ({ cruciblePlay: !st.cruciblePlay })), style: cs(s.cruciblePlay, this.WTCOL.contradicts) },
-          { label: '↺ RESTART', onClick: () => this.crucibleRestart(), style: cs(false) },
+          { label: '↺ RESTART', onClick: () => this.penRestart('crucible', 'cruciblePlay'), style: cs(false) },
           ...[[1, 'SLOW'], [3, 'NORMAL'], [8, 'FAST']].map(([v, l]) => ({
             label: l, onClick: () => this.setState({ crucibleSpeed: v }), style: cs(s.crucibleSpeed === v, this.WTCOL.contradicts)
           })),
@@ -277,11 +277,6 @@
         play: 0.001, scrub: false, scrubGeo: null, hover: -1
       };
     },
-    epistemeRestart() {
-      const E = this.M.episteme; if (!E) return;
-      E.play = 0.001; for (const f of E.frags) f.shownAt = 0;
-      this.setState({ epistemePlay: true });
-    },
     draw_episteme(ctx, W, H, dt) {
       if (!this.WK) return this.wkStandby(ctx, W, H);
       if (!this.M.episteme || this.M.episteme.order !== this.state.epistemeOrder) this.initEpisteme();
@@ -338,16 +333,10 @@
         },
 
         overlay: (g) => {
-          E.hover = -1;
           const mx = this.mouse.x, my = this.mouse.y;
-          if (mx >= g.padL - 6 && mx <= g.chartR - 14 && my >= g.ribY - 6 && my <= g.botY + 6) {
-            E.hover = Math.max(0, Math.min(E.nP - 1, Math.round(((mx - g.padL) / (g.chartR - g.padL - 20)) * (E.nP - 1))));
-          }
+          E.hover = this.penHoverColumn(ctx, g, E.nP);
           if (E.hover >= 0) {
             const r = E.rows[E.hover];
-            ctx.strokeStyle = 'rgba(232,230,225,0.22)'; ctx.setLineDash([2, 4]);
-            ctx.beginPath(); ctx.moveTo(g.xOf(E.hover), g.padT); ctx.lineTo(g.xOf(E.hover), g.botY); ctx.stroke();
-            ctx.setLineDash([]);
             this.card(ctx, mx, my, [
               [r.p.title.slice(0, 40), C.txt, '600 12px ' + this.GROT],
               [r.p.domain.toUpperCase() + ' \u00b7 #' + (E.hover + 1) + ' OF ' + E.nP + ' \u00b7 ' + this.fmt(r.w) + ' WORDS', this.WCOL[r.p.domain] || C.dim],
@@ -367,7 +356,7 @@
       // a fragment row is the most compelling thing on screen — let it be the
       // thing you click, ahead of the column underneath the cursor
       if (type === 'down') {
-        const hit = (E.fragRects || []).find(r => p.x >= r.x && p.x <= r.x + r.w && p.y >= r.y && p.y <= r.y + r.h);
+        const hit = this.hitRect(E.fragRects, p.x, p.y);
         if (hit) { this.wikiOpen(hit.id); return; }
       }
       if (this.penScrub('episteme', type, p) === 'click' && E.hover >= 0) this.wikiOpen(E.rows[E.hover].p.id);
@@ -395,10 +384,39 @@
         id: p.id, p,
         txt: ' ' + norm((this.WT[p.id] || '').replace(/\[\[[^\]]*\]\]/g, ' ')) + ' '
       }));
+      // Naively this is every page's title scanned against every page's body:
+      // 319 x 319 = ~102k indexOf passes over ~4 KB of prose each, roughly
+      // 400 MB of character scanning on the first open of ATTENTION. Instead
+      // index token -> bodies once, then shortlist each key by its rarest
+      // word. A body containing the phrase must contain every word of it, so
+      // the rarest word's posting list cannot miss a match; the shortlist only
+      // ever over-includes, and those still get the exact scan below.
+      const posting = new Map();
+      bodies.forEach((b, bi) => {
+        for (const w of b.txt.split(' ')) {
+          if (!w) continue;
+          let s = posting.get(w);
+          if (!s) posting.set(w, s = new Set());
+          s.add(bi);
+        }
+      });
+
       const items = [];
       for (const t of targets) {
+        const cand = new Set();
+        for (const k of t.keys) {
+          let rarest = null;
+          for (const w of k.split(' ')) {
+            const s = posting.get(w);
+            if (!s) { rarest = null; break; }   // word absent corpus-wide
+            if (!rarest || s.size < rarest.size) rarest = s;
+          }
+          if (rarest) for (const bi of rarest) cand.add(bi);
+        }
         let n = 0; const from = [];
-        for (const b of bodies) {
+        // corpus order, so `from` ties break exactly as they did before
+        for (const bi of [...cand].sort((a, b) => a - b)) {
+          const b = bodies[bi];
           if (b.id === t.p.id) continue;
           let c = 0;
           for (const k of t.keys) {
@@ -470,11 +488,6 @@
         play: 0.001, scrub: false, scrubGeo: null, hover: -1
       };
     },
-    attentionRestart() {
-      const P = this.M.attentionPen; if (!P) return;
-      P.play = 0.001; for (const f of P.frags) f.shownAt = 0;
-      this.setState({ attentionPlay: true });
-    },
     draw_attentionPen(ctx, W, H, dt) {
       if (!this.M.attentionPen || this.M.attentionPen.dom !== this.state.attentionDom) this.initAttentionPen();
       const C = this.COL, P = this.M.attentionPen;
@@ -507,16 +520,10 @@
           ctx.textAlign = 'left';
         },
         overlay: (g) => {
-          P.hover = -1;
           const mx = this.mouse.x, my = this.mouse.y;
-          if (mx >= g.padL - 6 && mx <= g.chartR - 14 && my >= g.ribY - 6 && my <= g.botY + 6) {
-            P.hover = Math.max(0, Math.min(P.nP - 1, Math.round(((mx - g.padL) / (g.chartR - g.padL - 20)) * (P.nP - 1))));
-          }
+          P.hover = this.penHoverColumn(ctx, g, P.nP);
           if (P.hover >= 0) {
             const it = P.rows[P.hover];
-            ctx.strokeStyle = 'rgba(232,230,225,0.22)'; ctx.setLineDash([2, 4]);
-            ctx.beginPath(); ctx.moveTo(g.xOf(P.hover), g.padT); ctx.lineTo(g.xOf(P.hover), g.botY); ctx.stroke();
-            ctx.setLineDash([]);
             const lines = [
               [it.p.title.slice(0, 40), C.txt, '600 12px ' + this.GROT],
               [it.p.domain.toUpperCase() + ' \u00b7 #' + (P.hover + 1) + ' OF ' + P.nP, this.WCOL[it.p.domain] || C.dim],
@@ -674,7 +681,7 @@
       if (this.state.attentionView === 'pen') {
         const P = this.M.attentionPen; if (!P) return;
         if (type === 'down') {
-          const hit = (P.fragRects || []).find(r => p.x >= r.x && p.x <= r.x + r.w && p.y >= r.y && p.y <= r.y + r.h);
+          const hit = this.hitRect(P.fragRects, p.x, p.y);
           if (hit) { this.wikiOpen(hit.id); return; }
         }
         if (this.penScrub('attentionPen', type, p) === 'click' && P.hover >= 0) this.wikiOpen(P.rows[P.hover].p.id);
@@ -682,7 +689,7 @@
       }
       const A = this.M.attention; if (!A) return;
       if (type === 'down') {
-        const row = (A.rowHits || []).find(r => p.x >= r.x && p.x <= r.x + r.w && p.y >= r.y && p.y <= r.y + r.h);
+        const row = this.hitRect(A.rowHits, p.x, p.y);
         if (row) { this.wikiOpen(row.it.p.id); return; }
         if (A.hover) { if (A.pinned === A.hover) { this.wikiOpen(A.hover.p.id); A.pinned = null; } else A.pinned = A.hover; }
         else A.pinned = null;
@@ -779,11 +786,6 @@
         play: 0.001, scrub: false, scrubGeo: null, hover: -1
       };
     },
-    dictionRestart() {
-      const P = this.M.dictionPen; if (!P) return;
-      P.play = 0.001; for (const f of P.frags) f.shownAt = 0;
-      this.setState({ dictionPlay: true });
-    },
     draw_dictionPen(ctx, W, H, dt) {
       if (!this.M.dictionPen || this.M.dictionPen.dom !== this.state.dictionDom) this.initDictionPen();
       const C = this.COL, P = this.M.dictionPen;
@@ -814,16 +816,10 @@
           ctx.textAlign = 'left';
         },
         overlay: (g) => {
-          P.hover = -1;
           const mx = this.mouse.x, my = this.mouse.y;
-          if (mx >= g.padL - 6 && mx <= g.chartR - 14 && my >= g.ribY - 6 && my <= g.botY + 6) {
-            P.hover = Math.max(0, Math.min(P.nP - 1, Math.round(((mx - g.padL) / (g.chartR - g.padL - 20)) * (P.nP - 1))));
-          }
+          P.hover = this.penHoverColumn(ctx, g, P.nP);
           if (P.hover >= 0) {
             const t = P.terms[P.hover];
-            ctx.strokeStyle = 'rgba(232,230,225,0.22)'; ctx.setLineDash([2, 4]);
-            ctx.beginPath(); ctx.moveTo(g.xOf(P.hover), g.padT); ctx.lineTo(g.xOf(P.hover), g.botY); ctx.stroke();
-            ctx.setLineDash([]);
             const u = this.dictionUsage(t.w, P.dom);
             const lines = [
               [t.w.toUpperCase(), C.txt, '700 14px ' + this.GROT],
@@ -932,13 +928,13 @@
           }
         }
       }
-      if (this.cv) this.cv.style.cursor = (D.hover || (D.rowHits || []).some(r => r.open && mx >= r.x && mx <= r.x + r.w && my >= r.y && my <= r.y + r.h)) ? 'pointer' : 'crosshair';
+      if (this.cv) this.cv.style.cursor = (D.hover || (D.rowHits || []).some(r => r.open && this.inRect(r, mx, my))) ? 'pointer' : 'crosshair';
     },
     pt_diction(type, p) {
       if (this.state.dictionView === 'pen') {
         const P = this.M.dictionPen; if (!P) return;
         if (type === 'down') {
-          const hit = (P.fragRects || []).find(r => p.x >= r.x && p.x <= r.x + r.w && p.y >= r.y && p.y <= r.y + r.h);
+          const hit = this.hitRect(P.fragRects, p.x, p.y);
           if (hit) { this.wikiOpen(hit.id); return; }
         }
         if (this.penScrub('dictionPen', type, p) === 'click' && P.hover >= 0) {
@@ -949,7 +945,7 @@
       }
       const D = this.M.diction; if (!D) return;
       if (type === 'down') {
-        const hit = (D.rowHits || []).find(r => p.x >= r.x && p.x <= r.x + r.w && p.y >= r.y && p.y <= r.y + r.h);
+        const hit = this.hitRect(D.rowHits, p.x, p.y);
         if (hit && hit.open) { this.wikiOpen(hit.open); return; }
         if (hit && hit.t) { D.pinned = (D.pinned === hit.t ? null : hit.t); return; }
         D.pinned = null;
@@ -983,11 +979,30 @@
       if (mode === 'box') return box;
       return CORE_FIELDS.concat(box);
     },
+    // The coverage grid is static: it only changes when the field mode changes
+    // or the dataset reloads, and the mode chip nulls M.schema outright. But
+    // draw_schema was rebuilding it on every frame — three passes of
+    // pages x fields predicate calls (the corpus-wide totals, the per-cell
+    // count, and the per-cell miss list pushed into cellHits), plus a freshly
+    // allocated array per cell. In ALL mode that is ~19k predicate calls and
+    // ~400 arrays per frame to paint a heat map that never moves.
+    schemaGrid() {
+      const S = this.M.schema;
+      if (S.grid) return S.grid;
+      const cols = this.schemaCols();
+      const cells = S.rows.map(r => cols.map(([k, label, test]) => {
+        const miss = r.ps.filter(p => !test(p));
+        const have = r.ps.length - miss.length;
+        return { r, k, label, test, miss, have, frac: have / r.ps.length };
+      }));
+      S.grid = { cols, cells, totals: cols.map(([, , test]) => this.WK.pages.filter(test).length) };
+      return S.grid;
+    },
     draw_schema(ctx, W, H, dt) {
       if (!this.WK) return this.wkStandby(ctx, W, H);
       if (!this.M.schema) this.initSchema();
       const C = this.COL, S = this.M.schema;
-      const cols = this.schemaCols();
+      const G = this.schemaGrid(), cols = G.cols;
       const panelW = S.pinned ? 300 : 0;
       const gx0 = 132, gx1 = W - 24 - (panelW ? panelW + 14 : 0);
       const gy0 = 100, gy1 = H - 56;
@@ -1013,9 +1028,6 @@
         ctx.restore();
       });
 
-      // overall per-column coverage across the whole corpus
-      const totals = cols.map(([k, l, test]) => this.WK.pages.filter(test).length);
-
       S.rows.forEach((r, ri) => {
         const y = gy0 + ri * rh;
         if (y + rh > gy1 + 1) return;
@@ -1026,12 +1038,12 @@
         ctx.font = '8px ' + this.MONO; ctx.fillStyle = C.faint;
         ctx.fillText(r.ps.length + ' PAGES', gx0 - 12, y + rh / 2 + 7);
         ctx.textAlign = 'left';
-        cols.forEach(([k, label, test], ci) => {
-          const have = r.ps.filter(test);
-          const frac = have.length / r.ps.length;
+        cols.forEach(([k, label], ci) => {
+          const cell = G.cells[ri][ci];
+          const frac = cell.frac;
           const x = gx0 + ci * cw;
           const hov = mx >= x && mx < x + cw && my >= y && my < y + rh;
-          if (hov) S.hover = { r, k, label, frac, have: have.length, miss: r.ps.filter(p => !test(p)), test };
+          if (hov) S.hover = cell;
           // coverage → green, gap → red; full coverage reads as a solid block
           const colr = frac >= 0.999 ? '#00ffa3' : frac >= 0.6 ? '#39ff14' : '#e01aff';
           ctx.fillStyle = hx(colr, 0.1 + frac * 0.72);
@@ -1044,14 +1056,14 @@
             ctx.fillText(Math.round(frac * 100) + '%', x + cw / 2, y + rh / 2);
             ctx.textAlign = 'left';
           }
-          S.cellHits.push({ x, y, w: cw, h: rh, cell: { r, k, label, frac, miss: r.ps.filter(p => !test(p)) } });
+          S.cellHits.push({ x, y, w: cw, h: rh, cell });
         });
       });
 
       // corpus-wide footer bar per column
       ctx.textBaseline = 'alphabetic';
       cols.forEach(([k, label], ci) => {
-        const x = gx0 + ci * cw, frac = totals[ci] / this.WK.pages.length;
+        const x = gx0 + ci * cw, frac = G.totals[ci] / this.WK.pages.length;
         ctx.fillStyle = 'rgba(29,36,48,0.9)'; ctx.fillRect(x + 1, gy1 + 10, cw - 2, 5);
         ctx.fillStyle = hx(frac >= 0.6 ? '#00ffa3' : '#39ff14', 0.85);
         ctx.fillRect(x + 1, gy1 + 10, (cw - 2) * frac, 5);
@@ -1091,14 +1103,14 @@
           [S.hover.miss.length ? S.hover.miss.length + ' MISSING · CLICK TO LIST THEM' : 'COMPLETE COVERAGE', S.hover.miss.length ? '#e01aff' : '#00ffa3', '9px ' + this.MONO]
         ]);
       }
-      if (this.cv) this.cv.style.cursor = (S.hover && S.hover.miss.length) || S.rowHits.some(r => mx >= r.x && mx <= r.x + r.w && my >= r.y && my <= r.y + r.h) ? 'pointer' : 'crosshair';
+      if (this.cv) this.cv.style.cursor = (S.hover && S.hover.miss.length) || this.hitRect(S.rowHits, mx, my) ? 'pointer' : 'crosshair';
     },
     pt_schema(type, p) {
       const S = this.M.schema; if (!S) return;
       if (type === 'down') {
-        const row = (S.rowHits || []).find(r => p.x >= r.x && p.x <= r.x + r.w && p.y >= r.y && p.y <= r.y + r.h);
+        const row = this.hitRect(S.rowHits, p.x, p.y);
         if (row) { this.wikiOpen(row.id); return; }
-        const cell = (S.cellHits || []).find(r => p.x >= r.x && p.x <= r.x + r.w && p.y >= r.y && p.y <= r.y + r.h);
+        const cell = this.hitRect(S.cellHits, p.x, p.y);
         if (cell && cell.cell.miss.length) {
           S.pinned = (S.pinned && S.pinned.r.t === cell.cell.r.t && S.pinned.k === cell.cell.k) ? null : cell.cell;
         } else S.pinned = null;
@@ -1216,11 +1228,6 @@
         play: 0.001, scrub: false, scrubGeo: null, hover: -1
       };
     },
-    crucibleRestart() {
-      const K = this.M.crucible; if (!K) return;
-      K.play = 0.001; for (const f of K.frags) f.shownAt = 0;
-      this.setState({ cruciblePlay: true });
-    },
     draw_crucible(ctx, W, H, dt) {
       if (!this.WK) return this.wkStandby(ctx, W, H);
       if (!this.M.crucible || this.M.crucible.filter !== (this.state.crucibleFilter || 'all')) this.initCrucible();
@@ -1285,16 +1292,10 @@
         },
 
         overlay: (g) => {
-          K.hover = -1;
           const mx = this.mouse.x, my = this.mouse.y;
-          if (mx >= g.padL - 6 && mx <= g.chartR - 14 && my >= g.ribY - 6 && my <= g.botY + 6) {
-            K.hover = Math.max(0, Math.min(K.nP - 1, Math.round(((mx - g.padL) / (g.chartR - g.padL - 20)) * (K.nP - 1))));
-          }
+          K.hover = this.penHoverColumn(ctx, g, K.nP);
           if (K.hover >= 0) {
             const r = K.rows[K.hover];
-            ctx.strokeStyle = 'rgba(232,230,225,0.22)'; ctx.setLineDash([2, 4]);
-            ctx.beginPath(); ctx.moveTo(g.xOf(K.hover), g.padT); ctx.lineTo(g.xOf(K.hover), g.botY); ctx.stroke();
-            ctx.setLineDash([]);
             const lines = [
               [r.a.title.slice(0, 40), this.WCOL[r.a.domain] || C.txt, '600 12px ' + this.GROT],
               ['⟷ ' + r.b.title.slice(0, 38), this.WCOL[r.b.domain] || C.txt, '600 12px ' + this.GROT],
@@ -1318,7 +1319,7 @@
     pt_crucible(type, p) {
       const K = this.M.crucible; if (!K) return;
       if (type === 'down') {
-        const hit = (K.fragRects || []).find(r => p.x >= r.x && p.x <= r.x + r.w && p.y >= r.y && p.y <= r.y + r.h);
+        const hit = this.hitRect(K.fragRects, p.x, p.y);
         if (hit) { this.wikiOpen(hit.id); return; }
       }
       if (this.penScrub('crucible', type, p) === 'click' && K.hover >= 0) this.wikiOpen(K.rows[K.hover].a.id);
@@ -1522,12 +1523,12 @@
           ['CLICK TO READ THE ROW PAGE', C.faint, '8.5px ' + this.MONO]
         ]);
       }
-      if (this.cv) this.cv.style.cursor = (E.hover || E.rowHits.some(r => mx >= r.x && mx <= r.x + r.w && my >= r.y && my <= r.y + r.h)) ? 'pointer' : 'crosshair';
+      if (this.cv) this.cv.style.cursor = (E.hover || this.hitRect(E.rowHits, mx, my)) ? 'pointer' : 'crosshair';
     },
     pt_echo(type, p) {
       const E = this.M.echo; if (!E) return;
       if (type === 'down') {
-        const row = (E.rowHits || []).find(r => p.x >= r.x && p.x <= r.x + r.w && p.y >= r.y && p.y <= r.y + r.h);
+        const row = this.hitRect(E.rowHits, p.x, p.y);
         if (row) { this.wikiOpen(row.id); return; }
         if (E.hover) this.wikiOpen(E.hover.pa.id);
       }

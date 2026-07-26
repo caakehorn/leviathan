@@ -5,14 +5,15 @@ A self-contained static site — the combined **VOID + LEVIATHAN** project — s
 ## What's here
 
 ```
-index.html            # entry point + inline styles and template markup
-procurement.html      # PROCUREMENT — an unlisted third section (see below)
+index.html            # entry point, inline styles and template markup, console shell
 404.html              # static not-found page (deep links into wiki page ids can go stale)
 js/
   support.js          # runtime: custom <x-dc> template engine, resource loading
   pen-core.js         # the pen scaffold: lanes, volume, playhead, verbatim feed
   galaxy-cluster.js   # particle background simulation
   void-engine.js      # VOID visual layer
+  pen-scaffold.js     # chart-recorder primitives shared by both sections' pen instruments
+  corpus-modules.js   # the nineteen CORPUS visualizers (PULSE, ATLAS, WEATHER, …)
   wiki-reader.js      # WIKI reader: markdown rendering, search, page navigation
   wiki-modules.js     # first-wave wiki visualizers (WEB, CLAIMS, MASS, …)
   wiki-analytics.js   # second-wave wiki instruments computed from page prose
@@ -34,7 +35,16 @@ robots.txt            # advisory: keeps crawlers off the bulk data/ blobs
   workflows/
     pages.yml         # GitHub Actions workflow that deploys to Pages
     sync-wiki.yml     # hourly rebuild of wiki-data.json from wiki-brain
+    validate.yml      # parses every JS file, workflow and the wiki dataset on each PR
 ```
+
+`index.html` holds only the shell: the state, the passphrase gate, the animation
+loop, pointer dispatch and the shared draw helpers. Every visualizer lives in a
+module file that hangs a plain object off `window` and is folded onto the
+component at mount, so a section's modules can be read and changed without
+touching the shell. The console dispatches to them by tab name
+(`this['draw_' + tab]`), which is why a new module needs no wiring beyond an
+`init`/`draw_`/`pt_` triple and an entry in the tab list.
 
 The page renders through a small client-side template engine (the `<x-dc>` element
 and `{{ ... }}` bindings). React and ReactDOM are loaded at runtime from the unpkg

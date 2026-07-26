@@ -38,6 +38,22 @@ jobs:
           done
           exit $fail
 
+      # The console shell still lives in an inline <script> that node never sees
+      # from the glob above, so a stray comma there would pass CI and only fail
+      # in the browser.
+      - name: Parse the inline console script in index.html
+        run: |
+          python3 - <<'PY' > /tmp/inline.js
+          import pathlib, sys
+          html = pathlib.Path('index.html').read_text(encoding='utf-8')
+          i = html.find('<script type="text/x-dc"')
+          if i < 0:
+              sys.exit('error: the inline x-dc script block is gone from index.html')
+          start = html.index('>', i) + 1
+          sys.stdout.write(html[start:html.index('</script>', start)])
+          PY
+          node --check /tmp/inline.js && echo 'ok   index.html inline script'
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
