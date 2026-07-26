@@ -31,18 +31,18 @@
       head.append(el('span', 'src s' + e.src, e.src));
       head.append(el('span', 'kind', e.kind));
       const v = el('span', 'verdict');
-      v.textContent = e.chain ? 'STATES BOTH HALVES IN ONE MESSAGE'
-        : e.linked ? 'same day: ' + [e.den ? e.den + ' order' : '', e.fnd ? e.fnd + ' funding' : '', e.sup ? e.sup + ' supply msg' : ''].filter(Boolean).join(' · ')
-        : 'no supply activity recorded that day';
+      v.textContent = (e.chain ? 'STATES BOTH HALVES IN ONE MESSAGE · ' : '') + e.desc;
       head.append(v);
       head.addEventListener('click', () => { state.open.has(e.d + e.t) ? state.open.delete(e.d + e.t) : state.open.add(e.d + e.t); render(); });
       row.append(head);
       if (state.open.has(e.d + e.t)) {
         const q = el('div', 'q qHer');
-        q.append(el('div', 'qm', 'ANNIE · ' + e.t + (e.amt ? '  ·  $' + e.amt : '')));
+        q.append(el('div', 'qm', 'ANNIE · ' + e.t
+          + (e.recv ? '  ·  RECEIVED $' + e.recv : '') + (e.spend ? '  ·  TOWARD A BUY $' + e.spend : '')));
         q.append(el('div', 'qx', '“' + e.x + '”'));
         row.append(q);
         for (const s of e.q) {
+          if (s.x === e.x.slice(0, 230)) continue;
           const b = el('div', 'q qSup');
           b.append(el('div', 'qm', 'SAME DAY · ' + s.t));
           b.append(el('div', 'qx', '“' + s.x + '”'));
