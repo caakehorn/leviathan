@@ -22,6 +22,8 @@
   var VERIFY = './data/verify.enc';   // small, written by tools/encrypt.py
   var BUNDLE = './data/leviathan.enc'; // fallback: the archive bundle itself
   var SKEY = 'lv.gate.pw';
+  var LKEY = 'lv.gate.until';         // lockout deadline, survives a reload
+  var LOCKOUT_MS = 30000;
 
   // ── hide the document before first paint ────────────────────────────────
   // A <style> in <head> beats setting inline styles on documentElement: it
@@ -102,13 +104,83 @@
     'color:#041206;font-family:inherit;font-weight:700;font-size:11px;letter-spacing:0.22em;padding:13px}',
     '#lv-gate button:hover{background:#b6ff8f}',
     '#lv-gate button[disabled]{opacity:0.6;cursor:default}',
-    '#lv-gate .ft{margin-top:16px;font-size:9px;letter-spacing:0.18em;color:#4f8a63;line-height:1.9}'
+    '#lv-gate .ft{margin-top:16px;font-size:9px;letter-spacing:0.18em;color:#4f8a63;line-height:1.9}',
+    // ── the taunt: 30 seconds of the whole viewport, for a wrong passphrase ──
+    // Doubles as the rate limit. It is stored as a deadline rather than a
+    // timer, so reloading the page does not skip the wait.
+    '#lv-taunt{position:fixed;inset:0;z-index:2147483647;display:flex;flex-direction:column;',
+    'align-items:center;justify-content:center;text-align:center;padding:3vmin;gap:3vmin;',
+    'background:#000;overflow:hidden;visibility:visible!important;',
+    "font-family:'Unbounded','Space Grotesk',system-ui,sans-serif;",
+    'animation:lvTauntBg .34s steps(1) infinite}',
+    '#lv-taunt b{display:block;font-weight:900;line-height:0.92;letter-spacing:-0.01em;',
+    'font-size:clamp(42px,12.5vw,230px);color:#ff2f9d;text-transform:uppercase;',
+    'overflow-wrap:anywhere;text-shadow:0 0 30px #ff2f9d,0 0 90px rgba(255,47,157,0.8);',
+    'animation:lvTauntTxt .34s steps(1) infinite}',
+    '#lv-taunt .cd{font-family:\'IBM Plex Mono\',ui-monospace,monospace;font-size:clamp(10px,1.5vw,15px);',
+    'letter-spacing:0.34em;color:#39ff14;text-shadow:0 0 16px rgba(57,255,20,0.9)}',
+    // 0.34s per on-off cycle is ~2.9 flashes/second, just under the 3 Hz
+    // general-flash threshold in WCAG 2.3.1 — the same line index.html's
+    // enterflash comment draws. Fast enough to be unbearable, slow enough not
+    // to be a seizure risk.
+    '@keyframes lvTauntBg{0%{background:#000}50%{background:#ff2f9d}}',
+    '@keyframes lvTauntTxt{0%{color:#ff2f9d;transform:scale(1)}50%{color:#000;transform:scale(1.04)}}',
+    // Same contract as every other animation on this site: the OS setting wins.
+    // The taunt still takes the whole page for the whole 30 seconds — it just
+    // stops strobing.
+    '@media (prefers-reduced-motion:reduce){',
+    '#lv-taunt{animation:none;background:#0a0002}',
+    '#lv-taunt b{animation:none;color:#ff2f9d}}'
   ].join('');
+
+  // Kept next to the greeting: both are the house style for turning someone
+  // away, and both get edited here and nowhere else.
+  var TAUNT = 'LMFAO SHE DONT LOVE YOU CUZ';
 
   // The house style for turning someone away. Kept in one place so it is
   // edited here and nowhere else.
   var GREETING = 'awww are you sad lil bro? she’s never going to truly be yours. '
     + 'Go away with your little babydick';
+
+  // ── lockout ─────────────────────────────────────────────────────────────
+  function lockedUntil() {
+    try { return parseInt(sessionStorage.getItem(LKEY), 10) || 0; } catch (e) { return 0; }
+  }
+  function setLockout(until) {
+    try { until ? sessionStorage.setItem(LKEY, String(until)) : sessionStorage.removeItem(LKEY); }
+    catch (e) { /* private mode: the in-memory timer still runs */ }
+  }
+
+  // Takes the whole viewport until `until`, then hands the page back to the
+  // gate. Returns a promise so callers can await the sentence.
+  function taunt(until) {
+    setLockout(until);
+    var ov = document.getElementById('lv-taunt');
+    if (!ov) {
+      ov = document.createElement('div');
+      ov.id = 'lv-taunt';
+      ov.setAttribute('role', 'alert');
+      ov.innerHTML = '<b></b><div class="cd"></div>';
+      ov.querySelector('b').textContent = TAUNT;   // copy, never markup
+      document.body.appendChild(ov);
+    }
+    var cd = ov.querySelector('.cd');
+    return new Promise(function (done) {
+      var tick = function () {
+        var left = until - Date.now();
+        if (left <= 0) {
+          clearInterval(iv);
+          ov.remove();
+          setLockout(0);
+          done();
+          return;
+        }
+        cd.textContent = 'TRY AGAIN IN ' + Math.ceil(left / 1000) + 'S';
+      };
+      var iv = setInterval(tick, 200);
+      tick();
+    });
+  }
 
   function paintGate() {
     var st = document.createElement('style');
@@ -136,19 +208,32 @@
 
     var submit = async function () {
       var v = input.value;
-      if (!v) return;
+      if (!v || go.disabled) return;
       err.textContent = ''; go.disabled = true; go.textContent = 'CHECKING…';
       try {
         await tryPassphrase(v);
         unlock();
       } catch (e) {
+        input.value = '';
+        await taunt(Date.now() + LOCKOUT_MS);
         err.textContent = '✕ WRONG PASSPHRASE — ACCESS DENIED';
         go.disabled = false; go.textContent = 'UNSEAL ►';
-        input.select();
+        input.focus();
       }
     };
     go.addEventListener('click', submit);
     input.addEventListener('keydown', function (e) { if (e.key === 'Enter') submit(); });
+
+    // A lockout carried over from a reload is served before anything is typed.
+    var left = lockedUntil() - Date.now();
+    if (left > 0) {
+      go.disabled = true; go.textContent = 'CHECKING…';
+      taunt(lockedUntil()).then(function () {
+        go.disabled = false; go.textContent = 'UNSEAL ►';
+        input.focus();
+      });
+      return;
+    }
     setTimeout(function () { input.focus(); }, 30);
   }
 
@@ -171,6 +256,11 @@
     passphrase: function () { return pw; },
     locked: function () { return !pw; },
     greeting: GREETING,
-    decrypt: decrypt
+    taunt: TAUNT,
+    decrypt: decrypt,
+    // index.html's archive prompt serves the same sentence for a wrong
+    // passphrase, so there is one punishment and one place that defines it.
+    punish: function () { return taunt(Date.now() + LOCKOUT_MS); },
+    lockoutMs: LOCKOUT_MS
   };
 })();

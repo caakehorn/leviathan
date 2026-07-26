@@ -722,9 +722,12 @@ class Component extends DCLogic {
         ov.style.display = 'none';
         this._setPhase('archive');
       } catch (e) {
+        input.value = '';
+        // One punishment for a wrong passphrase, defined in js/gate.js.
+        if (window.LVGate && window.LVGate.punish) await window.LVGate.punish();
         err.textContent = '✕ WRONG PASSPHRASE — ACCESS DENIED';
         go.disabled = false; go.textContent = 'DECRYPT ►';
-        input.select();
+        input.focus();
       }
     };
     go.addEventListener('click', submit);

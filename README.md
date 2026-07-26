@@ -122,6 +122,23 @@ The passphrase comes from `$LEVIATHAN_PASSPHRASE` or a prompt. It is never
 written to disk and must never be committed — and it cannot be recovered from
 anything in this repository, which is the point of the design.
 
+### Getting it wrong
+
+A wrong passphrase takes the whole viewport for 30 seconds. The lockout is
+stored as a deadline in `sessionStorage`, not a timer, so reloading the page
+does not skip it — which makes the taunt double as the rate limit: one guess
+per 30 seconds per tab, on top of the 250,000 PBKDF2 iterations each attempt
+already costs.
+
+It flashes at 0.34s per on-off cycle — about 2.9 flashes a second, just under
+the 3 Hz general-flash threshold in WCAG 2.3.1, the same line `index.html`'s
+`enterflash` comment draws. Under `prefers-reduced-motion: reduce` it stops
+strobing but still takes the whole page for the whole 30 seconds.
+
+The two pieces of copy — the greeting and the taunt — are defined once, at the
+top of `js/gate.js`. The console's own archive prompt borrows both rather than
+keeping a second copy.
+
 ### What the gate does not do
 
 **It gates rendering, not access.** These still resolve for anyone who types the
