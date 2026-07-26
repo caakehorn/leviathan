@@ -3,21 +3,26 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>PROCUREMENT — a third section</title>
+<title>THE ASK — PROCUREMENT · instrument VI</title>
 <meta name="robots" content="noindex, nofollow">
 <meta name="referrer" content="no-referrer">
 <meta name="theme-color" content="#10001f">
 <link rel="icon" href="data:,">
 
-<!-- Unlinked from the rest of the site, and unencrypted on purpose: every line
-     it quotes is already public in data/wiki-data.json and in the wiki-brain
-     repository it is built from, so a passphrase here would protect nothing and
-     would only make the evidence harder to check. noindex keeps it out of
-     search results all the same — unlisted, not secret. -->
+<!-- Standalone, directly-linkable view of instrument VI · THE ASK.
+     Same provenance contract as procurement.html: no passphrase, because every
+     line it quotes is already public in data/wiki-data.json and in the
+     wiki-brain repository it is built from. noindex keeps it unlisted, not
+     secret. Linking to this URL lands a reader on THE ASK and nothing else. -->
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous">
+<link rel="preconnect" href="https://fonts.gstatic.com crossorigin="anonymous">
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&amp;family=IBM+Plex+Mono:wght@400;600;700&amp;display=swap" rel="stylesheet">
+
+<meta property="og:type" content="website">
+<meta property="og:title" content="THE ASK — from PROCUREMENT">
+<meta property="og:description" content="Instrument VI of the PROCUREMENT section: Annie Ulmer's own 18,946 messages, recounted from the raw exports — she names the size, she raises the money, she hands him her own ATM code.">
+<meta name="twitter:card" content="summary">
 
 <style>
   * { box-sizing: border-box; }
@@ -43,6 +48,12 @@
   }
   .kicker { font-size: 9px; letter-spacing: 0.18em; color: #6f8a5e; }
   .kicker b { color: #e0aaff; font-weight: 600; }
+  .back {
+    font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: 0.16em;
+    color: #6b7484; text-decoration: none; border: 1px solid #5b1a8f;
+    padding: 4px 9px; transition: all 120ms ease;
+  }
+  .back:hover { color: #39ff14; border-color: #39ff14; }
 
   nav, #chips {
     display: flex; flex-wrap: wrap; gap: 6px;
@@ -67,10 +78,6 @@
   }
 
   #stageWrap { position: relative; flex: 1 1 auto; min-height: 0; overflow: hidden; }
-  /* The instruments need horizontal room — five lanes, a label gutter and a
-     verbatim feed. Below ~1000px the page scrolls sideways rather than
-     compressing the feed into unreadability. The overlays sit outside the
-     scroller so they stay put while the chart moves. */
   #scroll { position: absolute; inset: 0; overflow-x: auto; overflow-y: hidden; }
   #stage { display: block; touch-action: none; }
 
@@ -149,11 +156,12 @@
 <body>
 <div id="app">
   <header>
-    <h1>PROCUREMENT</h1>
+    <h1>THE ASK</h1>
     <div class="kicker">
-      A THIRD SECTION · SIX INSTRUMENTS OVER THE QUESTION OF <b>WHOSE DECISION IT WAS</b> ·
-      NO PASSPHRASE, BECAUSE EVERY LINE HERE IS ALREADY PUBLIC
+      INSTRUMENT VI OF THE <b>PROCUREMENT</b> SECTION · HER 18,946 MESSAGES, RECOUNTED FROM RAW · NO PASSPHRASE, EVERY LINE PUBLIC
     </div>
+    <div style="flex: 1;"></div>
+    <a class="back" href="./procurement.html">◂ ALL SIX INSTRUMENTS</a>
   </header>
 
   <nav id="tabs"></nav>
@@ -167,144 +175,96 @@
 
     <div id="brief" hidden>
       <div class="inner">
-        <h2>What this page is for, and what it does not claim</h2>
+        <h2>What this instrument is for, and what it does not claim</h2>
 
         <p>
           One question, asked narrowly: <em>was Annie Ulmer's acquisition and use of
           controlled substances something she did, or something that was done to
-          her?</em> The six instruments here answer it out of the message record
-          alone. Each pen is a count of cited lines, and every line it counts is
-          readable verbatim beside it — click any of them and the file, the
-          timestamp, the direction tag and the wiki page that carries it open in
-          full.
+          her?</em> THE ASK answers its part of that question out of the message record
+          alone — her own words, recounted from the raw exports, not the wiki's
+          summarizing prose. Every line it counts is readable verbatim beside it —
+          click any of them and the file, the timestamp, the direction tag and the
+          wiki page that carries it open in full.
         </p>
 
-        <h3>WHAT THE RECORD SHOWS</h3>
-        <ul>
-          <li>
-            She ran a supplier relationship of her own in <em>2018–2019</em> — travelling
-            to the source, placing orders by size, moving money, absorbing losses
-            when she was beaten, chasing the line when it went dead, and
-            introducing other buyers to it. That is <em>2,010 days</em> before the
-            window in which she is said to have been made dependent.
-          </li>
-          <li>
-            Third parties routed their own requests <em>through her</em>. That is a
-            supply node, not a victim of one.
-          </li>
-          <li>
-            In the terminal window she initiates. The clearest instance is
-            March 11, 2026: she opens the re-entry with the ask, offers an errand
-            as the consideration, and writes the refusal into the message herself —
-            <em>"You can tell me no."</em>
-          </li>
-          <li>
-            The record contains <em>no instance</em> of supply withheld as leverage or
-            punishment, across the entire terminal window, including hours after
-            the worst thing Dan ever said to her and minutes after the confession
-            he had spent months trying to obtain. Coercive control runs on the
-            threat of withdrawal. There is no withdrawal here to threaten with.
-          </li>
-          <li>
-            For every month of the relationship except the fifteen shaded in
-            <b>CLOCK</b>, she had her own income, her own route to supply, or both.
-            That window begins with a move she made and a funded apartment she
-            declined, and it ends with a job she took four weeks before the
-            relationship closed.
-          </li>
-          <li>
-            The most independent witness in the corpus is the man she left Dan
-            for — who had attacked Dan publicly two weeks earlier, and who then
-            described the addiction as hers, unprompted, to the last person with
-            any claim on his loyalty.
-          </li>
-        </ul>
-
-        <h3>THE ASK — ANNIE’S OWN WORDS, FROM THE RAW LOGS</h3>
+        <h3>THE ASK — RECOUNTED FROM THE RAW LOGS</h3>
         <p>
-          This instrument does not quote the wiki's summarizing prose. Every Annie-thread text export in
+          This one does not come from the wiki's prose. Every Annie-thread export in
           wiki-brain's <code>raw/self/message-csv/</code> was merged, the one UTC-stamped
           export converted to local time (it had been minting phantom duplicates
-          four hours off), the result deduplicated, and Annie's side kept:
-          <em>18,946 messages from Annie</em>, 2025-02-01 to 2026-06-05, <em>every month
+          four hours off), the result deduplicated, and her side kept:
+          <em>18,946 messages from her</em>, 2025-02-01 to 2026-06-05, <em>every month
           covered</em> — no narrative gaps to explain away.
         </p>
         <p>
-          Classification is frame-and-object, not keyword: a message counts as a procurement ask only if it is a
-          speech act aimed at somebody <em>and</em> names what it is for. Then every
+          Classification is frame-and-object, not keyword: a request has to be a
+          speech act aimed at somebody <em>and</em> name what it is for. Then every
           single hit was read by hand and the false positives struck. The precision
           that survived that audit is printed on the instrument, because a number
           nobody can check is not evidence.
         </p>
         <p>
           <b>The shape that came out is not the one the summaries imply.</b> Of 357
-          procurement messages from Annie:
+          procurement messages from her:
         </p>
         <ul>
-          <li><em>42</em> are Annie <b>naming the size of the buy</b> — the denominated order. Dan asks, Annie answers with a number. <em>"How much?" → "60."</em> <em>"I need a number now / she's making the call" → "100."</em></li>
-          <li><em>131</em> are Annie <b>asking for it</b> — mostly oblique, in the thread's own euphemisms: "get one," "get something," "I want a line," "More z," <em>"Why can't I just get it tonight,"</em> <em>"I want to get it first. I am dying here."</em></li>
-          <li><em>137</em> are Annie <b>raising the money</b>, including the ten times Annie asks Annie's own mother or sister for it.</li>
-          <li><em>25</em> are Annie <b>handing Dan the cardless code to Annie's own bank account</b> — <em>"I'll send you an access code. Take fifty out."</em> <em>"Can you please go to atm for me. Get out $80. I will send you the card less code."</em></li>
-          <li><em>22</em> are Annie <b>asking whether the source is reachable</b> — "Is there any possibility of seeing Bop," "Did you ever end up seeing Bop," "Is he coming."</li>
+          <li><em>42</em> are her <b>naming the size of the buy</b> — the denominated order. He asks, she answers with a number. <em>"How much" → "60."</em> <em>"i need a number now / she's making the call" → "100."</em></li>
+          <li><em>131</em> are her <b>asking for it</b> — mostly oblique, in the thread's own euphemisms: "get one," "get something," "I want a line," "More z," <em>"Why can't I just get it tonight,"</em> <em>"I want to get it first. I am dying here."</em></li>
+          <li><em>137</em> are her <b>raising the money</b>, including the ten times she asks her own mother or sister for it.</li>
+          <li><em>25</em> are her <b>handing him the cardless code to her own bank account</b> — <em>"I'll send you an access code. Take fifty out."</em> <em>"Can you please go to atm for me. Get out $80. I will send you the card less code."</em></li>
+          <li><em>22</em> are her <b>asking whether the source is reachable</b> — "Is there any possibility of seeing bop," "Did you ever end up seeing bop," "Is he coming."</li>
         </ul>
         <p>
           Two findings a keyword sweep cannot reach. The denominated order is one:
-          the message is just <code>60</code>, and it reads as noise until Dan's side is
+          the message is just <code>60</code>, and it reads as noise until his side is
           put back beside it, at which point it reads as a purchase order. The last
           one is <em>"100?"</em>, sent at 5:51 PM on <b>May 31, 2026</b> — six hours
           before "Goodbye forever."
         </p>
         <p>
           The cardless code is the other, and it inverts the dependency picture
-          outright. Twenty-five times Annie sends Dan a one-hour access code to
-          <em>Annie's own bank account</em> so Dan can withdraw the purchase money at an ATM.
-          A person being supplied by someone does not hand that person banking credentials to fund the purchase.
+          outright. Twenty-five times she sends him a one-hour access code to
+          <em>her own bank account</em> so he can withdraw the purchase money at an ATM.
+          A person being supplied by someone does not hand that person their
+          banking credentials to fund the purchase.
         </p>
         <p>
-          And on <b>March 6, 2026</b> Annie names the alternative herself:
+          And on <b>March 6, 2026</b> she names the alternative herself:
           <em>"I'll find someone else to get it from and you'll never have to deal
           with this again."</em> That sentence is not available to somebody whose
-          access runs through Dan alone.
+          access runs through him alone.
         </p>
         <p>
-          Annie states <em>68 dollar amounts totalling $2,629</em> and announces <em>32 ATM
-          runs</em>. The transaction the record actually documents is a purchase Annie
-          funds and directs, not a supply Annie is handed. Annie's own line, March 26 2025:
+          She states <em>68 dollar amounts totalling $2,629</em> and announces <em>32 ATM
+          runs</em>. The transaction the record actually documents is a purchase she
+          funds and directs, not a supply she is handed. Her own line, March 26 2025:
           <em>"When I am the one who will be fucking paying for it."</em>
         </p>
         <p>
           The rate is real too, and it is the corpus's own: a base-rate control run
-          on 2026-07-18 found <em>97.2% of a random sample of all Annie's messages</em> in the
+          on 2026-07-18 found <em>97.2% of a random sample of all her messages</em> in the
           Aug 2025 – Mar 2026 window had a request within ±24h. That control was
-          built to test whether Annie's love-declarations were procurement signals; it
+          built to test whether her love-declarations were procurement signals; it
           killed that claim and established the ask frequency in the same pass.
         </p>
         <p>
           The number worth setting against all of it: across the same 222-day window
-          Annie made <em>seven</em> unprompted enquiries after how Dan was — four once the
+          she made <em>seven</em> unprompted enquiries after how he was — four once the
           perfunctory ones are netted out. Once every fifty-five days.
         </p>
 
-        <h3>WHAT THIS PAGE DOES NOT CLAIM</h3>
+        <h3>WHAT THIS INSTRUMENT DOES NOT CLAIM</h3>
         <p class="caveat">
           It does not claim Dan is a bystander. The same corpus states plainly
           that he was the supply-chain architect of the terminal phase, that
           structuring a dependency was his doing, that his verbal abuse
           quadrupled across seven months and reproduces exactly from raw, and
           that the surveillance arc points toward control. Those findings are
-          <em>on this page</em>, in the same lanes as everything else, under
-          <b>AGAINST DAN</b> in <b>PROVENANCE</b>. Structuring a supply relationship with
+          <em>on the full PROCUREMENT page</em>, in the same lanes as everything else,
+          under <b>AGAINST DAN</b> in <b>PROVENANCE</b>. Structuring a supply relationship with
           someone who was already using for a decade is not the same act as
           creating the use — but it is not nothing, and nothing here pretends
           otherwise.
-        </p>
-        <p class="caveat">
-          It also does not use the record's most quotable statistic. The
-          <code>187:4</code> love-to-request ratio, long cited as proof that her
-          affection was a procurement instrument, was killed by a base-rate
-          control the corpus ran on itself on 2026-07-18 and inverted by the
-          directional test. It is absent from every lane here except as an
-          example of the record correcting against its own author.
         </p>
 
         <h3>SOURCING</h3>
@@ -314,11 +274,13 @@
           repository as <code>data/wiki-data.json</code>. Records carry the wiki's own
           provenance tiers, and where the wiki flags a line as dossier-only,
           undated, contradicted or unresolved, the flag travels with it and is
-          shown in the source card. <b>PROVENANCE</b> sorts the whole case by that
-          tier so the weak sourcing is impossible to hide behind the strong.
+          shown in the source card. <b>PROVENANCE</b> (on the full page) sorts the whole
+          case by that tier so the weak sourcing is impossible to hide behind
+          the strong.
         </p>
         <p>
           Press <b>ESC</b> to close this, and the space bar to start and stop the pens.
+          Use <b>◂ ALL SIX INSTRUMENTS</b> above to return to the full PROCUREMENT section.
         </p>
       </div>
     </div>
@@ -329,5 +291,19 @@
 <script src="./js/procurement-data.js"></script>
 <script src="./js/procurement-asks.js"></script>
 <script src="./js/procurement.js"></script>
+
+<!-- Bootstrap: collapse the tab bar to THE ASK only and open on it, so this
+     URL is a direct link to instrument VI and nothing else. Runs after
+     procurement.js's own DOMContentLoaded handler has constructed the instance. -->
+<script>
+  window.addEventListener('DOMContentLoaded', function () {
+    var p = window.__procurement;
+    if (!p) return;
+    // restrict the tab bar to THE ASK (instrument VI)
+    p.TABS = [['ask', 'VI · THE ASK']];
+    // open on it
+    p.setState({ tab: 'ask', pinned: null });
+  });
+</script>
 </body>
 </html>
