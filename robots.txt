@@ -13,3 +13,4 @@ Disallow: /data/
 # advisory, not access control. It is unencrypted on purpose (every line it
 # quotes is already public in data/wiki-data.json), just not advertised.
 Disallow: /procurement.html
+Disallow: /ledger.html
