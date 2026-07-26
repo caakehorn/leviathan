@@ -11,7 +11,10 @@ ledger.html           # THE DRUG LEDGER — day by day, both directions
 money.html            # THE FAMILY LEDGER — where the money came from
 transcript.html       # THE TRANSCRIPT — the complete message record, searchable
 404.html              # static not-found page (deep links into wiki page ids can go stale)
+css/
+  slime.css           # SLIME: the theme layer the standalone pages share
 js/
+  gate.js             # THE GATE: one passphrase in front of every page
   support.js          # runtime: custom <x-dc> template engine, resource loading
   pen-core.js         # the pen scaffold: lanes, volume, playhead, verbatim feed
   galaxy-cluster.js   # particle background simulation
@@ -34,6 +37,7 @@ data/
   transcript.json     # the message record behind transcript.html, built from a CSV export
 tools/
   build-wiki-data.py  # regenerates data/wiki-data.json from a wiki-brain checkout
+  encrypt.py          # writes blobs in the site's AES-256-GCM format
   build-transcript.py # regenerates data/transcript.json from an iMessage CSV export
   build-transcript-index.js # regenerates js/transcript-index.js from the two above
 .nojekyll             # disables GitHub's Jekyll build (see below)
@@ -48,6 +52,41 @@ robots.txt            # advisory: keeps crawlers off the bulk data/ blobs
     sync-wiki.yml     # hourly rebuild of wiki-data.json from wiki-brain
 ```
 
+## SLIME — the palette
+
+Radioactive green is the ground, not the accent. The ink is a green-black
+(`#041206`) lit from underneath by pools of `#39ff14`; purple is the
+counter-hue, and hot pink and cerulean are the two spot channels. Nothing on
+the site sits outside these five families:
+
+| channel | hex | where |
+| --- | --- | --- |
+| slime | `#39ff14` · hi `#b6ff8f` · acid `#ccff00` | primary — every default mark, rule and label |
+| mint | `#00ffa3` | the second green, for a lane that must not read as the first |
+| purple | `#b026ff` · violet `#7b2dff` · light `#e0aaff` | the counter-hue: structure, second series, pinned state |
+| hot pink | `#ff2f9d` · light `#ff86c9` | contradiction, adverse counts, the other side of a two-party record |
+| cerulean | `#00b7ff` · light `#7fe3ff` | the cold channel: muted chrome, focus rings, rivers, deferral |
+
+`index.html` carries them in `COL` (the console's canvas palette, with the
+legacy semantic names — `amber` is the slime channel, `cyan` the purple one,
+`red` the hot-pink one) and again as CSS custom properties for the markup.
+The standalone pages get them from `css/slime.css`, which also supplies the
+backdrop, the scanlines, and the ooze creeping down both edges. That
+stylesheet only ever *adds* atmosphere — layout, type scale and typeface stay
+with the page that loads it.
+
+The particle engines are on the same four stops: `neon()` in the WebGL path
+and `neonRGB()` in the CPU fallback (`js/galaxy-cluster.js`), and `pal()` in
+`js/void-engine.js`, all run slime → cerulean → purple → hot pink → slime.
+
+## The three phases
+
+`index.html` is one page in three states. **PHASE 00** is the splash — the
+gravity well, a live particle cluster you can grab. **PHASE 01** is the gate:
+the wordmark, the way into the archive, and one channel out. **PHASE 02** is
+the LEVIATHAN console itself, 37 instruments over two sections. Phase 01 is
+deliberately thin — it is a door, not a page with an argument to make.
+
 The page renders through a small client-side template engine (the `<x-dc>` element
 and `{{ ... }}` bindings). React and ReactDOM are loaded at runtime from the unpkg
 CDN (SRI-pinned, see `REACT_URL` in `js/support.js`), so viewers need an internet
@@ -58,9 +97,75 @@ which is why `index.html` preconnects and preloads them from the real `<head>`.
 pointing at a `.jsx`/`.tsx` file. There are none, so no in-browser transpilation
 happens on this site.
 
-The `data/leviathan.enc` bundle is encrypted; the site prompts for a passphrase and
-decrypts it in the browser using the Web Crypto API. The plaintext only ever exists
-in memory in the visitor's tab.
+## The gate
+
+`js/gate.js` loads first on every page and hides the document synchronously, so
+nothing paints until a passphrase clears. It uses the same protocol the archive
+bundle always had — PBKDF2-SHA256 over the passphrase (250,000 iterations),
+AES-256-GCM for the payload — and checks the entry by *decrypting* a blob:
+a wrong passphrase fails GCM authentication and throws. There is no stored hash,
+so there is nothing on the wire to grind offline any faster than 250k iterations
+per guess. One unlock covers the tab (`sessionStorage`), and `index.html`'s
+archive reuses it rather than asking twice.
+
+`tools/encrypt.py` writes blobs in that format — it is the encryptor that was
+missing from this repo:
+
+```bash
+tools/encrypt.py verify                      # data/verify.enc — the small blob
+                                             # the gate checks against
+tools/encrypt.py pack data/transcript.json   # -> data/transcript.json.enc
+tools/encrypt.py check data/leviathan.enc    # does this passphrase open it?
+```
+
+The passphrase comes from `$LEVIATHAN_PASSPHRASE` or a prompt. It is never
+written to disk and must never be committed — and it cannot be recovered from
+anything in this repository, which is the point of the design.
+
+### Getting it wrong
+
+A wrong passphrase takes the whole viewport for 30 seconds. The lockout is
+stored as a deadline in `sessionStorage`, not a timer, so reloading the page
+does not skip it — which makes the taunt double as the rate limit: one guess
+per 30 seconds per tab, on top of the 250,000 PBKDF2 iterations each attempt
+already costs.
+
+It flashes at 0.34s per on-off cycle — about 2.9 flashes a second, just under
+the 3 Hz general-flash threshold in WCAG 2.3.1, the same line `index.html`'s
+`enterflash` comment draws. Under `prefers-reduced-motion: reduce` it stops
+strobing but still takes the whole page for the whole 30 seconds.
+
+The two pieces of copy — the greeting and the taunt — are defined once, at the
+top of `js/gate.js`. The console's own archive prompt borrows both rather than
+keeping a second copy.
+
+### What the gate does not do
+
+**It gates rendering, not access.** These still resolve for anyone who types the
+URL, gate or no gate:
+
+- `data/transcript.json`, `data/wiki-data.json`
+- `js/ledger-data.js`, `js/money-data.js`, `js/procurement-data.js`, `js/procurement-asks.js`
+- the HTML of every page
+
+And while this repository is public, all of it is readable on github.com
+regardless of what the deployed site does. Real protection at rest means three
+things, in this order:
+
+1. **Encrypt the payloads** — `tools/encrypt.py pack` each one, have the page
+   fetch the `.enc` and decrypt with the gate's passphrase, and delete the
+   plaintext from the working tree.
+2. **Purge the history** — git keeps every plaintext blob ever committed, so
+   step 1 alone changes nothing for anyone who clones.
+3. **Make the repository private** — otherwise steps 1 and 2 only move where
+   the plaintext is read from.
+
+Until those are done, treat `js/gate.js` as a lock on the front door of a
+building with windows.
+
+The `data/leviathan.enc` bundle is the one payload already encrypted; the site
+decrypts it in the browser using the Web Crypto API, and the plaintext only ever
+exists in memory in the visitor's tab.
 
 The WIKI section's dataset (`data/wiki-data.json`) is the exception: it is built
 from the [wiki-brain](https://github.com/caakehorn/wiki-brain) repository — the
