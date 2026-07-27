@@ -188,7 +188,8 @@
     'LMFAO SHE DONT LOVE YOU CUZ',
     'BYE BYE BOZO',
     'HEY DON’T FEEL BAD! YOU TRIED! :)',
-    'YOU ARE NOT VERY SMART, HUH?'
+    'AWWW HES MAD. SO SCAWY IM SCAWWED'
+    'SHE AINT WANT YR LIL BABYDICK ANYMORE'
   ];
   var MSG_MS = 2000;                                // 10s a line
   // Step one of two. Type the code and hit Enter to cut the curtain short;
