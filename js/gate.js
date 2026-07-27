@@ -184,14 +184,21 @@
   // MSG_MS. Add or remove lines freely — the rotation reads the array's
   // length, and a single line simply never changes. Keep them short: this is
   // set at up to 230px and has to survive a phone in portrait.
+  
+index 0000000..1111111 100644
+--- a/gate.js
++++ b/gate.js
+@@ -1,3 +1,4 @@
+@@
   var TAUNTS = [
-    'LMFAO SHE DONT LOVE YOU CUZ',
-    'BYE BYE BOZO',
-    'HEY DON’T FEEL BAD! YOU TRIED! :)',
-    'AWWW HES MAD. SO SCAWY IM SCAWWED'
-    'SHE AINT WANT YR LIL BABYDICK ANYMORE'
-  ];
-  var MSG_MS = 5000;                                // 10s a line
+  'LMFAO SHE DONT LOVE YOU CUZ',
+  'BYE BYE BOZO',
+  'HEY DON’T FEEL BAD! YOU TRIED! :)',
+  'AWWW HES MAD. SO SCAWY IM SCAWWED',
+  'SHE AINT WANT YR LIL BABYDICK ANYMORE'
+];
+var MSG_MS = 3000; // change every 3s
+  
   // Step one of two. Type the code and hit Enter to cut the curtain short;
   // anyone who does not know it sits through the whole WAIT_MS and is let
   // through anyway. Nothing on screen advertises either — the code is for
