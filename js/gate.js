@@ -139,7 +139,7 @@
 
   // The house style for turning someone away. Kept in one place so it is
   // edited here and nowhere else.  
-  var GREETING = 'oh look, it's this fucking weirdo again. hey yo she ain't want your unhinged violent tendencies or little babydick anymore. get fucked go away. ';
+  var GREETING = "oh look, it's this fucking weirdo again. hey yo she ain't want your unhinged violent tendencies or little babydick anymore. get fucked go away. ";
 
   // ── lockout ─────────────────────────────────────────────────────────────
   function lockedUntil() {
