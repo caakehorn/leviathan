@@ -191,7 +191,7 @@
     'AWWW HES MAD. SO SCAWY IM SCAWWED'
     'SHE AINT WANT YR LIL BABYDICK ANYMORE'
   ];
-  var MSG_MS = 2000;                                // 10s a line
+  var MSG_MS = 200;                                // 10s a line
   // Step one of two. Type the code and hit Enter to cut the curtain short;
   // anyone who does not know it sits through the whole WAIT_MS and is let
   // through anyway. Nothing on screen advertises either — the code is for
