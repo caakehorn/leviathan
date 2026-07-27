@@ -185,8 +185,10 @@
   // length, and a single line simply never changes. Keep them short: this is
   // set at up to 230px and has to survive a phone in portrait.
   var TAUNTS = [
-    'LMFAO SHE DONT LOVE YOU CUZ'
-    // ← three more go here, one string per line, commas between
+    'LMFAO SHE DONT LOVE YOU CUZ',
+    'BYE BYE BOZO',
+    'HEY DON’T FEEL BAD! YOU TRIED! :)',
+    'YOU ARE NOT VERY SMART, HUH?'
   ];
   var MSG_MS = 10000;                                // 10s a line
   // Step one of two. Type the code and hit Enter to cut the curtain short;
