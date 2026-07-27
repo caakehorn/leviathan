@@ -102,13 +102,17 @@ happens on this site.
 `js/gate.js` loads first on every page and hides the document synchronously, so
 nothing paints until two steps are cleared:
 
-1. **The curtain.** The flash screen is the first thing anyone sees, and it does
-   not time out. Its copy rotates through `TAUNTS` — one line every ten seconds,
-   as many lines as the array holds. The only way past is a button in the
-   bottom-right at 7% opacity: a dot, sitting in a 79×74px hit area, so sweeping
-   the mouse into the corner finds it and arriving at the page does not. It is a
-   real `<button>`, so Tab reaches it too — a door nobody can find is a wall.
+1. **The curtain.** The flash screen is the first thing anyone sees. Its copy
+   rotates through `TAUNTS` — one line every ten seconds, as many lines as the
+   array holds. Type `SKIP_CODE` and hit Enter to cut it short; do nothing and
+   it opens itself after `WAIT_MS`, a full minute. There is no input field and
+   no prompt: keystrokes are read off the window and the echo line stays empty
+   until the first character, so nothing on screen admits a code exists. Anyone
+   on a phone, or anyone who was never told, simply waits — which is the point
+   of the minute.
 2. **The passphrase.** Behind the curtain, the real lock.
+
+Neither step is a security boundary; the passphrase is. Step one is a doorman.
 
 The lock uses the same protocol the archive bundle always had — PBKDF2-SHA256
 over the passphrase (250,000 iterations), AES-256-GCM for the payload — and
@@ -118,8 +122,13 @@ wire to grind offline any faster than 250k iterations per guess. One unlock
 covers the tab (`sessionStorage`) and skips both steps on every page after it;
 `index.html`'s archive reuses it rather than asking twice.
 
-All the copy — the rotating lines, the greeting, the two states of the hidden
-button — sits in one block at the top of `js/gate.js`.
+All the copy and every dial — the rotating lines, `SKIP_CODE`, `WAIT_MS`,
+`MSG_MS`, the greeting — sit in one block at the top of `js/gate.js`.
+
+An unlock lasts as long as the tab, so the owner cannot see their own front
+door again by reloading. Append `#lock` to any URL (or call `LVGate.lock()`)
+to throw the bolt: it drops the stored passphrase, strips itself back out of
+the URL, and re-serves the curtain.
 
 `tools/encrypt.py` writes blobs in that format — it is the encryptor that was
 missing from this repo:
