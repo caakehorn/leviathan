@@ -1,4 +1,12 @@
-// LEVIATHAN · THE GATE — one passphrase in front of the whole deployment.
+// LEVIATHAN · THE GATE — two steps in front of the whole deployment.
+//
+//   1. THE CURTAIN. The flash screen is the first thing anyone sees, and it
+//      does not time out. The only way past is a small button in the corner
+//      at 7% opacity that comes up on hover or keyboard focus.
+//   2. THE PASSPHRASE. Behind the curtain, the real lock.
+//
+// Both are re-served on every page load until a passphrase sticks; after that
+// one unlock covers the tab.
 //
 // Same protocol the archive bundle has always used: PBKDF2-SHA256 (250k
 // iterations) over the passphrase, AES-256-GCM for the payload. A wrong
@@ -119,6 +127,23 @@
     'animation:lvTauntTxt .34s steps(1) infinite}',
     '#lv-taunt .cd{font-family:\'IBM Plex Mono\',ui-monospace,monospace;font-size:clamp(10px,1.5vw,15px);',
     'letter-spacing:0.34em;color:#39ff14;text-shadow:0 0 16px rgba(57,255,20,0.9)}',
+    // ── the way through ──
+    // Step one of two. It has to be findable by anyone who looks and invisible
+    // to anyone who does not, so it sits in the bottom-right at 7% opacity and
+    // comes up to full on hover or keyboard focus. It is a real <button>, so
+    // Tab reaches it — a door nobody can find is not a door, it is a wall.
+    // The glyph is a dot, but the hit area is a fat corner: 34px of padding
+    // means sweeping the mouse into the bottom-right finds it without it ever
+    // being visible enough to notice on arrival.
+    '#lv-way{position:fixed;right:0;bottom:0;z-index:1;appearance:none;background:none;',
+    'border:0;padding:30px 34px;cursor:pointer;font-family:\'IBM Plex Mono\',ui-monospace,monospace;',
+    'font-size:12px;letter-spacing:0.3em;color:#39ff14;opacity:0.07;',
+    'transition:opacity .18s ease,text-shadow .18s ease;mix-blend-mode:difference}',
+    '#lv-way:hover,#lv-way:focus-visible{opacity:1;mix-blend-mode:normal;outline:none;',
+    'text-shadow:0 0 14px rgba(57,255,20,0.95),0 0 40px rgba(57,255,20,0.6)}',
+    '#lv-way .w{display:none}',
+    '#lv-way:hover .w,#lv-way:focus-visible .w{display:inline}',
+    '#lv-way:hover .d,#lv-way:focus-visible .d{display:none}',
     // 0.34s per on-off cycle is ~2.9 flashes/second, just under the 3 Hz
     // general-flash threshold in WCAG 2.3.1 — the same line index.html's
     // enterflash comment draws. Fast enough to be unbearable, slow enough not
@@ -133,12 +158,21 @@
     '#lv-taunt b{animation:none;color:#ff2f9d}}'
   ].join('');
 
-  // Kept next to the greeting: both are the house style for turning someone
-  // away, and both get edited here and nowhere else.
-  var TAUNT = 'LMFAO SHE DONT LOVE YOU CUZ';
-
-  // The house style for turning someone away. Kept in one place so it is
-  // edited here and nowhere else.  
+  // ── the copy ────────────────────────────────────────────────────────────
+  // The house style for turning someone away, all of it in one place so it is
+  // edited here and nowhere else.
+  //
+  // TAUNTS cycles on the curtain and through the punishment, one line every
+  // MSG_MS. Add or remove lines freely — the rotation reads the array's
+  // length, and a single line simply never changes. Keep them short: this is
+  // set at up to 230px and has to survive a phone in portrait.
+  var TAUNTS = [
+    'LMFAO SHE DONT LOVE YOU CUZ'
+    // ← three more go here, one string per line, commas between
+  ];
+  var MSG_MS = 10000;                                // 10s a line
+  var WAY_REST = '·';                                // the hidden way through, at rest
+  var WAY_HOVER = 'ok fine ›';                       // …and once you have found it
   var GREETING = "oh look, it's this fucking weirdo again. hey yo she ain't want your unhinged violent tendencies or little babydick anymore. get fucked go away. ";
 
   // ── lockout ─────────────────────────────────────────────────────────────
@@ -150,26 +184,59 @@
     catch (e) { /* private mode: the in-memory timer still runs */ }
   }
 
-  // Takes the whole viewport until `until`, then hands the page back to the
-  // gate. Returns a promise so callers can await the sentence.
-  function taunt(until) {
-    setLockout(until);
+  // ── the flash screen ────────────────────────────────────────────────────
+  // One screen, two jobs. As the CURTAIN it is the first thing anyone sees and
+  // it stays until the hidden way through is clicked; as the PUNISHMENT it
+  // holds for thirty seconds with a countdown and no way out. Same markup,
+  // same flash, so the site says exactly one thing to anyone it does not know.
+  //
+  //   flash({ onWay: fn })   -> curtain: waits for the click
+  //   flash({ until: ms })   -> punishment: resolves when the clock runs out
+  function flash(opts) {
+    styleOnce();
+    if (opts.until) setLockout(opts.until);
+
     var ov = document.getElementById('lv-taunt');
-    if (!ov) {
-      ov = document.createElement('div');
-      ov.id = 'lv-taunt';
-      ov.setAttribute('role', 'alert');
-      ov.innerHTML = '<b></b><div class="cd"></div>';
-      ov.querySelector('b').textContent = TAUNT;   // copy, never markup
-      document.body.appendChild(ov);
-    }
+    if (ov) ov.remove();          // never stack two of these
+    ov = document.createElement('div');
+    ov.id = 'lv-taunt';
+    ov.setAttribute('role', 'alert');
+    ov.innerHTML = '<b></b><div class="cd"></div>';
+    document.body.appendChild(ov);
     var cd = ov.querySelector('.cd');
+
+    // The rotation. textContent, never innerHTML: these are copy, not markup.
+    // One line is not a rotation, so the interval is only armed for two or
+    // more — otherwise it would tick forever repainting the same string.
+    var line = ov.querySelector('b'), at = 0, rot = 0;
+    line.textContent = TAUNTS[0] || '';
+    if (TAUNTS.length > 1) {
+      rot = setInterval(function () {
+        at = (at + 1) % TAUNTS.length;
+        line.textContent = TAUNTS[at];
+      }, MSG_MS);
+    }
+    var close = function () { if (rot) clearInterval(rot); ov.remove(); };
+
     return new Promise(function (done) {
+      if (opts.onWay) {
+        // Step one of two. No countdown — this one waits as long as it takes.
+        var way = document.createElement('button');
+        way.id = 'lv-way';
+        way.type = 'button';
+        way.setAttribute('aria-label', 'Continue to the passphrase');
+        way.innerHTML = '<span class="d"></span><span class="w"></span>';
+        way.querySelector('.d').textContent = WAY_REST;
+        way.querySelector('.w').textContent = WAY_HOVER;
+        way.addEventListener('click', function () { close(); done(); });
+        ov.appendChild(way);
+        return;
+      }
       var tick = function () {
-        var left = until - Date.now();
+        var left = opts.until - Date.now();
         if (left <= 0) {
           clearInterval(iv);
-          ov.remove();
+          close();
           setLockout(0);
           done();
           return;
@@ -181,10 +248,17 @@
     });
   }
 
-  function paintGate() {
+  var styled = false;
+  function styleOnce() {
+    if (styled) return;
+    styled = true;
     var st = document.createElement('style');
     st.textContent = CSS;
     document.head.appendChild(st);
+  }
+
+  function paintGate() {
+    styleOnce();
 
     var ov = document.createElement('div');
     ov.id = 'lv-gate';
@@ -214,7 +288,7 @@
         unlock();
       } catch (e) {
         input.value = '';
-        await taunt(Date.now() + LOCKOUT_MS);
+        await flash({ until: Date.now() + LOCKOUT_MS });
         err.textContent = '✕ WRONG PASSPHRASE — ACCESS DENIED';
         go.disabled = false; go.textContent = 'UNSEAL ►';
         input.focus();
@@ -224,10 +298,9 @@
     input.addEventListener('keydown', function (e) { if (e.key === 'Enter') submit(); });
 
     // A lockout carried over from a reload is served before anything is typed.
-    var left = lockedUntil() - Date.now();
-    if (left > 0) {
+    if (lockedUntil() > Date.now()) {
       go.disabled = true; go.textContent = 'CHECKING…';
-      taunt(lockedUntil()).then(function () {
+      flash({ until: lockedUntil() }).then(function () {
         go.disabled = false; go.textContent = 'UNSEAL ►';
         input.focus();
       });
@@ -236,13 +309,22 @@
     setTimeout(function () { input.focus(); }, 30);
   }
 
-  // A passphrase carried over from an earlier page in this tab still has to
-  // clear the same check — sessionStorage is not itself trusted.
+  // ── two steps, in order ─────────────────────────────────────────────────
+  //   1. find the way through the curtain
+  //   2. enter the passphrase
+  // Both are re-served on every page load until a passphrase sticks. A
+  // passphrase carried over from an earlier page in this tab still has to
+  // clear the same decrypt — sessionStorage is not itself trusted — but it
+  // does buy its way past the curtain, so one unlock covers the whole tab.
   async function boot() {
     if (pw) {
       try { await tryPassphrase(pw); unlock(); return; }
       catch (e) { pw = null; try { sessionStorage.removeItem(SKEY); } catch (e2) {} }
     }
+    // A lockout outlives the curtain: someone who guessed wrong and reloaded
+    // serves the rest of the sentence before they are offered the way through.
+    if (lockedUntil() > Date.now()) await flash({ until: lockedUntil() });
+    await flash({ onWay: true });
     paintGate();
   }
 
@@ -255,11 +337,11 @@
     passphrase: function () { return pw; },
     locked: function () { return !pw; },
     greeting: GREETING,
-    taunt: TAUNT,
+    taunts: TAUNTS,
     decrypt: decrypt,
     // index.html's archive prompt serves the same sentence for a wrong
     // passphrase, so there is one punishment and one place that defines it.
-    punish: function () { return taunt(Date.now() + LOCKOUT_MS); },
+    punish: function () { return flash({ until: Date.now() + LOCKOUT_MS }); },
     lockoutMs: LOCKOUT_MS
   };
 })();

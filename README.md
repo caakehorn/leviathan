@@ -14,7 +14,7 @@ transcript.html       # THE TRANSCRIPT — the complete message record, searchab
 css/
   slime.css           # SLIME: the theme layer the standalone pages share
 js/
-  gate.js             # THE GATE: one passphrase in front of every page
+  gate.js             # THE GATE: curtain + passphrase in front of every page
   support.js          # runtime: custom <x-dc> template engine, resource loading
   pen-core.js         # the pen scaffold: lanes, volume, playhead, verbatim feed
   galaxy-cluster.js   # particle background simulation
@@ -44,7 +44,7 @@ tools/
 .gitignore            # ignores the transient .wiki-brain/ checkout
 .gitattributes        # LF endings; marks the data files binary / generated
 .editorconfig         # 4-space Python, 2-space everything else
-robots.txt            # advisory: keeps crawlers off the bulk data/ blobs
+robots.txt            # advisory: disallow-all, since the gate fronts everything
 .github/
   dependabot.yml      # weekly bumps for the Actions used below
   workflows/
@@ -100,13 +100,26 @@ happens on this site.
 ## The gate
 
 `js/gate.js` loads first on every page and hides the document synchronously, so
-nothing paints until a passphrase clears. It uses the same protocol the archive
-bundle always had — PBKDF2-SHA256 over the passphrase (250,000 iterations),
-AES-256-GCM for the payload — and checks the entry by *decrypting* a blob:
-a wrong passphrase fails GCM authentication and throws. There is no stored hash,
-so there is nothing on the wire to grind offline any faster than 250k iterations
-per guess. One unlock covers the tab (`sessionStorage`), and `index.html`'s
-archive reuses it rather than asking twice.
+nothing paints until two steps are cleared:
+
+1. **The curtain.** The flash screen is the first thing anyone sees, and it does
+   not time out. Its copy rotates through `TAUNTS` — one line every ten seconds,
+   as many lines as the array holds. The only way past is a button in the
+   bottom-right at 7% opacity: a dot, sitting in a 79×74px hit area, so sweeping
+   the mouse into the corner finds it and arriving at the page does not. It is a
+   real `<button>`, so Tab reaches it too — a door nobody can find is a wall.
+2. **The passphrase.** Behind the curtain, the real lock.
+
+The lock uses the same protocol the archive bundle always had — PBKDF2-SHA256
+over the passphrase (250,000 iterations), AES-256-GCM for the payload — and
+checks the entry by *decrypting* a blob: a wrong passphrase fails GCM
+authentication and throws. There is no stored hash, so there is nothing on the
+wire to grind offline any faster than 250k iterations per guess. One unlock
+covers the tab (`sessionStorage`) and skips both steps on every page after it;
+`index.html`'s archive reuses it rather than asking twice.
+
+All the copy — the rotating lines, the greeting, the two states of the hidden
+button — sits in one block at the top of `js/gate.js`.
 
 `tools/encrypt.py` writes blobs in that format — it is the encryptor that was
 missing from this repo:
@@ -124,20 +137,21 @@ anything in this repository, which is the point of the design.
 
 ### Getting it wrong
 
-A wrong passphrase takes the whole viewport for 30 seconds. The lockout is
-stored as a deadline in `sessionStorage`, not a timer, so reloading the page
-does not skip it — which makes the taunt double as the rate limit: one guess
-per 30 seconds per tab, on top of the 250,000 PBKDF2 iterations each attempt
-already costs.
+A wrong passphrase brings the same screen back for 30 seconds, this time with a
+countdown and no way through. The lockout is stored as a deadline in
+`sessionStorage`, not a timer, so reloading the page does not skip it — which
+makes it double as the rate limit: one guess per 30 seconds per tab, on top of
+the 250,000 PBKDF2 iterations each attempt already costs. It outlives the
+curtain, too: reload mid-sentence and you serve the remainder before you are
+offered the way through again.
 
 It flashes at 0.34s per on-off cycle — about 2.9 flashes a second, just under
 the 3 Hz general-flash threshold in WCAG 2.3.1, the same line `index.html`'s
 `enterflash` comment draws. Under `prefers-reduced-motion: reduce` it stops
 strobing but still takes the whole page for the whole 30 seconds.
 
-The two pieces of copy — the greeting and the taunt — are defined once, at the
-top of `js/gate.js`. The console's own archive prompt borrows both rather than
-keeping a second copy.
+The console's own archive prompt calls `LVGate.punish()` for a wrong passphrase
+rather than keeping its own version of any of this.
 
 ### What the gate does not do
 
