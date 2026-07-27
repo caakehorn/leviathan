@@ -138,9 +138,8 @@
   var TAUNT = 'LMFAO SHE DONT LOVE YOU CUZ';
 
   // The house style for turning someone away. Kept in one place so it is
-  // edited here and nowhere else.
-  var GREETING = 'awww are you sad lil bro? she’s never going to truly be yours. '
-    + 'Go away with your little babydick';
+  // edited here and nowhere else.  
+  var GREETING = 'oh look, it's this fucking weirdo again. hey yo she ain't want your unhinged violent tendencies or little babydick anymore. get fucked go away. ';
 
   // ── lockout ─────────────────────────────────────────────────────────────
   function lockedUntil() {
@@ -195,8 +194,8 @@
       + '<input type="password" autocomplete="off" aria-label="Passphrase" placeholder="passphrase">'
       + '<div class="err" role="alert"></div>'
       + '<button type="button">UNSEAL ►</button>'
-      + '<div class="ft">AES-256-GCM · PBKDF2-SHA256 · 250,000 ITERATIONS<br>'
-      + 'NO PASSPHRASE RECOVERY — THERE IS NOTHING HERE TO RECOVER IT FROM</div>'
+      + '<div class="ft">IF UR READING THIS UR GAY · AWWWW HE IS ANGRY HOW ADORABLE · GO PUNCH A WALL OR SOMETHING <br>'
+      + 'ENJOY MY WEBSITE, BUCKO. I MADE IT FOR YOU.</div>'
       + '</div>';
     // textContent, not innerHTML: the greeting is copy, never markup.
     ov.querySelector('.say').textContent = GREETING;
