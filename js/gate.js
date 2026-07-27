@@ -190,7 +190,7 @@
     'HEY DON’T FEEL BAD! YOU TRIED! :)',
     'YOU ARE NOT VERY SMART, HUH?'
   ];
-  var MSG_MS = 10000;                                // 10s a line
+  var MSG_MS = 2000;                                // 10s a line
   // Step one of two. Type the code and hit Enter to cut the curtain short;
   // anyone who does not know it sits through the whole WAIT_MS and is let
   // through anyway. Nothing on screen advertises either — the code is for
