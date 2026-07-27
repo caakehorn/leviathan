@@ -47,6 +47,38 @@
   var pw = null;
   try { pw = sessionStorage.getItem(SKEY); } catch (e) { /* private mode */ }
 
+  // ── re-locking ──────────────────────────────────────────────────────────
+  // An unlock lasts as long as the tab, which is what makes the site usable —
+  // but it also means the owner cannot see their own front door again without
+  // opening a new tab. #lock (or ?lock) throws the bolt: it drops the stored
+  // passphrase, strips itself out of the URL so a reload does not re-lock on
+  // every refresh, and hands over to the curtain. LVGate.lock() does the same
+  // thing from the console.
+  function forget() {
+    pw = null;
+    try { sessionStorage.removeItem(SKEY); sessionStorage.removeItem(LKEY); } catch (e) {}
+  }
+  function wantsLock() { return /(^|[?&#])lock\b/.test(location.search + location.hash); }
+
+  // Typing #lock into the address bar of a page that is already open is a
+  // fragment navigation — the document never reloads, so nothing above would
+  // ever run again. Catch it and reload by hand, or the escape hatch only
+  // works from a cold URL.
+  window.addEventListener('hashchange', function () {
+    if (wantsLock()) { forget(); location.reload(); }
+  });
+
+  if (wantsLock()) {
+    forget();
+    // Strip only the lock token — index.html's #void and #archive deep links
+    // have to survive being combined with it.
+    try {
+      var q = location.search.replace(/([?&])lock\b&?/, '$1').replace(/[?&]$/, '');
+      var h = location.hash.replace(/([#&])lock\b&?/, '$1').replace(/[#&]$/, '');
+      history.replaceState(null, '', location.pathname + q + h);
+    } catch (e) { /* file:// and the like */ }
+  }
+
   function b64(s) { return Uint8Array.from(atob(s), function (c) { return c.charCodeAt(0); }); }
 
   // Decrypt a blob in this project's format. Throws on a wrong passphrase.
@@ -127,23 +159,9 @@
     'animation:lvTauntTxt .34s steps(1) infinite}',
     '#lv-taunt .cd{font-family:\'IBM Plex Mono\',ui-monospace,monospace;font-size:clamp(10px,1.5vw,15px);',
     'letter-spacing:0.34em;color:#39ff14;text-shadow:0 0 16px rgba(57,255,20,0.9)}',
-    // ── the way through ──
-    // Step one of two. It has to be findable by anyone who looks and invisible
-    // to anyone who does not, so it sits in the bottom-right at 7% opacity and
-    // comes up to full on hover or keyboard focus. It is a real <button>, so
-    // Tab reaches it — a door nobody can find is not a door, it is a wall.
-    // The glyph is a dot, but the hit area is a fat corner: 34px of padding
-    // means sweeping the mouse into the bottom-right finds it without it ever
-    // being visible enough to notice on arrival.
-    '#lv-way{position:fixed;right:0;bottom:0;z-index:1;appearance:none;background:none;',
-    'border:0;padding:30px 34px;cursor:pointer;font-family:\'IBM Plex Mono\',ui-monospace,monospace;',
-    'font-size:12px;letter-spacing:0.3em;color:#39ff14;opacity:0.07;',
-    'transition:opacity .18s ease,text-shadow .18s ease;mix-blend-mode:difference}',
-    '#lv-way:hover,#lv-way:focus-visible{opacity:1;mix-blend-mode:normal;outline:none;',
-    'text-shadow:0 0 14px rgba(57,255,20,0.95),0 0 40px rgba(57,255,20,0.6)}',
-    '#lv-way .w{display:none}',
-    '#lv-way:hover .w,#lv-way:focus-visible .w{display:inline}',
-    '#lv-way:hover .d,#lv-way:focus-visible .d{display:none}',
+    // The echo line: empty until someone starts typing the code, so the screen
+    // gives nothing away to anyone who does not already know there is one.
+    '#lv-taunt .cd.bad{color:#ff2f9d;text-shadow:0 0 16px rgba(255,47,157,0.9)}',
     // 0.34s per on-off cycle is ~2.9 flashes/second, just under the 3 Hz
     // general-flash threshold in WCAG 2.3.1 — the same line index.html's
     // enterflash comment draws. Fast enough to be unbearable, slow enough not
@@ -171,8 +189,12 @@
     // ← three more go here, one string per line, commas between
   ];
   var MSG_MS = 10000;                                // 10s a line
-  var WAY_REST = '·';                                // the hidden way through, at rest
-  var WAY_HOVER = 'ok fine ›';                       // …and once you have found it
+  // Step one of two. Type the code and hit Enter to cut the curtain short;
+  // anyone who does not know it sits through the whole WAIT_MS and is let
+  // through anyway. Nothing on screen advertises either — the code is for
+  // people who were told it, and the wait is for everyone else.
+  var SKIP_CODE = '420666';
+  var WAIT_MS = 60000;                               // a full minute, then it opens itself
   var GREETING = "oh look, it's this fucking weirdo again. hey yo she ain't want your unhinged violent tendencies or little babydick anymore. get fucked go away. ";
 
   // ── lockout ─────────────────────────────────────────────────────────────
@@ -216,20 +238,49 @@
         line.textContent = TAUNTS[at];
       }, MSG_MS);
     }
-    var close = function () { if (rot) clearInterval(rot); ov.remove(); };
+    var timers = [];
+    var onKey = null;
+    var close = function () {
+      if (rot) clearInterval(rot);
+      timers.forEach(clearTimeout);
+      if (onKey) window.removeEventListener('keydown', onKey, true);
+      ov.remove();
+    };
 
     return new Promise(function (done) {
       if (opts.onWay) {
-        // Step one of two. No countdown — this one waits as long as it takes.
-        var way = document.createElement('button');
-        way.id = 'lv-way';
-        way.type = 'button';
-        way.setAttribute('aria-label', 'Continue to the passphrase');
-        way.innerHTML = '<span class="d"></span><span class="w"></span>';
-        way.querySelector('.d').textContent = WAY_REST;
-        way.querySelector('.w').textContent = WAY_HOVER;
-        way.addEventListener('click', function () { close(); done(); });
-        ov.appendChild(way);
+        // ── step one of two ──
+        // Type SKIP_CODE and hit Enter to cut it short. Do nothing and it lets
+        // you through after WAIT_MS anyway. There is no field and no prompt:
+        // keystrokes are read straight off the window, and the echo line stays
+        // empty until the first digit, so the screen never advertises that a
+        // code exists. Anyone on a phone, or anyone who was never told, simply
+        // waits — which is the whole point of the minute.
+        var buf = '';
+        var pass = function () { close(); done(); };
+        timers.push(setTimeout(pass, WAIT_MS));
+
+        onKey = function (e) {
+          if (e.metaKey || e.ctrlKey || e.altKey) return;   // leave shortcuts alone
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            if (buf === SKIP_CODE) { pass(); return; }
+            buf = '';
+            cd.textContent = '✕';
+            cd.className = 'cd bad';
+            timers.push(setTimeout(function () { cd.textContent = ''; cd.className = 'cd'; }, 900));
+            return;
+          }
+          if (e.key === 'Backspace') { e.preventDefault(); buf = buf.slice(0, -1); }
+          else if (e.key === 'Escape') { buf = ''; }
+          else if (e.key.length === 1 && /\S/.test(e.key)) {
+            // Cap the buffer so a cat on the keyboard cannot grow it forever.
+            buf = (buf + e.key).slice(-SKIP_CODE.length * 2);
+          } else return;
+          cd.className = 'cd';
+          cd.textContent = buf;
+        };
+        window.addEventListener('keydown', onKey, true);
         return;
       }
       var tick = function () {
@@ -336,6 +387,8 @@
   window.LVGate = {
     passphrase: function () { return pw; },
     locked: function () { return !pw; },
+    // Throw the bolt again without opening a new tab. Same thing #lock does.
+    lock: function () { forget(); location.reload(); },
     greeting: GREETING,
     taunts: TAUNTS,
     decrypt: decrypt,
