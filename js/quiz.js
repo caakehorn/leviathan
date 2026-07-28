@@ -108,26 +108,26 @@
     var fill = decoy.querySelector('.ldfill');
     var body = decoy.querySelector('#decoy-body');
     var phrashes = [
-      'the signal degrades as it moves through the relay chain.',
-      'we need to talk about what happened at the bridge.',
-      'she did not answer when i called back twice.',
-      'this data point does not cohere with the surrounding record.',
-      'the archive has been reordered at the server level.',
-      'i am not comfortable confirming or denying that version.',
-      'the log says what the log says. that is all.',
-      'please wait while the connection stabilizes…',
-      'the packet loss is above threshold for this sector.',
-      'i will be in touch once the backlog clears.',
-      'do not refresh. it will break the current session.',
-      'we have reason to believe the record was altered.',
-      'the most recent fragment does not match the earlier ones.',
-      'i have seen the transcript. i have a lot to say about it.',
-      'this whole thing reminds me of something i used to say.',
-      'the mirror is only a mirror. it does not know what it reflects.',
-      'i keep coming back to the phrase that started it.',
-      'the numbers add up on some level. not all levels.',
-      'someone is watching the logs in real time i think.',
-      'the system is functioning. nothing else i can tell you.'
+      'you are everything',
+      'dont cry baby please dont cry',
+      'i am scared of losing you',
+      'why are you doing this to me',
+      'i just want you to be okay',
+      'she told me you were dangerous',
+      'baby i need you to know that i love you',
+      'i cant keep doing this without you',
+      'youre my favorite person in the world',
+      'i want to fix this i really do',
+      'why wont you just let me explain',
+      'please come back i miss you so much',
+      'i should have listened to you',
+      'you were right about everything',
+      'i lost the only person who ever loved me',
+      'please dont go',
+      'i am so sorry i was not enough',
+      'you make me feel something i cant name',
+      'baby come home',
+      'i hate that i let you down'
     ];
     var n = phrashes.length;
     var i = 0;
