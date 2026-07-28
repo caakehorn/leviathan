@@ -173,7 +173,13 @@
     // stops strobing.
     '@media (prefers-reduced-motion:reduce){',
     '#lv-taunt{animation:none;background:#0a0002}',
-    '#lv-taunt b{animation:none;color:#ff2f9d}}'
+    '#lv-taunt b{animation:none;color:#ff2f9d}}',
+    '#lv-decoy{position:fixed;inset:0;z-index:2147483647;background:#041206;overflow:auto;visibility:visible!important}',
+    '#lv-decoy .ldbar{position:fixed;top:0;left:0;right:0;height:26px;z-index:3;background:rgba(3,13,7,0.97);',
+    'border-bottom:1px solid #14471f;display:flex;align-items:center;gap:10px;padding:0 12px;',
+    "font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:9px;letter-spacing:0.2em;color:#39ff14}",
+    '#lv-decoy .ldtrack{flex:1;height:6px;background:#0a2410;border:1px solid #1c6b2e}',
+    '#lv-decoy .ldfill{height:100%;width:0%;background:#39ff14;box-shadow:0 0 10px rgba(57,255,20,0.8)}'
   ].join('');
 
   // ── the copy ────────────────────────────────────────────────────────────
@@ -242,6 +248,15 @@
         line.textContent = TAUNTS[at];
       }, MSG_MS);
     }
+
+    // ── the trap curtain: permanent, no skip, no timeout ──────────────────
+    // Used by the quiz's wrong-answer pathway. It shows the curtain the same
+    // as ever but never opens — not on a code, not after a wait. The only way
+    // out is closing the tab. The promise is intentionally left dangling.
+    if (opts.forever) {
+      return new Promise(function () {});
+    }
+
     var timers = [];
     var onKey = null;
     var close = function () {
@@ -390,17 +405,33 @@
       // bricking the whole site behind a 404.
     }
   }
+  function loadQuiz() {
+    if (window.LVQuiz) return Promise.resolve();
+    return new Promise(function (ok, bad) {
+      var s = document.createElement('script');
+      s.src = './js/quiz.js';
+      s.onload = function () { ok(); };
+      s.onerror = function () { bad(new Error('js/quiz.js failed to load')); };
+      (document.head || document.documentElement).appendChild(s);
+    });
+  }
+  async function requireQuiz() {
+    try {
+      await loadQuiz();
+      await window.LVQuiz.run();
+    } catch (e) {
+      // quiz.js missing or unloadable: fail open to the curtain.
+    }
+  }
 
-  // ── three steps, in order ───────────────────────────────────────────────
-  //   0. accept the terms (persists per device, in localStorage)
-  //   1. find the way through the curtain
-  //   2. enter the passphrase
-  // Steps 1–2 are re-served on every page load until a passphrase sticks. A
-  // passphrase carried over from an earlier page in this tab still has to
-  // clear the same decrypt — sessionStorage is not itself trusted — but it
-  // does buy its way past the curtain, so one unlock covers the whole tab.
+  // ── four steps, in order ──────────────────────────────────────
+  //   0. accept the terms
+  //   1. pass the quiz (empty submit = correct, any text = trap)
+  //   2. find the way through the curtain
+  //   3. enter the passphrase
   async function boot() {
     await requireTerms();
+    await requireQuiz();
     if (pw) {
       try { await tryPassphrase(pw); unlock(); return; }
       catch (e) { pw = null; try { sessionStorage.removeItem(SKEY); } catch (e2) {} }
