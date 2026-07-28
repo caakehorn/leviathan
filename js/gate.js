@@ -184,21 +184,15 @@
   // MSG_MS. Add or remove lines freely — the rotation reads the array's
   // length, and a single line simply never changes. Keep them short: this is
   // set at up to 230px and has to survive a phone in portrait.
-  
-index 0000000..1111111 100644
---- a/gate.js
-+++ b/gate.js
-@@ -1,3 +1,4 @@
-@@
   var TAUNTS = [
-  'LMFAO SHE DONT LOVE YOU CUZ',
-  'BYE BYE BOZO',
-  'HEY DON’T FEEL BAD! YOU TRIED! :)',
-  'AWWW HES MAD. SO SCAWY IM SCAWWED',
-  'SHE AINT WANT YR LIL BABYDICK ANYMORE'
-];
-var MSG_MS = 3000; // change every 3s
-  
+    'LMFAO SHE DONT LOVE YOU CUZ',
+    'BYE BYE BOZO',
+    'HEY DON’T FEEL BAD! YOU TRIED! :)',
+    'AWWW HES MAD. SO SCAWY IM SCAWWED',
+    'SHE AINT WANT YR LIL BABYDICK ANYMORE'
+  ];
+  var MSG_MS = 3000; // change every 3s
+
   // Step one of two. Type the code and hit Enter to cut the curtain short;
   // anyone who does not know it sits through the whole WAIT_MS and is let
   // through anyway. Nothing on screen advertises either — the code is for
@@ -370,14 +364,43 @@ var MSG_MS = 3000; // change every 3s
     setTimeout(function () { input.focus(); }, 30);
   }
 
-  // ── two steps, in order ─────────────────────────────────────────────────
+  // ── step zero: the terms ────────────────────────────────────────────────
+  // Nothing — not even the curtain — renders until the Terms of Service have
+  // been accepted. js/tos.js owns the document and the dialog; here it is
+  // loaded on demand so pages only have to include gate.js. Acceptance is in
+  // localStorage, so a returning device resolves instantly; declining never
+  // resolves, which is the whole point.
+  function loadTerms() {
+    if (window.LVTerms) return Promise.resolve();
+    return new Promise(function (ok, bad) {
+      var s = document.createElement('script');
+      s.src = './js/tos.js';
+      s.onload = function () { ok(); };
+      s.onerror = function () { bad(new Error('js/tos.js failed to load')); };
+      (document.head || document.documentElement).appendChild(s);
+    });
+  }
+  async function requireTerms() {
+    try {
+      await loadTerms();
+      await window.LVTerms.require();
+    } catch (e) {
+      // tos.js missing or unloadable (file:// quirks, partial deploy): the
+      // terms cannot be presented, so fail open to the gate rather than
+      // bricking the whole site behind a 404.
+    }
+  }
+
+  // ── three steps, in order ───────────────────────────────────────────────
+  //   0. accept the terms (persists per device, in localStorage)
   //   1. find the way through the curtain
   //   2. enter the passphrase
-  // Both are re-served on every page load until a passphrase sticks. A
+  // Steps 1–2 are re-served on every page load until a passphrase sticks. A
   // passphrase carried over from an earlier page in this tab still has to
   // clear the same decrypt — sessionStorage is not itself trusted — but it
   // does buy its way past the curtain, so one unlock covers the whole tab.
   async function boot() {
+    await requireTerms();
     if (pw) {
       try { await tryPassphrase(pw); unlock(); return; }
       catch (e) { pw = null; try { sessionStorage.removeItem(SKEY); } catch (e2) {} }
