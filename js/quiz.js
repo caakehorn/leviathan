@@ -95,11 +95,11 @@
     decoy.id = 'lv-decoy';
     decoy.innerHTML =
       '<div class="ldbar">' +
-      '  <span>LOADING TRANSCRIPT…</span>' +
+      '  <span>LIVE IMESSAGE VIEWER…</span>' +
       '  <div class="ldtrack"><div class="ldfill"></div></div>' +
       '</div>' +
       '<div class="wrap" style="padding-top:50px">' +
-      '  <header><h1>THE TRANSCRIPT</h1><div class="sub" id="meta">RETRIEVING FROM SECURE ARCHIVE…</div></header>' +
+      '  <header><h1> REALTIME TEXT MONITOR</h1><div class="sub" id="meta"> CONNECTION TO NETWORK SERVER FROM SECURE SOURCE…</div></header>' +
       '  <div class="legend"><span><b class="key-dan">DAN</b> &nbsp;messages Dan sent</span><span><b class="key-annie">ANNIE</b> &nbsp;messages Annie sent</span></div>' +
       '  <div class="bar"><input type="search" disabled placeholder="search…"/><button class="btn" disabled>BOTH</button><span class="count">0 results</span></div>' +
       '  <div id="decoy-body"></div>' +
