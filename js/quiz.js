@@ -137,67 +137,41 @@
     var decoy = document.createElement('div');
     decoy.id = 'lv-decoy';
     decoy.innerHTML =
-      '<div class="sl-drips l" aria-hidden="true">' +
-      '  <i style="left:2px;--h:210px;--dur:15s;--del:0s"></i>' +
-      '  <i class="pink" style="left:10px;--h:128px;--dur:19s;--del:3.5s"></i>' +
-      '  <i style="left:6px;--h:300px;--dur:23s;--del:8s"></i>' +
-      '  <i class="cer" style="left:13px;--h:96px;--dur:12.5s;--del:6.2s"></i>' +
+      '<div class="ldbar">' +
+      '  <span>LIVE IMESSAGE VIEWER…</span>' +
+      '  <div class="ldtrack"><div class="ldfill"></div></div>' +
       '</div>' +
-      '<div class="sl-drips r" aria-hidden="true">' +
-      '  <i style="right:3px;--h:250px;--dur:17s;--del:1.4s"></i>' +
-      '  <i class="cer" style="right:11px;--h:110px;--dur:21s;--del:5s"></i>' +
-      '  <i style="right:7px;--h:168px;--dur:13.5s;--del:9.5s"></i>' +
-      '  <i class="pink" style="right:14px;--h:340px;--dur:26s;--del:12s"></i>' +
-      '</div>' +
-      '<div class="wrap">' +
-      '  <header>' +
-      '    <h1>THE TRANSCRIPT</h1>' +
-      '    <div class="sub" id="meta">RETRIEVING FROM SECURE ARCHIVE…</div>' +
-      '  </header>' +
-      '  <div class="legend">' +
-      '    <span><b class="key-dan">DAN</b> &nbsp;messages Dan sent</span>' +
-      '    <span><b class="key-annie">ANNIE</b> &nbsp;messages Annie sent</span>' +
-      '  </div>' +
-      '  <div class="bar">' +
-      '    <input type="search" id="q" placeholder="search the record —  or #1234 to jump to a line" autocomplete="off" spellcheck="false" disabled>' +
-      '    <button class="btn" id="fAll" aria-pressed="true" disabled>BOTH</button>' +
-      '    <button class="btn" id="fSent" aria-pressed="false" disabled>DAN ONLY</button>' +
-      '    <button class="btn" id="fRecv" aria-pressed="false" disabled>ANNIE ONLY</button>' +
-      '    <span class="count" id="count">0 messages</span>' +
-      '  </div>' +
-      '  <div id="doc"></div>' +
-      '  <div class="note" id="foot"></div>' +
+      '<div class="wrap" style="padding-top:50px">' +
+      '  <header><h1> REALTIME TEXT MONITOR</h1><div class="sub" id="meta"> CONNECTION TO NETWORK SERVER FROM SECURE SOURCE…</div></header>' +
+      '  <div class="legend"><span><b class="key-dan">DAN</b> &nbsp;messages Dan sent</span><span><b class="key-annie">ANNIE</b> &nbsp;messages Annie sent</span></div>' +
+      '  <div class="bar"><input type="search" disabled placeholder="search…"/><button class="btn" disabled>BOTH</button><span class="count">0 results</span></div>' +
+      '  <div id="decoy-body"></div>' +
       '</div>';
     document.body.appendChild(decoy);
 
     var fill = decoy.querySelector('.ldfill');
-    var doc = decoy.querySelector('#doc');
-    var meta = decoy.querySelector('#meta');
-    var countEl = decoy.querySelector('#count');
-    var foot = decoy.querySelector('#foot');
-
-    // Fake messages that mimic the real transcript's tone and style:
-    // short, casual, fragments of conversation — not lovey-dovey
-    // paragraphs, but actual chat-style lines between two people.
-    // Each entry: [timestamp, isAnnie, text]
-    var rows = [
-      ['2026-07-24 09:12:33', 0, 'I need you to hear me out here.'],
-      ['2026-07-24 09:14:07', 1, 'What is it now.'],
-      ['2026-07-24 09:15:42', 0, 'It about the thing you said at dinner.'],
-      ['2026-07-24 09:16:18', 1, 'Which thing. There were a lot of things.'],
-      ['2026-07-24 09:18:03', 0, 'The thing where you told everyone I was fine with it.'],
-      ['2026-07-24 09:20:51', 1, 'i was trying to keep the peace'],
-      ['2026-07-24 09:22:14', 0, 'Peace? You were rewriting history in real time.'],
-      ['2026-07-24 09:25:33', 1, 'whatever you need to tell yourself'],
-      ['2026-07-24 09:27:08', 0, 'I am not telling myself anything. I am telling you.'],
-      ['2026-07-24 09:30:44', 1, 'Okay. And what exactly are you telling me.'],
-      ['2026-07-24 09:32:19', 0, 'That I saw the messages. All of them.'],
-      ['2026-07-24 09:34:52', 1, '…'],
-      ['2026-07-24 09:37:01', 1, 'I dont know what you are talking about'],
-      ['2026-07-24 09:39:27', 0, 'You do. You know exactly what I am talking about.'],
-      ['2026-07-24 09:42:15', 1, 'If you think I am going to sit here and defend myself—'],
-      ['2026-07-24 09:43:38', 0, 'I am not asking you to defend yourself. I am asking you to stop.'],
-      ['2026-07-24 09:46:02', 1, 'Stop what. Being honest. Being real. Being the only person in this']
+    var body = decoy.querySelector('#decoy-body');
+    var phrashes = [
+      'hey you',
+      'hiiii bb',
+      'whatcha doin loser?',
+      'im thinking about sommeething... ',
+      'what? olive garden? lmao',
+      'your big d',
+      'you wanna come play? i stop watching this congressional testimony for you',
+      'i cant - otto and alice are here',
+      'what about later?.',
+      'i will be in touch ',
+      'do not refresh. it will break the current session.',
+      'we have reason to believe the record was altered.',
+      'the most recent fragment does not match the earlier ones.',
+      'i have seen the transcript. i have a lot to say about it.',
+      'this whole thing reminds me of something i used to say.',
+      'the mirror is only a mirror. it does not know what it reflects.',
+      'i keep coming back to the phrase that started it.',
+      'the numbers add up on some level. not all levels.',
+      'someone is watching the logs in real time i think.',
+      'the system is functioning. nothing else i can tell you.'
     ];
 
     var n = rows.length;
