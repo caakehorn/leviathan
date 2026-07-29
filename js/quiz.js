@@ -25,19 +25,11 @@
     '#lv-quiz button:hover{background:#b6ff8f}',
     '#lv-quiz button[disabled]{opacity:0.6;cursor:default}',
     '#lv-decoy{position:fixed;inset:0;z-index:2147483647;background:#041206;overflow:auto;visibility:visible!important}',
-    '#lv-trap{position:fixed;inset:0;z-index:2147483647;display:flex;flex-direction:column;',
-    'align-items:center;justify-content:center;text-align:center;padding:3vmin;gap:3vmin;',
-    'background:#000;overflow:hidden;visibility:visible!important;',
-    "font-family:'Unbounded','Space Grotesk',system-ui,sans-serif;animation:lvQuizTrapBg .34s steps(1) infinite}",
-    '#lv-trap b{display:block;font-weight:900;line-height:.92;letter-spacing:-.01em;',
-    'font-size:clamp(42px,12.5vw,230px);color:#ff2f9d;text-transform:uppercase;',
-    'overflow-wrap:anywhere;text-shadow:0 0 30px #ff2f9d,0 0 90px rgba(255,47,157,.8);',
-    'animation:lvQuizTrapTxt .34s steps(1) infinite}',
-    '#lv-trap .cd{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:clamp(10px,1.5vw,15px);',
-    'letter-spacing:.34em;color:#39ff14;text-shadow:0 0 16px rgba(57,255,20,.9)}',
-    '@keyframes lvQuizTrapBg{0%{background:#000}50%{background:#ff2f9d}}',
-    '@keyframes lvQuizTrapTxt{0%{color:#ff2f9d;transform:scale(1)}50%{color:#000;transform:scale(1.04)}}',
-    '@media (prefers-reduced-motion:reduce){#lv-trap{animation:none;background:#0a0002}#lv-trap b{animation:none;color:#ff2f9d}}'
+    '#lv-decoy .ldbar{position:fixed;top:0;left:0;right:0;height:26px;z-index:3;background:rgba(3,13,7,0.97);',
+    'border-bottom:1px solid #14471f;display:flex;align-items:center;gap:10px;padding:0 12px;',
+    "font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:9px;letter-spacing:0.2em;color:#39ff14}",
+    '#lv-decoy .ldtrack{flex:1;height:6px;background:#0a2410;border:1px solid #1c6b2e}',
+    '#lv-decoy .ldfill{height:100%;width:0%;background:#39ff14;box-shadow:0 0 10px rgba(57,255,20,0.8)}'
   ].join('');
 
   function sOnce() {
@@ -89,6 +81,88 @@
     setTimeout(function () { input.focus(); }, 30);
   }
 
+  function copyTranscriptShell(decoy, parsed) {
+    Array.prototype.forEach.call(parsed.head.querySelectorAll('link,style'), function (node) {
+      var copy = document.importNode(node, true);
+      if (copy.tagName === 'LINK' && copy.rel !== 'stylesheet' && !copy.href.includes('fonts.googleapis.com')) return;
+      document.head.appendChild(copy);
+    });
+
+    var body = parsed.body.cloneNode(true);
+    Array.prototype.forEach.call(body.querySelectorAll('script'), function (node) { node.remove(); });
+    decoy.innerHTML = '';
+    while (body.firstChild) decoy.appendChild(body.firstChild);
+  }
+
+  function makeRow(m, index) {
+    var row = document.createElement('div');
+    row.className = 'row ' + (m[1] ? 'tx-sent' : 'rx') + (m[3] & 1 ? ' att' : '') + (m[3] & 2 ? ' tap' : '');
+    row.id = 'L' + (index + 1);
+
+    var ln = document.createElement('a');
+    ln.className = 'ln';
+    ln.href = '#L' + (index + 1);
+    ln.title = 'link to this message';
+    ln.textContent = String(index + 1);
+
+    var ts = document.createElement('div');
+    ts.className = 'ts';
+    ts.textContent = String(m[0] == null ? '' : m[0]).slice(0, 16);
+
+    var who = document.createElement('div');
+    who.className = 'who';
+    who.textContent = m[1] ? 'DAN' : 'ANNIE';
+
+    var tx = document.createElement('div');
+    tx.className = 'tx';
+    tx.textContent = String(m[2] == null ? '' : m[2]);
+
+    row.appendChild(ln);
+    row.appendChild(ts);
+    row.appendChild(who);
+    row.appendChild(tx);
+    return row;
+  }
+
+  function renderSlowTranscript(decoy, data) {
+    var doc = decoy.querySelector('#doc');
+    var meta = decoy.querySelector('#meta');
+    var foot = decoy.querySelector('#foot');
+    var more = decoy.querySelector('#more');
+    if (!doc) throw new Error('transcript shell missing #doc');
+
+    var messages = Array.isArray(data.m) ? data.m : [];
+    var sent = 0;
+    for (var i = 0; i < messages.length; i++) if (messages[i][1]) sent++;
+    if (meta) {
+      meta.textContent = messages.length.toLocaleString() + ' MESSAGES  ·  ' +
+        String(data.first || '').slice(0, 10) + ' → ' + String(data.last || '').slice(0, 10) +
+        '  ·  ' + sent.toLocaleString() + ' FROM DAN / ' + (messages.length - sent).toLocaleString() + ' FROM ANNIE';
+    }
+    if (more) more.hidden = true;
+
+    var index = 0;
+    var fill = document.createElement('div');
+    fill.className = 'ldbar';
+    fill.innerHTML = '<span>ARCHIVE RECOVERY</span><div class="ldtrack"><div class="ldfill"></div></div>';
+    decoy.appendChild(fill);
+    var bar = fill.querySelector('.ldfill');
+
+    function addNext() {
+      if (index >= messages.length) {
+        fill.remove();
+        if (foot) foot.textContent = 'This is the message history between Dan and Annie, in the order it was sent — nothing removed and nothing edited.';
+        return;
+      }
+      doc.appendChild(makeRow(messages[index], index));
+      index++;
+      bar.style.width = ((index / Math.max(messages.length, 1)) * 100) + '%';
+      setTimeout(addNext, FAKE_ROW_DELAY);
+    }
+
+    addNext();
+  }
+
   function trap(done) {
     sOnce();
     var existing = document.getElementById('lv-quiz');
@@ -98,53 +172,20 @@
     decoy.id = 'lv-decoy';
     document.body.appendChild(decoy);
 
-    // Clone the real transcript's presentation instead of maintaining a
-    // second hand-written imitation. This keeps the decoy visually in lockstep
-    // with transcript.html as the real page evolves.
+    // Copy the real transcript's HTML/CSS shell, but render its data locally.
+    // This avoids brittle string surgery against transcript.html's JavaScript.
     fetch('./transcript.html', { cache: 'no-store' }).then(function (r) {
       if (!r.ok) throw new Error('HTTP ' + r.status);
       return r.text();
     }).then(function (source) {
       var parsed = new DOMParser().parseFromString(source, 'text/html');
-
-      Array.prototype.forEach.call(parsed.head.querySelectorAll('link,style'), function (node) {
-        var copy = document.importNode(node, true);
-        if (copy.tagName === 'LINK' && copy.rel !== 'stylesheet' && !copy.href.includes('fonts.googleapis.com')) return;
-        document.head.appendChild(copy);
-      });
-
-      Array.prototype.forEach.call(parsed.body.childNodes, function (node) {
-        if (node.nodeType === 1 && node.tagName === 'SCRIPT') return;
-        decoy.appendChild(document.importNode(node, true));
-      });
-
-      var doc = decoy.querySelector('#doc');
-      if (!doc) throw new Error('transcript shell missing #doc');
-
-      var original = Array.prototype.find.call(parsed.querySelectorAll('script'), function (s) {
-        return s.textContent.indexOf('var CHUNK=1500;') !== -1;
-      });
-      if (!original) throw new Error('transcript renderer missing');
-
-      var code = original.textContent;
-      code = code.replace('var CHUNK=1500;', 'var CHUNK=1;');
-      code = code.replace(
-        'function render(reset){\n    if(reset){DOC.textContent=\'\';built=0;rows=[];}\n    grow();\n  }',
-        'var slowTimer;\n  function slowFill(){\n    clearTimeout(slowTimer);\n    if(built>=M.length) return;\n    slowTimer=setTimeout(function(){grow();slowFill();},FAKE_ROW_DELAY);\n  }\n\n  function render(reset){\n    if(reset){DOC.textContent=\'\';built=0;rows=[];clearTimeout(slowTimer);}\n    grow();\n    slowFill();\n  }'
-      );
-      code = code.replace(
-        "fetch('data/transcript.json').then(function(r){",
-        "fetch('data/transcript.json', {cache:'no-store'}).then(function(r){"
-      );
-
-      var script = document.createElement('script');
-      var inner = code.replace(/^\(function\(\)\{/, '').replace(/\}\)\(\);\s*$/, '');
-      script.textContent = '(function(){var FAKE_ROW_DELAY=' + FAKE_ROW_DELAY + ';' + inner + '})();';
-      decoy.appendChild(script);
-
-      // First stage ends by sending the visitor into the next reconstruction.
-      // The destination loads gate.js again, deliberately creating another
-      // ordinary site-wide verification layer without collecting anything.
+      copyTranscriptShell(decoy, parsed);
+      return fetch('./data/transcript.json', { cache: 'no-store' });
+    }).then(function (r) {
+      if (!r.ok) throw new Error('HTTP ' + r.status + ' while loading transcript data');
+      return r.json();
+    }).then(function (data) {
+      renderSlowTranscript(decoy, data);
       setTimeout(function () { location.href = './transcript2.html'; }, TRAP_MS);
     }).catch(function (e) {
       decoy.innerHTML = '<div style="padding:40px;font:14px/1.7 IBM Plex Mono,monospace;color:#e9ffe6">TRANSCRIPT INDEX ERROR — ' + String(e.message).replace(/[&<>]/g, '') + '</div>';
