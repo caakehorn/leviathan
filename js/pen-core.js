@@ -19,7 +19,7 @@
       const C = this.COL;
       lanes.forEach((ln, li) => {
         const y0 = geo.padT + li * (geo.laneH + geo.laneGap);
-        ctx.fillStyle = 'rgba(13,17,24,0.6)';
+        ctx.fillStyle = 'rgba(4,18,8,0.6)';
         ctx.fillRect(geo.x0, y0, geo.x1 - geo.x0, geo.laneH);
         ctx.strokeStyle = C.grid; ctx.strokeRect(geo.x0 + 0.5, y0 + 0.5, geo.x1 - geo.x0, geo.laneH);
         ctx.font = '9px ' + this.MONO; ctx.fillStyle = ln.color; ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
@@ -56,7 +56,7 @@
 
     drawVolumeLane(ctx, geo, y0, data, max, playPos, color, label) {
       const C = this.COL;
-      ctx.fillStyle = 'rgba(13,17,24,0.6)';
+      ctx.fillStyle = 'rgba(4,18,8,0.6)';
       ctx.fillRect(geo.x0, y0, geo.x1 - geo.x0, geo.laneH);
       ctx.font = '9px ' + this.MONO; ctx.fillStyle = color; ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
       ctx.fillText(label || 'VOLUME', geo.x0 - 12, y0 + geo.laneH / 2);
@@ -78,7 +78,7 @@
     // it came from. Returns hit-rects so the owning pt_ handler can open them.
     drawFragmentFeed(ctx, geo, frags, playPos, title, accent) {
       const C = this.COL;
-      ctx.fillStyle = 'rgba(11,15,21,0.85)';
+      ctx.fillStyle = 'rgba(3,14,7,0.85)';
       ctx.fillRect(geo.fx, geo.fy, geo.fw, geo.fh);
       ctx.strokeStyle = C.line; ctx.strokeRect(geo.fx + 0.5, geo.fy + 0.5, geo.fw, geo.fh);
       ctx.font = '9px ' + this.MONO; ctx.fillStyle = C.faint; ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
@@ -109,7 +109,7 @@
         ctx.fillText((f.id ? (hot ? '▸ ' : '') : '') + f.tag, geo.fx + 14, fy);
         fy += 14;
         ctx.font = (i === 0 ? '500 12.5px ' : '11px ') + this.GROT;
-        ctx.fillStyle = 'rgba(232,230,225,' + alpha + ')';
+        ctx.fillStyle = 'rgba(214,255,208,' + alpha + ')';
         const words = txt.split(' ');
         let line = '', lh = i === 0 ? 17 : 15;
         for (const w2 of words) {
@@ -197,7 +197,7 @@
       if (cfg.volume) this.drawVolumeLane(ctx, geo, vy0, cfg.volume.data, cfg.volume.max, M.play, cfg.volume.color, cfg.volume.label);
 
       // ---- needle ----
-      ctx.strokeStyle = 'rgba(232,230,225,0.5)'; ctx.lineWidth = 1;
+      ctx.strokeStyle = 'rgba(214,255,208,0.5)'; ctx.lineWidth = 1;
       ctx.beginPath(); ctx.moveTo(playX, (cfg.ribbon ? ribY - 4 : padT - 6)); ctx.lineTo(playX, botY + 8); ctx.stroke();
 
       if (cfg.marker) cfg.marker(g);

@@ -5,7 +5,7 @@
   // colour whether you meet it on a canvas or on a page.
   const DCOL = {
     self: '#39ff14', timeline: '#b026ff', people: '#ccff00', mind: '#7b2dff',
-    work: '#00ffa3', interests: '#e0aaff', health: '#7dffb0', places: '#c77dff', legal: '#9ecb4a'
+    work: '#00ffa3', interests: '#e0aaff', health: '#7dffb0', places: '#ff86c9', legal: '#9ecb4a'
   };
   const DOMS = ['self', 'timeline', 'people', 'mind', 'work', 'interests', 'health', 'places', 'legal'];
   // SLIME — matches the reader's edge ramp; contradicts keeps the hottest purple.
@@ -18,8 +18,8 @@
   const TCOL = {
     causes: '#ccff00', 'caused-by': '#ccff00', evidences: '#39ff14', 'evidenced-by': '#39ff14',
     instantiates: '#7b2dff', 'instance-of': '#7b2dff', precedes: '#7dffb0', follows: '#7dffb0',
-    parallels: '#00ffa3', mirrors: '#7dffb0', contradicts: '#e01aff', 'co-occurs': '#8fa878',
-    supplies: '#c77dff', 'supplied-by': '#c77dff', contextualizes: '#e0aaff', escalates: '#b026ff',
+    parallels: '#00ffa3', mirrors: '#7dffb0', contradicts: '#ff2f9d', 'co-occurs': '#8fa878',
+    supplies: '#ff86c9', 'supplied-by': '#ff86c9', contextualizes: '#e0aaff', escalates: '#b026ff',
     resolves: '#39ff14', 'component-of': '#8fa878', contains: '#8fa878', related: '#5f7a4e'
   };
   window.WikiModules = {
@@ -48,7 +48,7 @@
         fontFamily: "'IBM Plex Mono', monospace", fontSize: '10.5px', letterSpacing: '0.18em',
         padding: '6px 13px', cursor: 'pointer', fontWeight: on ? 700 : 400,
         color: on ? tone : '#6f8a5e', background: on ? 'rgba(123,45,255,0.06)' : 'transparent',
-        border: '1px solid ' + (on ? tone : '#1d2430'), whiteSpace: 'nowrap', transition: 'all 130ms ease'
+        border: '1px solid ' + (on ? tone : '#123a1c'), whiteSpace: 'nowrap', transition: 'all 130ms ease'
       };
     },
 
@@ -126,7 +126,7 @@
       }
       if (s.tab === 'census') {
         return [['first', 'BY FIRST CONTACT'], ['span', 'BY LONGEVITY'], ['name', 'A\u2013Z']].map(([id, l]) => ({
-          label: l, onClick: () => this.setState({ censusSort: id }), style: cs(s.censusSort === id, '#c77dff')
+          label: l, onClick: () => this.setState({ censusSort: id }), style: cs(s.censusSort === id, '#ff86c9')
         }));
       }
       if (s.tab === 'strata') {
@@ -270,7 +270,7 @@
         if (!active(e.a) || !active(e.b)) continue;
         const hot = focus && (e.a === focus || e.b === focus);
         if (e.type) ctx.strokeStyle = hot ? (TCOL[e.type] || '#7b2dff') : 'rgba(123,45,255,' + (hot ? 0.9 : 0.16) + ')';
-        else ctx.strokeStyle = hot ? 'rgba(139,148,164,0.55)' : 'rgba(139,148,164,0.06)';
+        else ctx.strokeStyle = hot ? 'rgba(96,160,182,0.55)' : 'rgba(96,160,182,0.06)';
         ctx.beginPath(); ctx.moveTo(e.a.x, e.a.y); ctx.lineTo(e.b.x, e.b.y); ctx.stroke();
       }
       // nodes + hover
@@ -287,7 +287,7 @@
         ctx.fill();
         if (n.deg > 14 || isF) {
           ctx.font = (isF ? '10px ' : '8.5px ') + this.MONO;
-          ctx.fillStyle = isF ? '#e9ffe6' : 'rgba(139,148,164,0.75)';
+          ctx.fillStyle = isF ? '#e9ffe6' : 'rgba(96,160,182,0.75)';
           ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
           ctx.fillText(n.p.title.slice(0, 26), n.x, n.y - n.r - 3);
         }
@@ -310,7 +310,7 @@
         ctx.font = '10px ' + this.MONO;
         const sum = this.wkWrap(ctx, p.summary || '(no summary)', w - 28).slice(0, 6);
         const h = 92 + sum.length * 15;
-        ctx.fillStyle = 'rgba(13,17,24,0.95)';
+        ctx.fillStyle = 'rgba(4,18,8,0.95)';
         ctx.strokeStyle = DCOL[p.domain];
         ctx.beginPath(); ctx.rect(x, y, w, h); ctx.fill(); ctx.stroke();
         ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
@@ -318,7 +318,7 @@
         ctx.fillText(p.title.slice(0, 34), x + 14, y + 24);
         ctx.font = '9px ' + this.MONO; ctx.fillStyle = DCOL[p.domain];
         ctx.fillText(p.domain.toUpperCase() + ' \u00b7 ' + (p.page_type || '').toUpperCase() + ' \u00b7 ' + p.words.toLocaleString() + ' WORDS', x + 14, y + 41);
-        ctx.font = '10px ' + this.MONO; ctx.fillStyle = '#b9b4a9';
+        ctx.font = '10px ' + this.MONO; ctx.fillStyle = '#b4c8ae';
         sum.forEach((s, i) => ctx.fillText(s, x + 14, y + 62 + i * 15));
         ctx.fillStyle = '#7b2dff'; ctx.font = '600 10px ' + this.MONO;
         ctx.fillText('\u25b8 OPEN IN READER', x + 14, y + h - 12);
@@ -372,10 +372,10 @@
         if (y > H - 30) return;
         const on = st.claimType === 'ALL' || st.claimType === t;
         const col = TCOL[t] || '#8fa878';
-        ctx.fillStyle = on ? col : 'rgba(91,100,114,0.4)';
+        ctx.fillStyle = on ? col : 'rgba(60,120,140,0.4)';
         ctx.fillRect(18, y - 4, Math.max(3, (n / maxC) * 120), 8);
         ctx.font = '9px ' + this.MONO;
-        ctx.fillStyle = on ? '#c9c5bb' : '#6f8a5e';
+        ctx.fillStyle = on ? '#c6d6c0' : '#6f8a5e';
         ctx.fillText(t.toUpperCase() + ' \u00b7 ' + n, 18, y + 13);
         Cl.typeHits.push({ y0: y - 8, y1: y + 20, t });
       });
@@ -401,24 +401,24 @@
           const hov = mx > fx && mx < fx + fw && my > y && my < y + ch;
           if (hov) Cl.hoverRow = { e, x0: fx, x1: fx + fw, y0: y, y1: y + ch };
           const col = TCOL[e.type] || '#8fa878';
-          ctx.fillStyle = hov ? 'rgba(16,20,27,0.9)' : 'rgba(13,17,24,0.55)';
+          ctx.fillStyle = hov ? 'rgba(5,18,9,0.9)' : 'rgba(4,18,8,0.55)';
           ctx.strokeStyle = hov ? col : C.line;
           ctx.beginPath(); ctx.rect(fx, y, fw, ch); ctx.fill(); ctx.stroke();
           ctx.textBaseline = 'middle';
           ctx.font = '600 10px ' + this.MONO;
-          ctx.fillStyle = DCOL[a.domain] || '#c9c5bb'; ctx.textAlign = 'left';
+          ctx.fillStyle = DCOL[a.domain] || '#c6d6c0'; ctx.textAlign = 'left';
           ctx.fillText(a.title.slice(0, 30), fx + 16, y + 20);
           const aw = ctx.measureText(a.title.slice(0, 30)).width;
-          ctx.fillStyle = '#10001f';
+          ctx.fillStyle = '#041206';
           const tw = ctx.measureText(e.type.toUpperCase()).width + 12;
           ctx.fillStyle = col;
           ctx.fillRect(fx + 16 + aw + 12, y + 12, tw, 15);
-          ctx.fillStyle = '#10001f';
+          ctx.fillStyle = '#041206';
           ctx.fillText(e.type.toUpperCase(), fx + 16 + aw + 18, y + 20);
-          ctx.fillStyle = DCOL[b.domain] || '#c9c5bb';
+          ctx.fillStyle = DCOL[b.domain] || '#c6d6c0';
           ctx.fillText(b.title.slice(0, 30), fx + 16 + aw + tw + 24, y + 20);
           ctx.font = '11.5px ' + this.GROT;
-          ctx.fillStyle = hov ? '#d9d5cb' : '#a9a49a';
+          ctx.fillStyle = hov ? '#d6ffc7' : '#a3b89d';
           claimLines.forEach((l, li) => ctx.fillText(l, fx + 16, y + 44 + li * 17));
           if (hov) {
             ctx.font = '8.5px ' + this.MONO; ctx.fillStyle = C.dim;
@@ -506,12 +506,12 @@
         const hov = my >= y && my < y + rh && mx >= gx0 - 175 && mx <= gx1;
         if (hov) Ce.hover = { ...r, y };
         const span = r.b - r.a;
-        const col = span > 2000 ? '#c77dff' : span > 400 ? '#39ff14' : '#8fa878';
+        const col = span > 2000 ? '#ff86c9' : span > 400 ? '#39ff14' : '#8fa878';
         ctx.fillStyle = hov ? '#ffffff' : col + (hov ? '' : 'cc');
         ctx.fillRect(x0, y + rh * 0.22, x1 - x0, Math.max(2, rh * 0.5));
         if (rh >= 9 || hov) {
           ctx.font = (hov ? '600 ' : '') + Math.min(10, rh - 2.5) + 'px ' + this.MONO;
-          ctx.fillStyle = hov ? '#e9ffe6' : '#6b7484';
+          ctx.fillStyle = hov ? '#e9ffe6' : '#4f9fb8';
           ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
           ctx.fillText(r.p.title.slice(0, 24), gx0 - 10, y + rh / 2);
         }
@@ -524,8 +524,8 @@
         ctx.font = '10px ' + this.MONO;
         const lines = [
           [r.p.title, '#e9ffe6', '600 11px ' + this.MONO],
-          [this.fmtDate(r.a, true) + ' \u2192 ' + this.fmtDate(r.b, true) + ' \u00b7 ' + Math.round((r.b - r.a) / 365 * 10) / 10 + ' YRS', '#c77dff'],
-          ...this.wkWrap(ctx, r.known.slice(0, 200), 330).slice(0, 4).map(l => [l, '#b9b4a9']),
+          [this.fmtDate(r.a, true) + ' \u2192 ' + this.fmtDate(r.b, true) + ' \u00b7 ' + Math.round((r.b - r.a) / 365 * 10) / 10 + ' YRS', '#ff86c9'],
+          ...this.wkWrap(ctx, r.known.slice(0, 200), 330).slice(0, 4).map(l => [l, '#b4c8ae']),
           ['CLICK TO OPEN THE PAGE', C.dim, '8.5px ' + this.MONO]
         ];
         this.card(ctx, Math.min(mx, W - 380), my, lines);
@@ -575,7 +575,7 @@
       St.hover = null;
       doms.forEach((d, di) => {
         const ly = gy0 + di * laneH;
-        ctx.strokeStyle = 'rgba(29,36,48,0.6)';
+        ctx.strokeStyle = 'rgba(10,34,16,0.6)';
         ctx.beginPath(); ctx.moveTo(gx0, ly); ctx.lineTo(gx1, ly); ctx.stroke();
         ctx.font = '9px ' + this.MONO; ctx.fillStyle = DCOL[d];
         ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
@@ -611,7 +611,7 @@
         this.card(ctx, mx, my, [
           [it.p.title, '#e9ffe6', '600 11px ' + this.MONO],
           [this.fmtDate(it.a, true) + ' \u2192 ' + this.fmtDate(it.b, true), DCOL[it.p.domain]],
-          ...this.wkWrap(ctx, (it.p.summary || '').slice(0, 170), 320).slice(0, 3).map(l => [l, '#b9b4a9']),
+          ...this.wkWrap(ctx, (it.p.summary || '').slice(0, 170), 320).slice(0, 3).map(l => [l, '#b4c8ae']),
           ['CLICK TO OPEN', C.dim, '8.5px ' + this.MONO]
         ]);
       }
@@ -626,7 +626,7 @@
     // ============================================================
     initAccrete() {
       const WK = this.WK;
-      const KCOL = { ingest: '#39ff14', connect: '#7b2dff', rename: '#b026ff', build: '#00ffa3', edit: '#c77dff', add: '#c77dff', triage: '#8fa878', lint: '#8fa878', rewrite: '#e01aff', fix: '#e01aff' };
+      const KCOL = { ingest: '#39ff14', connect: '#7b2dff', rename: '#b026ff', build: '#00ffa3', edit: '#ff86c9', add: '#ff86c9', triage: '#8fa878', lint: '#8fa878', rewrite: '#ff2f9d', fix: '#ff2f9d' };
       const byDay = {};
       for (const o of WK.log) {
         const k = KCOL[o.k] ? o.k : 'other';
@@ -702,12 +702,12 @@
       ctx.textBaseline = 'middle';
       for (const [k, col] of Object.entries(A.KCOL)) {
         ctx.fillStyle = col; ctx.fillRect(lx, H - 26, 7, 7);
-        ctx.font = '8.5px ' + this.MONO; ctx.fillStyle = '#6b7484';
+        ctx.font = '8.5px ' + this.MONO; ctx.fillStyle = '#4f9fb8';
         ctx.fillText(k.toUpperCase(), lx + 11, H - 22);
         lx += 24 + ctx.measureText(k.toUpperCase()).width;
       }
       ctx.fillStyle = 'rgba(123,45,255,0.9)'; ctx.fillRect(lx, H - 25, 14, 2);
-      ctx.fillStyle = '#6b7484'; ctx.fillText('CUMULATIVE PAGES', lx + 20, H - 22);
+      ctx.fillStyle = '#4f9fb8'; ctx.fillText('CUMULATIVE PAGES', lx + 20, H - 22);
       if (A.hover) {
         const s = A.hover;
         const lines = [[s.ds, '#e9ffe6', '600 11px ' + this.MONO]];
@@ -762,7 +762,7 @@
         ctx.strokeStyle = isP ? '#ffffff' : 'rgba(123,45,255,0.6)';
         ctx.stroke();
         ctx.font = (isP ? '600 ' : '') + Math.min(13, 8 + n.n * 0.2) + 'px ' + this.MONO;
-        ctx.fillStyle = isP ? '#10001f' : '#c9c5bb';
+        ctx.fillStyle = isP ? '#041206' : '#c6d6c0';
         ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
         ctx.fillText('#' + n.t, n.x, n.y);
         if (mx >= 0 && !hover) { const dx = mx - n.x, dy = my - n.y; if (dx * dx + dy * dy < n.r * n.r) hover = n; }
@@ -780,7 +780,7 @@
         const ids = T.pinned.ids.slice(0, 16);
         const x = W - 320, y = 56, w = 300, rowH = 20;
         const h = 44 + ids.length * rowH;
-        ctx.fillStyle = 'rgba(13,17,24,0.95)'; ctx.strokeStyle = '#7b2dff';
+        ctx.fillStyle = 'rgba(4,18,8,0.95)'; ctx.strokeStyle = '#7b2dff';
         ctx.beginPath(); ctx.rect(x, y, w, h); ctx.fill(); ctx.stroke();
         ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
         ctx.font = '600 11px ' + this.MONO; ctx.fillStyle = '#cfa8ff';
@@ -793,7 +793,7 @@
           ctx.font = '9.5px ' + this.MONO;
           ctx.fillStyle = DCOL[pp.domain] || '#8fa878';
           ctx.fillText('\u25b8', x + 14, ry);
-          ctx.fillStyle = hov ? '#e9ffe6' : '#a9a49a';
+          ctx.fillStyle = hov ? '#e9ffe6' : '#a3b89d';
           ctx.fillText(pp.title.slice(0, 34), x + 28, ry);
           T.pageHits.push({ x, y: ry - rowH / 2, w, h: rowH, id });
         });
@@ -901,11 +901,11 @@
         const col = DCOL[r.d];
         ctx.fillStyle = col + (hov ? 'ee' : (r.p.id.endsWith('/index') ? '30' : '66'));
         ctx.fillRect(r.x, r.y, r.w, r.h);
-        ctx.strokeStyle = 'rgba(7,9,13,0.9)';
+        ctx.strokeStyle = 'rgba(2,10,5,0.9)';
         ctx.strokeRect(r.x, r.y, r.w, r.h);
         if (r.w > 70 && r.h > 16) {
           ctx.font = '8.5px ' + this.MONO;
-          ctx.fillStyle = hov ? '#10001f' : 'rgba(232,230,225,0.8)';
+          ctx.fillStyle = hov ? '#041206' : 'rgba(214,255,208,0.8)';
           ctx.textAlign = 'left'; ctx.textBaseline = 'top';
           ctx.fillText(r.p.title.slice(0, Math.floor(r.w / 6)), r.x + 5, r.y + 4);
         }
@@ -917,7 +917,7 @@
       let lx = 16;
       for (const g of Ms.doms) {
         ctx.fillStyle = DCOL[g.d]; ctx.fillRect(lx, H - 26, 7, 7);
-        ctx.font = '8.5px ' + this.MONO; ctx.fillStyle = '#6b7484';
+        ctx.font = '8.5px ' + this.MONO; ctx.fillStyle = '#4f9fb8';
         const lbl = g.d.toUpperCase() + ' ' + Math.round(g.w / 1000) + 'K';
         ctx.fillText(lbl, lx + 11, H - 22);
         lx += 24 + ctx.measureText(lbl).width;
@@ -928,7 +928,7 @@
         this.card(ctx, mx, my, [
           [r.p.title, '#e9ffe6', '600 11px ' + this.MONO],
           [r.d.toUpperCase() + ' \u00b7 ' + r.p.words.toLocaleString() + ' WORDS', DCOL[r.d]],
-          ...this.wkWrap(ctx, (r.p.summary || '').slice(0, 150), 300).slice(0, 3).map(l => [l, '#b9b4a9']),
+          ...this.wkWrap(ctx, (r.p.summary || '').slice(0, 150), 300).slice(0, 3).map(l => [l, '#b4c8ae']),
           ['CLICK TO OPEN', C.dim, '8.5px ' + this.MONO]
         ]);
       }
@@ -1063,7 +1063,7 @@
         : /facebook/i.test(s) ? ['FACEBOOK', '#b026ff']
         : /gemini|chat/i.test(s) ? ['AI CHATS', '#7b2dff']
         : /location|semantic/i.test(s) ? ['LOCATION', '#00ffa3']
-        : /dox|scan/i.test(s) ? ['DOCUMENTS', '#c77dff']
+        : /dox|scan/i.test(s) ? ['DOCUMENTS', '#ff86c9']
         : /twitter|youtube|takeout/i.test(s) ? ['PLATFORM EXPORTS', '#e0aaff']
         : /ancestry|dna|gedcom/i.test(s) ? ['GENEALOGY', '#b6ff8f']
         : ['OTHER', '#8fa878'];
@@ -1094,7 +1094,7 @@
         ctx.fillRect(gx0, y + rowH * 0.18, bw, rowH * 0.62);
         if (rowH >= 9) {
           ctx.font = (active ? '600 ' : '') + Math.min(9.5, rowH - 3) + 'px ' + this.MONO;
-          ctx.fillStyle = active ? '#e9ffe6' : '#6b7484';
+          ctx.fillStyle = active ? '#e9ffe6' : '#4f9fb8';
           const name = r.s.split('/').pop().slice(0, 46);
           ctx.fillText(name + ' \u00b7 ' + r.n, gx0 + bw + 10, y + rowH / 2);
         }
@@ -1105,7 +1105,7 @@
         const ids = E.pinned.ids.slice(0, Math.floor((H - 120) / 19));
         const x = W - 330, y = 44, w = 312;
         const h = 46 + ids.length * 19;
-        ctx.fillStyle = 'rgba(13,17,24,0.96)'; ctx.strokeStyle = E.pinned.cat[1];
+        ctx.fillStyle = 'rgba(4,18,8,0.96)'; ctx.strokeStyle = E.pinned.cat[1];
         ctx.beginPath(); ctx.rect(x, y, w, h); ctx.fill(); ctx.stroke();
         ctx.font = '600 10px ' + this.MONO; ctx.fillStyle = E.pinned.cat[1];
         ctx.fillText(E.pinned.s.split('/').pop().slice(0, 40), x + 14, y + 18);
@@ -1119,7 +1119,7 @@
           ctx.font = '9px ' + this.MONO;
           ctx.fillStyle = DCOL[pp.domain] || '#8fa878';
           ctx.fillText('\u25b8', x + 14, ry);
-          ctx.fillStyle = hov ? '#e9ffe6' : '#a9a49a';
+          ctx.fillStyle = hov ? '#e9ffe6' : '#a3b89d';
           ctx.fillText(pp.title.slice(0, 36), x + 26, ry);
           E.pageHits.push({ x, y: ry - 9, w, h: 19, id });
         });
@@ -1263,7 +1263,7 @@
       ctx.fillText(Math.round(Ch.cum[Math.min(Ch.nD - 1, Math.floor(Ch.play))]) + ' PAGES TO DATE', chartR - 24, vy0 + 12);
       ctx.textAlign = 'left';
 
-      ctx.strokeStyle = 'rgba(232,230,225,0.5)'; ctx.lineWidth = 1;
+      ctx.strokeStyle = 'rgba(214,255,208,0.5)'; ctx.lineWidth = 1;
       ctx.beginPath(); ctx.moveTo(playX, padT - 6); ctx.lineTo(playX, vy0 + laneH + 8); ctx.stroke();
       ctx.font = '9px ' + this.MONO; ctx.fillStyle = C.dim; ctx.textAlign = 'center'; ctx.textBaseline = 'top';
       for (let i = 0; i < Ch.nD; i += Math.max(1, Math.ceil(Ch.nD / 10))) {
@@ -1407,7 +1407,7 @@
         ctx.fill();
         if (lit || n.r > 6) {
           ctx.font = (lit ? '600 ' : '') + '8.5px ' + this.MONO;
-          ctx.fillStyle = lit ? C.txt : '#6b7484';
+          ctx.fillStyle = lit ? C.txt : '#4f9fb8';
           ctx.textAlign = 'center'; ctx.textBaseline = 'top';
           ctx.fillText(n.p.title.slice(0, 26), n.x, n.y + n.r + 3);
         }
@@ -1440,7 +1440,7 @@
       ];
       this.drawPenLanes(ctx, { padL: sx0, padT: stripY, laneH, laneGap: 4, x0: sx0, x1: sx1, xOf }, lanes, Ge.play, st.genesisPlay);
       const playX = xOf(Ge.play);
-      ctx.strokeStyle = 'rgba(232,230,225,0.5)'; ctx.lineWidth = 1;
+      ctx.strokeStyle = 'rgba(214,255,208,0.5)'; ctx.lineWidth = 1;
       ctx.beginPath(); ctx.moveTo(playX, stripY - 6); ctx.lineTo(playX, stripY + laneH * 2 + 4 + 8); ctx.stroke();
       Ge.scrubGeo = { x0: sx0, x1: sx1, y0: stripY - 10, y1: stripY + laneH * 2 + 4 + 10 };
 

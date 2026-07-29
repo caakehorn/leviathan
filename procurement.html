@@ -3,10 +3,13 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- THE GATE — must be first: it hides the document synchronously, so
+     nothing behind the passphrase paints even for a frame. -->
+<script src="./js/gate.js"></script>
 <title>PROCUREMENT — a third section</title>
 <meta name="robots" content="noindex, nofollow">
 <meta name="referrer" content="no-referrer">
-<meta name="theme-color" content="#10001f">
+<meta name="theme-color" content="#041206">
 <link rel="icon" href="data:,">
 
 <!-- Unlinked from the rest of the site, and unencrypted on purpose: every line
@@ -19,20 +22,21 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous">
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&amp;family=IBM+Plex+Mono:wght@400;600;700&amp;display=swap" rel="stylesheet">
 
+<link rel="stylesheet" href="./css/slime.css">
 <style>
   * { box-sizing: border-box; }
   html, body {
     margin: 0; padding: 0; height: 100%;
-    background: #10001f; color: #e9ffe6;
+    background: #041206; color: #e9ffe6;
     font-family: 'IBM Plex Mono', ui-monospace, monospace;
     overflow: hidden;
   }
-  ::selection { background: #b026ff; color: #10001f; }
+  ::selection { background: #b026ff; color: #041206; }
 
   #app { display: flex; flex-direction: column; height: 100%; }
 
   header {
-    border-bottom: 1px solid #2a1245;
+    border-bottom: 1px solid #14471f;
     padding: 12px 18px 10px;
     display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px 16px;
     flex: 0 0 auto;
@@ -48,13 +52,13 @@
     display: flex; flex-wrap: wrap; gap: 6px;
     padding: 8px 18px; flex: 0 0 auto;
   }
-  nav { border-bottom: 1px solid #170a2a; }
-  #chips { border-bottom: 1px solid #170a2a; }
+  nav { border-bottom: 1px solid #0a2410; }
+  #chips { border-bottom: 1px solid #0a2410; }
 
   .chip {
     font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; letter-spacing: 0.14em;
-    padding: 5px 11px; cursor: pointer; border: 1px solid #5b1a8f;
-    color: #6b7484; background: rgba(13,17,24,0.85);
+    padding: 5px 11px; cursor: pointer; border: 1px solid #1d8a34;
+    color: #4f9fb8; background: rgba(4,18,8,0.85);
     transition: all 120ms ease; white-space: nowrap;
   }
   .chip:hover { color: #b6ff8f; border-color: #39ff14; }
@@ -62,7 +66,7 @@
 
   #hint {
     padding: 7px 18px; font-size: 8.5px; letter-spacing: 0.16em;
-    color: #6f8a5e; border-bottom: 1px solid #170a2a; flex: 0 0 auto;
+    color: #6f8a5e; border-bottom: 1px solid #0a2410; flex: 0 0 auto;
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }
 
@@ -78,7 +82,7 @@
   #source {
     position: absolute; left: 18px; bottom: 18px; width: min(560px, calc(100% - 36px));
     max-height: calc(100% - 36px); overflow: auto;
-    background: rgba(11,4,22,0.97); border: 1px solid #2a1245;
+    background: rgba(4,16,7,0.97); border: 1px solid #14471f;
     padding: 14px 16px 16px; box-shadow: 0 0 40px rgba(176,38,255,0.25);
   }
   #source[hidden] { display: none; }
@@ -97,7 +101,7 @@
   dl.meta dd { margin: 0; font-size: 10px; color: #6f8a5e; word-break: break-word; }
   .note {
     font-family: 'Space Grotesk', sans-serif; font-size: 11.5px; line-height: 1.5;
-    color: #c77dff; border-left: 2px solid #7b2dff; padding-left: 10px; margin-bottom: 10px;
+    color: #ff86c9; border-left: 2px solid #7b2dff; padding-left: 10px; margin-bottom: 10px;
   }
   #source a {
     font-size: 9px; letter-spacing: 0.14em; color: #b026ff; text-decoration: none;
@@ -108,7 +112,7 @@
   /* the written brief */
   #brief {
     position: absolute; inset: 0; overflow: auto;
-    background: rgba(9,3,18,0.975); padding: 28px min(6vw, 60px) 60px;
+    background: rgba(3,13,6,0.975); padding: 28px min(6vw, 60px) 60px;
   }
   #brief[hidden] { display: none; }
   #brief .inner { max-width: 760px; margin: 0 auto; }
@@ -128,18 +132,38 @@
   #brief ul { margin: 0 0 12px; padding-left: 18px; }
   #brief li { margin-bottom: 7px; }
   #brief em { color: #b6ff8f; font-style: normal; }
-  #brief .caveat { border-left: 2px solid #e01aff; padding-left: 12px; color: #e0aaff; }
+  #brief .caveat { border-left: 2px solid #ff2f9d; padding-left: 12px; color: #e0aaff; }
   #brief code {
     font-family: 'IBM Plex Mono', monospace; font-size: 11.5px; color: #00ffa3;
+  }
+
+  /* the giant PLAY THE ASK button pulses so it cannot be missed */
+  @keyframes askpulse {
+    0%, 100% { box-shadow: 0 0 22px rgba(57,255,20,0.65), 0 0 70px rgba(176,38,255,0.30); transform: scale(1); }
+    50%      { box-shadow: 0 0 40px rgba(57,255,20,0.95), 0 0 130px rgba(176,38,255,0.5); transform: scale(1.045); }
   }
 
   @media (max-width: 720px) {
     #hint { white-space: normal; }
     h1 { font-size: 14px; }
+    .chip.play-massive { font-size: 12px; padding: 12px 22px; }
   }
 </style>
 </head>
 <body>
+<!-- ── slime drips: the theme layer's ooze, both edges ── -->
+<div class="sl-drips l" aria-hidden="true">
+  <i style="left:2px;--h:210px;--dur:15s;--del:0s"></i>
+  <i class="pink" style="left:10px;--h:128px;--dur:19s;--del:3.5s"></i>
+  <i style="left:6px;--h:300px;--dur:23s;--del:8s"></i>
+  <i class="cer" style="left:13px;--h:96px;--dur:12.5s;--del:6.2s"></i>
+</div>
+<div class="sl-drips r" aria-hidden="true">
+  <i style="right:3px;--h:250px;--dur:17s;--del:1.4s"></i>
+  <i class="cer" style="right:11px;--h:110px;--dur:21s;--del:5s"></i>
+  <i style="right:7px;--h:168px;--dur:13.5s;--del:9.5s"></i>
+  <i class="pink" style="right:14px;--h:340px;--dur:26s;--del:12s"></i>
+</div>
 <div id="app">
   <header>
     <h1>PROCUREMENT</h1>
@@ -213,69 +237,68 @@
           </li>
         </ul>
 
-        <h3>THE ASK — RECOUNTED FROM THE RAW LOGS</h3>
+        <h3>THE ASK — ANNIE’S OWN WORDS, FROM THE RAW LOGS</h3>
         <p>
-          This one does not come from the wiki's prose. Every Annie-thread export in
+          This instrument does not quote the wiki's summarizing prose. Every Annie-thread text export in
           wiki-brain's <code>raw/self/message-csv/</code> was merged, the one UTC-stamped
           export converted to local time (it had been minting phantom duplicates
-          four hours off), the result deduplicated, and her side kept:
-          <em>18,946 messages from her</em>, 2025-02-01 to 2026-06-05, <em>every month
+          four hours off), the result deduplicated, and Annie's side kept:
+          <em>18,946 messages from Annie</em>, 2025-02-01 to 2026-06-05, <em>every month
           covered</em> — no narrative gaps to explain away.
         </p>
         <p>
-          Classification is frame-and-object, not keyword: a request has to be a
-          speech act aimed at somebody <em>and</em> name what it is for. Then every
+          Classification is frame-and-object, not keyword: a message counts as a procurement ask only if it is a
+          speech act aimed at somebody <em>and</em> names what it is for. Then every
           single hit was read by hand and the false positives struck. The precision
           that survived that audit is printed on the instrument, because a number
           nobody can check is not evidence.
         </p>
         <p>
           <b>The shape that came out is not the one the summaries imply.</b> Of 357
-          procurement messages from her:
+          procurement messages from Annie:
         </p>
         <ul>
-          <li><em>42</em> are her <b>naming the size of the buy</b> — the denominated order. He asks, she answers with a number. <em>"How much" → "60."</em> <em>"i need a number now / she's making the call" → "100."</em></li>
-          <li><em>131</em> are her <b>asking for it</b> — mostly oblique, in the thread's own euphemisms: "get one," "get something," "I want a line," "More z," <em>"Why can't I just get it tonight,"</em> <em>"I want to get it first. I am dying here."</em></li>
-          <li><em>137</em> are her <b>raising the money</b>, including the ten times she asks her own mother or sister for it.</li>
-          <li><em>25</em> are her <b>handing him the cardless code to her own bank account</b> — <em>"I'll send you an access code. Take fifty out."</em> <em>"Can you please go to atm for me. Get out $80. I will send you the card less code."</em></li>
-          <li><em>22</em> are her <b>asking whether the source is reachable</b> — "Is there any possibility of seeing bop," "Did you ever end up seeing bop," "Is he coming."</li>
+          <li><em>42</em> are Annie <b>naming the size of the buy</b> — the denominated order. Dan asks, Annie answers with a number. <em>"How much?" → "60."</em> <em>"I need a number now / she's making the call" → "100."</em></li>
+          <li><em>131</em> are Annie <b>asking for it</b> — mostly oblique, in the thread's own euphemisms: "get one," "get something," "I want a line," "More z," <em>"Why can't I just get it tonight,"</em> <em>"I want to get it first. I am dying here."</em></li>
+          <li><em>137</em> are Annie <b>raising the money</b>, including the ten times Annie asks Annie's own mother or sister for it.</li>
+          <li><em>25</em> are Annie <b>handing Dan the cardless code to Annie's own bank account</b> — <em>"I'll send you an access code. Take fifty out."</em> <em>"Can you please go to atm for me. Get out $80. I will send you the card less code."</em></li>
+          <li><em>22</em> are Annie <b>asking whether the source is reachable</b> — "Is there any possibility of seeing Bop," "Did you ever end up seeing Bop," "Is he coming."</li>
         </ul>
         <p>
           Two findings a keyword sweep cannot reach. The denominated order is one:
-          the message is just <code>60</code>, and it reads as noise until his side is
+          the message is just <code>60</code>, and it reads as noise until Dan's side is
           put back beside it, at which point it reads as a purchase order. The last
           one is <em>"100?"</em>, sent at 5:51 PM on <b>May 31, 2026</b> — six hours
           before "Goodbye forever."
         </p>
         <p>
           The cardless code is the other, and it inverts the dependency picture
-          outright. Twenty-five times she sends him a one-hour access code to
-          <em>her own bank account</em> so he can withdraw the purchase money at an ATM.
-          A person being supplied by someone does not hand that person their
-          banking credentials to fund the purchase.
+          outright. Twenty-five times Annie sends Dan a one-hour access code to
+          <em>Annie's own bank account</em> so Dan can withdraw the purchase money at an ATM.
+          A person being supplied by someone does not hand that person banking credentials to fund the purchase.
         </p>
         <p>
-          And on <b>March 6, 2026</b> she names the alternative herself:
+          And on <b>March 6, 2026</b> Annie names the alternative herself:
           <em>"I'll find someone else to get it from and you'll never have to deal
           with this again."</em> That sentence is not available to somebody whose
-          access runs through him alone.
+          access runs through Dan alone.
         </p>
         <p>
-          She states <em>68 dollar amounts totalling $2,629</em> and announces <em>32 ATM
-          runs</em>. The transaction the record actually documents is a purchase she
-          funds and directs, not a supply she is handed. Her own line, March 26 2025:
+          Annie states <em>68 dollar amounts totalling $2,629</em> and announces <em>32 ATM
+          runs</em>. The transaction the record actually documents is a purchase Annie
+          funds and directs, not a supply Annie is handed. Annie's own line, March 26 2025:
           <em>"When I am the one who will be fucking paying for it."</em>
         </p>
         <p>
           The rate is real too, and it is the corpus's own: a base-rate control run
-          on 2026-07-18 found <em>97.2% of a random sample of all her messages</em> in the
+          on 2026-07-18 found <em>97.2% of a random sample of all Annie's messages</em> in the
           Aug 2025 – Mar 2026 window had a request within ±24h. That control was
-          built to test whether her love-declarations were procurement signals; it
+          built to test whether Annie's love-declarations were procurement signals; it
           killed that claim and established the ask frequency in the same pass.
         </p>
         <p>
           The number worth setting against all of it: across the same 222-day window
-          she made <em>seven</em> unprompted enquiries after how he was — four once the
+          Annie made <em>seven</em> unprompted enquiries after how Dan was — four once the
           perfunctory ones are netted out. Once every fifty-five days.
         </p>
 
@@ -319,6 +342,8 @@
   </div>
 </div>
 
+<script src="./js/transcript-index.js"></script>
+<script src="./js/transcript-link.js"></script>
 <script src="./js/pen-core.js"></script>
 <script src="./js/procurement-data.js"></script>
 <script src="./js/procurement-asks.js"></script>

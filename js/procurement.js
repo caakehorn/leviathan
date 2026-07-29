@@ -21,14 +21,14 @@
   const D = window.ProcurementData;
 
   const COL = {
-    bg: '#10001f', panel: '#10001f', line: '#2a1245', grid: '#170a2a',
+    bg: '#041206', panel: '#041206', line: '#14471f', grid: '#0a2410',
     txt: '#e9ffe6', dim: '#6f8a5e', faint: '#3d5230',
     amber: '#39ff14', amberHi: '#b6ff8f', cyan: '#b026ff', cyanHi: '#e0aaff',
-    red: '#e01aff', green: '#00ffa3', rose: '#c77dff', violet: '#7b2dff', violetHi: '#cfa8ff'
+    red: '#ff2f9d', green: '#00ffa3', rose: '#ff86c9', violet: '#7b2dff', violetHi: '#cfa8ff'
   };
   // who did the thing — one colour per actor, used for every ribbon on the page
-  const WHO = { annie: '#39ff14', dan: '#b026ff', third: '#e01aff', record: '#00ffa3' };
-  const TIER_COL = { 'RAW-CSV': '#39ff14', 'RAW-DUMP': '#39ff14', THREAD: '#00ffa3', WIKI: '#b026ff', DOSSIER: '#e01aff', DERIVED: '#e01aff' };
+  const WHO = { annie: '#39ff14', dan: '#b026ff', third: '#ff2f9d', record: '#00ffa3' };
+  const TIER_COL = { 'RAW-CSV': '#39ff14', 'RAW-DUMP': '#39ff14', THREAD: '#00ffa3', WIKI: '#b026ff', DOSSIER: '#ff2f9d', DERIVED: '#ff2f9d' };
 
   const hx = (col, a) => col + Math.round(Math.max(0, Math.min(1, a)) * 255).toString(16).padStart(2, '0');
   const MONTHS = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
@@ -182,7 +182,7 @@
       uncond: 'HIS HOSTILITY CLIMBS. THE SUPPLY NEVER MOVES WITH IT. THE LEVERAGE LANE IS EMPTY BECAUSE THE RECORD HAS NOTHING TO PUT IN IT · CLICK ANY LINE FOR ITS SOURCE',
       clock: 'THE WHOLE RELATIONSHIP AT MONTH RESOLUTION · THE SHADED WINDOW IS WHERE SHE SOURCED THROUGH HIM — ENTERED BY HER OWN MOVE, LEFT BY HER OWN JOB',
       prov: 'THE SAME CASE RE-SORTED BY HOW HARD THE EVIDENCE IS · RAW EXPORT ROWS FIRST, DAN’S UNCORROBORATED WORD LAST · FILTER TO SEE WHAT SURVIVES WITHOUT HIM',
-      ask: 'RECOUNTED FROM THE RAW EXPORTS — 18,946 OF HER MESSAGES, FEB 2025 → JUN 2026 · SHE IS RAISING THE MONEY, NOT ASKING HIM FOR DRUGS · CLICK ANY LINE'
+      ask: 'FROM THE RAW TEXT EXPORTS — 18,946 OF ANNIE’S MESSAGES, FEB 2025 → JUN 2026 · ANNIE RAISES THE MONEY AND NAMES THE BUY SIZE — NOT ASKING DAN FOR DRUGS · CLICK ANY LINE FOR ITS SOURCE'
     };
 
     chip(label, on, tone, onClick) {
@@ -209,8 +209,18 @@
         this.chip(label, s.tab === id, '#39ff14', () => this.setState({ tab: id, pinned: null }))));
 
       const t = s.tab;
+      const playLabel = (t === 'ask')
+        ? (s[t + 'Play'] ? '❚❚ PAUSE THE ASK' : '▶ PLAY THE ASK')
+        : (s[t + 'Play'] ? '❚❚ PAUSE' : '▶ PLAY');
+      const playBtn = this.chip(playLabel, s[t + 'Play'], '#39ff14', () => this.togglePlay());
+      // On THE ASK (instrument VI) the Play control is made massive and
+      // impossible to miss — it is the one action that brings the pens to life.
+      if (t === 'ask') {
+        playBtn.className = 'chip play-massive' + (s[t + 'Play'] ? ' on' : '');
+        playBtn.style.cssText = 'font-family:' + this.MONO + ';font-size:15px;font-weight:700;letter-spacing:0.24em;padding:16px 36px;border-radius:999px;border:1px solid #39ff14;color:' + (s[t + 'Play'] ? '#39ff14' : '#041206') + ';background:' + (s[t + 'Play'] ? 'rgba(57,255,20,0.18)' : '#39ff14') + ';box-shadow:0 0 30px rgba(57,255,20,0.7);animation:askpulse 2.4s ease-in-out infinite;cursor:pointer;white-space:nowrap;';
+      }
       const chips = [
-        this.chip(s[t + 'Play'] ? '❚❚ PAUSE' : '▶ PLAY', s[t + 'Play'], '#39ff14', () => this.togglePlay()),
+        playBtn,
         this.chip('↺ RESTART', false, null, () => this.restart())
       ];
       const sp = {
@@ -224,7 +234,7 @@
       chips.push(...this.speedChips(t + 'Speed', sp, '#b026ff'));
       if (t === 'prov') {
         chips.push(...[['all', 'ALL'], ['annie', 'HER OWN WORDS'], ['third', 'THIRD PARTY'], ['adverse', 'AGAINST DAN']]
-          .map(([id, l]) => this.chip(l, s.provFilter === id, id === 'adverse' ? '#e01aff' : '#00ffa3',
+          .map(([id, l]) => this.chip(l, s.provFilter === id, id === 'adverse' ? '#ff2f9d' : '#00ffa3',
             () => { this.M.prov = null; this.setState({ provFilter: id }); })));
       }
       chips.push(this.chip(s.brief ? '▤ CLOSE BRIEF' : '▤ BRIEF', s.brief, '#e0aaff', () => this.setState({ brief: !s.brief })));
@@ -279,6 +289,18 @@
       row('ACTOR', { annie: 'ANNIE', dan: 'DAN', third: 'THIRD PARTY', record: 'THE RECORD ITSELF' }[r.who]);
       this.srcEl.append(meta);
 
+      // Straight into the record itself, at the line this came off.
+      if (window.TranscriptLink) {
+        const ts = /^(\d{4}-\d{2}-\d{2})[ T](\d{2}:\d{2})/.exec(r.dir || '');
+        const d = (ts && ts[1]) || (/^\d{4}-\d{2}-\d{2}$/.test(r.d || '') ? r.d : null);
+        const t = (ts && ts[2]) || (r.t || '');
+        const who = /Sent/i.test(r.dir || '') ? 'D' : /Received/i.test(r.dir || '') ? 'A'
+          : r.who === 'dan' ? 'D' : r.who === 'annie' ? 'A' : '?';
+        const link = d && t ? window.TranscriptLink.el({ d, t, who, text: r.text })
+          : d ? window.TranscriptLink.dayEl(d) : null;
+        if (link) { const wrap = document.createElement('div'); wrap.append(link); this.srcEl.append(wrap); }
+      }
+
       if (r.note) this.srcEl.append(mk('note', r.note));
       const a = document.createElement('a');
       a.href = url; a.target = '_blank'; a.rel = 'noopener noreferrer';
@@ -307,7 +329,7 @@
       if (bx + w > this.W - 8) bx = x - w - 14;
       if (by < 8) by = y + 16;
       if (bx < 8) bx = 8;
-      ctx.fillStyle = 'rgba(13,17,24,0.94)';
+      ctx.fillStyle = 'rgba(4,18,8,0.94)';
       ctx.strokeStyle = COL.line;
       ctx.beginPath(); ctx.rect(bx, by, w, h); ctx.fill(); ctx.stroke();
       lines.forEach(([txt, color, font], i) => {
@@ -414,9 +436,9 @@
         lanes: [
           { data: A.series.ask, label: 'SHE ASKS / SHE GOES', unit: 'CITED ACTS', color: '#39ff14', max: A.max.ask },
           { data: A.series.node, label: 'SHE SOURCES IT HERSELF', unit: 'CITED ACTS', color: '#00ffa3', max: A.max.node },
-          { data: A.series.route, label: 'SHE ROUTES IT FOR OTHERS', unit: 'CITED ACTS', color: '#c77dff', max: A.max.route },
+          { data: A.series.route, label: 'SHE ROUTES IT FOR OTHERS', unit: 'CITED ACTS', color: '#ff86c9', max: A.max.route },
           { data: A.series.offer, label: 'HE OFFERS / DELIVERS', unit: 'CITED ACTS', color: '#b026ff', max: A.max.offer },
-          { data: new Float32Array(A.nP), label: 'HE WITHHOLDS AS LEVERAGE', unit: 'CITED ACTS · ZERO', color: '#e01aff', max: A.max.hold }
+          { data: new Float32Array(A.nP), label: 'HE WITHHOLDS AS LEVERAGE', unit: 'CITED ACTS · ZERO', color: '#ff2f9d', max: A.max.hold }
         ],
         volume: { data: A.vol, max: A.maxVol, color: '#7b2dff' },
         frags: A.frags,
@@ -438,7 +460,7 @@
         // the flat lane needs saying out loud, or it reads as a rendering bug
         marker: (g) => {
           const y = g.padT + 4 * (g.laneH + g.geo.laneGap) + g.laneH / 2;
-          ctx.font = '9px ' + this.MONO; ctx.fillStyle = hx('#e01aff', 0.8); ctx.textAlign = 'center';
+          ctx.font = '9px ' + this.MONO; ctx.fillStyle = hx('#ff2f9d', 0.8); ctx.textAlign = 'center';
           ctx.fillText('NO RECORD EXISTS FOR THIS LANE — wiki/people/annie-ulmer, AUG 2025 → MAR 2026', (g.padL + g.chartR) / 2, y + 4);
           ctx.textAlign = 'left';
         },
@@ -450,7 +472,7 @@
             A.hover = Math.max(0, Math.min(A.nP - 1, Math.round(((mx - g.padL) / (g.chartR - g.padL - 20)) * (A.nP - 1))));
           }
           if (A.hover >= 0) {
-            ctx.strokeStyle = 'rgba(232,230,225,0.22)'; ctx.setLineDash([2, 4]);
+            ctx.strokeStyle = 'rgba(214,255,208,0.22)'; ctx.setLineDash([2, 4]);
             ctx.beginPath(); ctx.moveTo(g.xOf(A.hover), g.padT); ctx.lineTo(g.xOf(A.hover), g.botY); ctx.stroke();
             ctx.setLineDash([]);
             this.hoverCard(ctx, A.rows[A.hover], '#' + (A.hover + 1) + ' OF ' + A.nP);
@@ -479,7 +501,7 @@
         ['travel', 'SHE TRAVELS TO IT', '#39ff14'],
         ['pay', 'SHE MOVES THE MONEY', '#00ffa3'],
         ['chase', 'SHE CHASES A FAILURE', '#b026ff'],
-        ['broker', 'SHE ROUTES IT FOR OTHERS', '#e01aff']
+        ['broker', 'SHE ROUTES IT FOR OTHERS', '#ff2f9d']
       ];
       const series = {}, max = {};
       const bw = Math.max(1.4, nP / 7);
@@ -498,7 +520,7 @@
         play: 0.001, scrub: false, scrubGeo: null,
         frags: rows.map((r, i) => ({
           pos: i, text: r.text, tag: stamp(r) + ' · ' + r.tag, shownAt: 0,
-          pen: { travel: '#39ff14', pay: '#00ffa3', chase: '#b026ff', broker: '#e01aff' }[r.k], id: r
+          pen: { travel: '#39ff14', pay: '#00ffa3', chase: '#b026ff', broker: '#ff2f9d' }[r.k], id: r
         }))
       };
     }
@@ -544,7 +566,7 @@
             L.hover = Math.max(0, Math.min(L.nP - 1, Math.round(((mx - g.padL) / (g.chartR - g.padL - 20)) * (L.nP - 1))));
           }
           if (L.hover >= 0) {
-            ctx.strokeStyle = 'rgba(232,230,225,0.22)'; ctx.setLineDash([2, 4]);
+            ctx.strokeStyle = 'rgba(214,255,208,0.22)'; ctx.setLineDash([2, 4]);
             ctx.beginPath(); ctx.moveTo(g.xOf(L.hover), g.padT); ctx.lineTo(g.xOf(L.hover), g.botY); ctx.stroke();
             ctx.setLineDash([]);
             this.hoverCard(ctx, L.rows[L.hover], '#' + (L.hover + 1) + ' OF ' + L.nP);
@@ -592,7 +614,7 @@
         frags: rows.map(r => ({
           pos: at(r) + Math.min(0.85, (r.i % 5) * 0.14), text: r.text,
           tag: stamp(r) + ' · ' + r.tag, shownAt: 0,
-          pen: r.lane === 'hold' ? '#e01aff' : WHO[r.who], id: r
+          pen: r.lane === 'hold' ? '#ff2f9d' : WHO[r.who], id: r
         })).sort((a, b) => a.pos - b.pos)
       };
     }
@@ -611,19 +633,19 @@
         lanes: [
           { data: U.ask, label: 'SHE ASKS', unit: 'CITED ACTS', color: '#39ff14', max: U.mx },
           { data: U.give, label: 'HE PROVIDES', unit: 'CITED ACTS', color: '#00ffa3', max: U.mx },
-          { data: U.hostile, label: 'HE TURNS ON HER', unit: 'CITED LINES · COUNT BELOW', color: '#c77dff', max: U.mx },
-          { data: new Float32Array(U.nP), label: 'SUPPLY USED AS LEVERAGE', unit: 'CITED ACTS · ZERO', color: '#e01aff', max: U.mx }
+          { data: U.hostile, label: 'HE TURNS ON HER', unit: 'CITED LINES · COUNT BELOW', color: '#ff86c9', max: U.mx },
+          { data: new Float32Array(U.nP), label: 'SUPPLY USED AS LEVERAGE', unit: 'CITED ACTS · ZERO', color: '#ff2f9d', max: U.mx }
         ],
-        volume: { data: U.vol, max: 36, color: '#e01aff' },
+        volume: { data: U.vol, max: 36, color: '#ff2f9d' },
         frags: U.frags,
         feedTitle: 'THE TERMINAL WINDOW, VERBATIM · CLICK ONE FOR ITS SOURCE',
         feed: { dy: -32, dh: -30 },
-        ribbon: (i, past) => hx(U.volKnown[i] ? '#e01aff' : '#3d5230', past ? 0.85 : 0.16),
+        ribbon: (i, past) => hx(U.volKnown[i] ? '#ff2f9d' : '#3d5230', past ? 0.85 : 0.16),
         tickStep: 1,
         tickLabel: label,
 
         readout: (g) => {
-          ctx.font = '600 12px ' + this.MONO; ctx.fillStyle = '#e01aff'; ctx.textAlign = 'right';
+          ctx.font = '600 12px ' + this.MONO; ctx.fillStyle = '#ff2f9d'; ctx.textAlign = 'right';
           const i = Math.min(U.nP - 1, Math.floor(U.play));
           ctx.fillText(label(i) + ' · ' + (U.volKnown[i] ? U.vol[i] + ' ABUSIVE MESSAGES FROM HIM' : 'ABUSE COUNT NOT PUBLISHED'), g.chartR - 20, 30);
           ctx.font = '9px ' + this.MONO; ctx.fillStyle = '#39ff14';
@@ -636,10 +658,10 @@
           const zi = U.volKnown.lastIndexOf(true);
           if (zi >= 0 && zi < U.nP - 1) {
             const zx = g.xOf(zi + 0.5);
-            ctx.strokeStyle = hx('#e01aff', 0.45); ctx.setLineDash([3, 4]);
+            ctx.strokeStyle = hx('#ff2f9d', 0.45); ctx.setLineDash([3, 4]);
             ctx.beginPath(); ctx.moveTo(zx, g.padT); ctx.lineTo(zx, g.botY); ctx.stroke();
             ctx.setLineDash([]);
-            ctx.font = '8px ' + this.MONO; ctx.fillStyle = hx('#e01aff', 0.7); ctx.textAlign = 'center';
+            ctx.font = '8px ' + this.MONO; ctx.fillStyle = hx('#ff2f9d', 0.7); ctx.textAlign = 'center';
             ctx.fillText('COUNTED ← | → NOT PUBLISHED', zx, g.botY + 26);
             ctx.textAlign = 'left';
           }
@@ -655,13 +677,13 @@
           }
           if (U.hover >= 0) {
             const i = U.hover;
-            ctx.strokeStyle = 'rgba(232,230,225,0.22)'; ctx.setLineDash([2, 4]);
+            ctx.strokeStyle = 'rgba(214,255,208,0.22)'; ctx.setLineDash([2, 4]);
             ctx.beginPath(); ctx.moveTo(g.xOf(i), g.padT); ctx.lineTo(g.xOf(i), g.botY); ctx.stroke();
             ctx.setLineDash([]);
             const inMonth = U.rows.filter(r => monthIndex(r.day, U.y0, U.m0) === i);
             const lines = [
               [label(i), COL.txt, '600 12px ' + this.GROT],
-              [U.volKnown[i] ? U.vol[i] + ' ABUSIVE MESSAGES FROM DAN (PUBLISHED COUNT)' : 'ABUSE COUNT NOT PUBLISHED', '#e01aff', '9px ' + this.MONO],
+              [U.volKnown[i] ? U.vol[i] + ' ABUSIVE MESSAGES FROM DAN (PUBLISHED COUNT)' : 'ABUSE COUNT NOT PUBLISHED', '#ff2f9d', '9px ' + this.MONO],
               ['0 INSTANCES OF SUPPLY WITHHELD', '#39ff14', '9px ' + this.MONO],
               [inMonth.length + ' CITED RECORD' + (inMonth.length === 1 ? '' : 'S') + ' THIS MONTH', COL.dim, '9px ' + this.MONO]
             ];
@@ -748,7 +770,7 @@
         lanes: [
           { data: K.income, label: 'SHE HAS HER OWN INCOME', unit: 'DOCUMENTED PHASE', color: '#39ff14', max: 1 },
           { data: K.route, label: 'A ROUTE THAT ISN’T HIM', unit: 'DOCUMENTED PHASE', color: '#00ffa3', max: 1 },
-          { data: K.danSrc, label: 'HE IS HER SOURCE', unit: 'DOCUMENTED PHASE', color: '#e01aff', max: 1 },
+          { data: K.danSrc, label: 'HE IS HER SOURCE', unit: 'DOCUMENTED PHASE', color: '#ff2f9d', max: 1 },
           { data: K.acts, label: 'HER OWN PROCUREMENT ACTS', unit: 'CITED ACTS', color: '#b026ff', max: K.maxActs }
         ],
         volume: { data: K.vol, max: K.maxVol, color: '#7b2dff' },
@@ -757,7 +779,7 @@
         feed: { dy: -32, dh: -30 },
         ribbon: (i, past) => {
           const ph = K.phaseAt[i];
-          const col = ph.danSrc > 0 ? '#e01aff' : ph.income >= 1 ? '#39ff14' : '#7b2dff';
+          const col = ph.danSrc > 0 ? '#ff2f9d' : ph.income >= 1 ? '#39ff14' : '#7b2dff';
           return hx(col, past ? 0.9 : 0.16);
         },
         tickStep: 1,
@@ -767,7 +789,7 @@
           const i = Math.min(K.nP - 1, Math.floor(K.play));
           const ph = K.phaseAt[i];
           ctx.font = '600 11px ' + this.MONO;
-          ctx.fillStyle = ph.danSrc > 0 ? '#e01aff' : '#39ff14';
+          ctx.fillStyle = ph.danSrc > 0 ? '#ff2f9d' : '#39ff14';
           ctx.textAlign = 'right';
           ctx.fillText(ph.label, g.chartR - 20, 30);
           ctx.font = '9px ' + this.MONO; ctx.fillStyle = COL.dim;
@@ -782,12 +804,12 @@
           let b = a;
           while (b + 1 < K.nP && K.danSrc[b + 1] > 0) b++;
           const xa = g.xOf(a), xb = g.xOf(b);
-          ctx.fillStyle = 'rgba(224,26,255,0.10)';
+          ctx.fillStyle = 'rgba(255,47,157,0.10)';
           ctx.fillRect(xa, g.padT, xb - xa, g.botY - g.padT);
-          ctx.strokeStyle = hx('#e01aff', 0.5); ctx.setLineDash([3, 4]);
+          ctx.strokeStyle = hx('#ff2f9d', 0.5); ctx.setLineDash([3, 4]);
           ctx.beginPath(); ctx.moveTo(xa, g.padT); ctx.lineTo(xa, g.botY); ctx.moveTo(xb, g.padT); ctx.lineTo(xb, g.botY); ctx.stroke();
           ctx.setLineDash([]);
-          ctx.font = '8px ' + this.MONO; ctx.fillStyle = hx('#e01aff', 0.9); ctx.textAlign = 'center';
+          ctx.font = '8px ' + this.MONO; ctx.fillStyle = hx('#ff2f9d', 0.9); ctx.textAlign = 'center';
           ctx.fillText('THE WINDOW THE CLAIM IS ABOUT', (xa + xb) / 2, g.padT + 14);
           ctx.textAlign = 'left';
           ctx.font = '9px ' + this.MONO; ctx.fillStyle = hx('#6f8a5e', 0.95);
@@ -803,12 +825,12 @@
           if (K.hover >= 0) {
             const i = K.hover, ph = K.phaseAt[i];
             const y = K.y0 + Math.floor((K.m0 + i) / 12), m = (K.m0 + i) % 12;
-            ctx.strokeStyle = 'rgba(232,230,225,0.22)'; ctx.setLineDash([2, 4]);
+            ctx.strokeStyle = 'rgba(214,255,208,0.22)'; ctx.setLineDash([2, 4]);
             ctx.beginPath(); ctx.moveTo(g.xOf(i), g.padT); ctx.lineTo(g.xOf(i), g.botY); ctx.stroke();
             ctx.setLineDash([]);
             const lines = [
               [MONTHS[m] + ' ' + y, COL.txt, '600 12px ' + this.GROT],
-              [ph.label, ph.danSrc > 0 ? '#e01aff' : '#39ff14', '9px ' + this.MONO]
+              [ph.label, ph.danSrc > 0 ? '#ff2f9d' : '#39ff14', '9px ' + this.MONO]
             ];
             for (const ln of this.wrap(ctx, ph.note, 380).slice(0, 4)) lines.push([ln, COL.txt, '11px ' + this.GROT]);
             this.card(ctx, mx, my, lines);
@@ -876,7 +898,7 @@
           { data: P.series[0], label: 'RAW EXPORT ROW', unit: 'FILE · TIME · DIRECTION', color: '#39ff14', max: P.max },
           { data: P.series[1], label: 'NAMED EXPORT, ATTRIBUTED', unit: 'NO ROW-LEVEL TAG', color: '#00ffa3', max: P.max },
           { data: P.series[2], label: 'WIKI FINDING', unit: 'SOURCED, NOT QUOTED', color: '#b026ff', max: P.max },
-          { data: P.series[3], label: 'DOSSIER OR DERIVED ONLY', unit: 'SECONDARY', color: '#e01aff', max: P.max }
+          { data: P.series[3], label: 'DOSSIER OR DERIVED ONLY', unit: 'SECONDARY', color: '#ff2f9d', max: P.max }
         ],
         volume: { data: P.vol, max: 4, color: '#7b2dff' },
         frags: P.frags,
@@ -898,10 +920,10 @@
         marker: (g) => {
           if (P.softAt <= 0) return;
           const zx = g.xOf(P.softAt);
-          ctx.strokeStyle = hx('#e01aff', 0.55); ctx.setLineDash([3, 4]);
+          ctx.strokeStyle = hx('#ff2f9d', 0.55); ctx.setLineDash([3, 4]);
           ctx.beginPath(); ctx.moveTo(zx, g.padT); ctx.lineTo(zx, g.botY); ctx.stroke();
           ctx.setLineDash([]);
-          ctx.font = '8px ' + this.MONO; ctx.fillStyle = hx('#e01aff', 0.8); ctx.textAlign = 'center';
+          ctx.font = '8px ' + this.MONO; ctx.fillStyle = hx('#ff2f9d', 0.8); ctx.textAlign = 'center';
           ctx.fillText('PRIMARY ROWS ← | → EVERYTHING SOFTER', zx, g.botY + 26);
           ctx.textAlign = 'left';
           ctx.font = '9px ' + this.MONO; ctx.fillStyle = hx('#e0aaff', 0.8);
@@ -915,7 +937,7 @@
             P.hover = Math.max(0, Math.min(P.nP - 1, Math.round(((mx - g.padL) / (g.chartR - g.padL - 20)) * (P.nP - 1))));
           }
           if (P.hover >= 0) {
-            ctx.strokeStyle = 'rgba(232,230,225,0.22)'; ctx.setLineDash([2, 4]);
+            ctx.strokeStyle = 'rgba(214,255,208,0.22)'; ctx.setLineDash([2, 4]);
             ctx.beginPath(); ctx.moveTo(g.xOf(P.hover), g.padT); ctx.lineTo(g.xOf(P.hover), g.botY); ctx.stroke();
             ctx.setLineDash([]);
             this.hoverCard(ctx, P.rows[P.hover], '#' + (P.hover + 1) + ' OF ' + P.nP);
@@ -945,12 +967,12 @@
       const rows = A0.records.map(r => ({ ...r, day: D.dayNum(r.d), pos: D.dayNum(r.d) - d0 }))
         .filter(r => r.pos >= 0 && r.pos < nP);
       const LANES = [
-        // the order she names — "How much?" · "60" — is the top lane because it
-        // is the act the whole question turns on: she sets the size of the buy
-        ['denom', 'SHE NAMES THE NUMBER', '#39ff14', ['denom']],
-        ['want', 'SHE ASKS FOR IT', '#00ffa3', ['want', 'order', 'chase', 'askSupply', 'askMoney', 'askOther']],
-        ['fund', 'SHE RAISES THE MONEY', '#b6ff8f', ['fund', 'ask3p']],
-        ['code', 'SHE HANDS HIM HER ATM CODE', '#c77dff', ['code']],
+        // the order Annie names — "How much?" · "60" — is the top lane because it
+        // is the act the whole question turns on: Annie sets the size of the buy
+        ['denom', 'ANNIE NAMES THE BUY SIZE', '#39ff14', ['denom']],
+        ['want', 'ANNIE ASKS FOR IT', '#00ffa3', ['want', 'order', 'chase', 'askSupply', 'askMoney', 'askOther']],
+        ['fund', 'ANNIE RAISES THE MONEY', '#b6ff8f', ['fund', 'ask3p']],
+        ['code', 'ANNIE HANDS DAN HER ATM CODE', '#ff86c9', ['code']],
         ['see', 'IS THE SOURCE AROUND?', '#b026ff', ['see']]
       ];
       const series = {}, max = {}, counts = {};
@@ -971,16 +993,16 @@
       for (let i = 0; i < nP; i++) { run += byDay[i] || 0; cum[i] = run; }
 
       const KTAG = {
-        denom: 'HE ASKS HOW MUCH \u2014 SHE NAMES THE NUMBER',
-        want: 'SHE ASKS FOR IT', code: 'SHE HANDS HIM HER ATM CODE', see: 'IS THE SOURCE AROUND?',
-        fund: 'SHE RAISES THE MONEY', order: 'SHE PLACES THE ORDER', chase: 'SHE CHASES THE SUPPLY',
-        askSupply: 'SHE ASKS HIM FOR SUPPLY', askMoney: 'SHE ASKS HIM FOR MONEY',
-        askOther: 'SHE ASKS HIM FOR SOMETHING', ask3p: 'SHE ASKS HER OWN FAMILY'
+        denom: 'DAN ASKS HOW MUCH \u2014 ANNIE NAMES THE NUMBER',
+        want: 'ANNIE ASKS FOR IT', code: 'ANNIE HANDS DAN HER ATM CODE', see: 'IS THE SOURCE AROUND?',
+        fund: 'ANNIE RAISES THE MONEY', order: 'ANNIE PLACES THE ORDER', chase: 'ANNIE CHASES THE SUPPLY',
+        askSupply: 'ANNIE ASKS DAN FOR SUPPLY', askMoney: 'ANNIE ASKS DAN FOR MONEY',
+        askOther: 'ANNIE ASKS DAN FOR SOMETHING', ask3p: 'ANNIE ASKS ANNIE’S FAMILY'
       };
       const KCOL = {
-        denom: '#39ff14', want: '#00ffa3', code: '#c77dff', see: '#b026ff',
+        denom: '#39ff14', want: '#00ffa3', code: '#ff86c9', see: '#b026ff',
         fund: '#b6ff8f', order: '#00ffa3', chase: '#00ffa3',
-        askSupply: '#c77dff', askMoney: '#c77dff', askOther: '#c77dff', ask3p: '#b026ff'
+        askSupply: '#ff86c9', askMoney: '#ff86c9', askOther: '#ff86c9', ask3p: '#b026ff'
       };
 
       this.M.ask = {
@@ -992,7 +1014,7 @@
           tag: r.d + ' ' + r.t + ' · ' + KTAG[r.k],
           shownAt: 0, pen: KCOL[r.k],
           id: {
-            tier: 'RAW-CSV', tag: KTAG[r.k], text: r.x,
+            tier: 'RAW-CSV', tag: KTAG[r.k], text: r.x, d: r.d, t: r.t,
             src: 'wiki-brain raw/self/message-csv/ · merged Annie-thread exports',
             dir: r.d + ' ' + r.t + ' | Received | +1 212 ··· 2449',
             page: 'wiki/people/annie-ulmer', who: 'annie', day: r.day, approx: false,
@@ -1015,18 +1037,18 @@
 
       this.penInstrument(ctx, W, H, dt, {
         id: 'ask', accent: '#39ff14', title: 'THE ASK',
-        sub: this.fitSub(ctx, A.total + ' PROCUREMENT MESSAGES · ' + A.counts.denom + ' NAME THE SIZE · ' + A.counts.code + ' HAND HIM HER ATM CODE'),
+        sub: this.fitSub(ctx, A.total + ' PROCUREMENT MESSAGES · ' + A.counts.denom + ' WHERE ANNIE NAMES THE SIZE · ' + A.counts.code + ' WHERE ANNIE HANDS DAN HER ATM CODE'),
         nP: A.nP, padL: 176, padT: 76, padB: 76, laneGap: 7,
         lanes: A.LANES.map(([k, lab, col]) => ({
           data: A.series[k], label: lab, unit: A.counts[k] + ' MESSAGES', color: col, max: A.max[k]
         })),
-        volume: { data: A.cum, max: Math.max(1, A.total), color: '#e01aff', label: 'RUNNING TOTAL' },
+        volume: { data: A.cum, max: Math.max(1, A.total), color: '#ff2f9d', label: 'RUNNING TOTAL' },
         frags: A.frags,
         feedTitle: 'HER OWN WORDS, FROM THE RAW EXPORTS · CLICK FOR PROVENANCE',
         feed: { dy: -32, dh: -30 },
         ribbon: (i, past) => {
           const n = A.byDay[i] || 0;
-          if (!n) return hx('#2a1245', past ? 0.4 : 0.12);
+          if (!n) return hx('#14471f', past ? 0.4 : 0.12);
           return hx('#39ff14', past ? Math.min(1, 0.5 + n * 0.25) : 0.25);
         },
         tickStep: 1,
@@ -1035,7 +1057,7 @@
         readout: (g) => {
           const i = Math.min(A.nP - 1, Math.floor(A.play));
           const t = dayOf(i);
-          ctx.font = '700 15px ' + this.MONO; ctx.fillStyle = '#e01aff'; ctx.textAlign = 'right';
+          ctx.font = '700 15px ' + this.MONO; ctx.fillStyle = '#ff2f9d'; ctx.textAlign = 'right';
           ctx.fillText('RUNNING TOTAL: ' + A.cum[i], g.chartR - 20, 32);
           ctx.font = '9px ' + this.MONO; ctx.fillStyle = COL.dim;
           ctx.fillText(MONTHS[t.getUTCMonth()] + ' ' + t.getUTCDate() + ' ' + t.getUTCFullYear()
@@ -1046,11 +1068,11 @@
         marker: (g) => {
           ctx.font = '9px ' + this.MONO; ctx.textAlign = 'left';
           ctx.fillStyle = hx('#39ff14', 0.9);
-          ctx.fillText(A.meta.herMessages.toLocaleString('en-US') + ' OF HER MESSAGES READ, ' + A.meta.from + ' → ' + A.meta.to
+          ctx.fillText(A.meta.herMessages.toLocaleString('en-US') + ' OF ANNIE’S MESSAGES READ, ' + A.meta.from + ' → ' + A.meta.to
             + ' · EVERY MONTH COVERED · NO NARRATIVE GAPS TO EXPLAIN AWAY.', g.padL, g.botY + 40);
           ctx.fillStyle = hx('#e0aaff', 0.9);
-          ctx.fillText('SHE STATES ' + A.meta.dollarMentions + ' DOLLAR AMOUNTS TOTALLING $' + A.meta.dollarsStated.toLocaleString('en-US')
-            + '. THE PROTOCOL IS HIS QUESTION AND HER NUMBER: \u201cHOW MUCH?\u201d \u2192 \u201c60\u201d. THE CODE LANE IS HER OWN BANK ACCOUNT.', g.padL, g.botY + 54);
+          ctx.fillText('ANNIE STATES ' + A.meta.dollarMentions + ' DOLLAR AMOUNTS TOTALLING $' + A.meta.dollarsStated.toLocaleString('en-US')
+            + '. THE PATTERN: DAN ASKS HOW MUCH, ANNIE NAMES THE NUMBER — “HOW MUCH?” → “60”. THE CODE LANE IS ANNIE’S OWN BANK ACCOUNT.', g.padL, g.botY + 54);
         },
 
         overlay: (g) => {
@@ -1061,14 +1083,14 @@
           }
           if (A.hover >= 0) {
             const i = A.hover, t = dayOf(i);
-            ctx.strokeStyle = 'rgba(232,230,225,0.22)'; ctx.setLineDash([2, 4]);
+            ctx.strokeStyle = 'rgba(214,255,208,0.22)'; ctx.setLineDash([2, 4]);
             ctx.beginPath(); ctx.moveTo(g.xOf(i), g.padT); ctx.lineTo(g.xOf(i), g.botY); ctx.stroke();
             ctx.setLineDash([]);
             const near = A.rows.filter(r => Math.abs(r.pos - i) <= 5).sort((a, b) => Math.abs(a.pos - i) - Math.abs(b.pos - i));
             const lines = [
               [MONTHS[t.getUTCMonth()] + ' ' + t.getUTCDate() + ', ' + t.getUTCFullYear(), COL.txt, '600 12px ' + this.GROT],
               [(A.byDay[i] || 0) + ' PROCUREMENT MESSAGE' + ((A.byDay[i] || 0) === 1 ? '' : 'S') + ' THAT DAY', '#39ff14', '9px ' + this.MONO],
-              ['RUNNING TOTAL HERE: ' + A.cum[i] + ' OF ' + A.total, '#e01aff', '9px ' + this.MONO]
+              ['RUNNING TOTAL HERE: ' + A.cum[i] + ' OF ' + A.total, '#ff2f9d', '9px ' + this.MONO]
             ];
             for (const r of near.slice(0, 3)) {
               lines.push([r.d + ' ' + r.t, COL.dim, '9px ' + this.MONO]);

@@ -38,7 +38,7 @@
    scanlines, mesh, a sweeping tracking band, grain and a mains flicker.
    All of it sits ABOVE the layout and below nothing you need to click. */
 .rdr-veil{position:absolute;inset:0;z-index:4;pointer-events:none;
-  background:repeating-linear-gradient(0deg,rgba(10,0,26,.30) 0 1px,transparent 1px 3px);
+  background:repeating-linear-gradient(0deg,rgba(3,13,6,.30) 0 1px,transparent 1px 3px);
   animation:rdrFlick 5.5s steps(1) infinite}
 @keyframes rdrFlick{0%,96%,100%{opacity:1}97%{opacity:.72}98%{opacity:1}99%{opacity:.85}}
 .rdr-mesh{position:absolute;inset:0;z-index:2;pointer-events:none;opacity:.5;
@@ -54,7 +54,7 @@
 @keyframes rdrTrack{0%{top:-140px;opacity:0}6%{opacity:1}94%{opacity:1}100%{top:100%;opacity:0}}
 /* grain */
 .rdr-grain{position:absolute;inset:0;z-index:1;pointer-events:none;opacity:.20;
-  background-image:radial-gradient(rgba(10,0,26,.5) .5px,transparent .5px);
+  background-image:radial-gradient(rgba(3,13,6,.5) .5px,transparent .5px);
   background-size:3px 3px;animation:rdrGrain .55s steps(1) infinite}
 @keyframes rdrGrain{0%{background-position:0 0}25%{background-position:2px 1px}
   50%{background-position:1px 2px}75%{background-position:2px 2px}100%{background-position:0 1px}}
@@ -89,7 +89,7 @@
 
 /* ══════════ NAV ══════════ */
 .rdr-nav{width:296px;min-width:296px;display:flex;flex-direction:column;
-  background:linear-gradient(180deg,#240046,#10001f);border-right:3px solid #b026ff;box-shadow:6px 0 34px rgba(74,0,128,.65);position:relative;z-index:20}
+  background:linear-gradient(180deg,#0a2c11,#041206);border-right:3px solid #b026ff;box-shadow:6px 0 34px rgba(74,0,128,.65);position:relative;z-index:20}
 .rdr-nav::after{content:'';position:absolute;top:0;right:-1px;bottom:0;width:1px;
   background:linear-gradient(180deg,transparent,#7b2dff,#39ff14,transparent);opacity:.7}
 .rdr-srch{padding:14px 14px 10px;border-bottom:1px solid rgba(123,45,255,.18)}
@@ -99,9 +99,9 @@
 .rdr-srch input::placeholder{color:#6a8f58;letter-spacing:.14em}
 .rdr-srch input:focus{border-color:#b026ff;box-shadow:0 0 0 1px rgba(176,38,255,.35),0 0 22px rgba(176,38,255,.28),inset 0 0 18px rgba(123,45,255,.15)}
 .rdr-count{margin-top:8px;font-size:8.5px;letter-spacing:.26em;color:#8fd97a}
-.rdr-list{flex:1;overflow-y:auto;padding:4px 0 40px;scrollbar-width:thin;scrollbar-color:#7b2dff #10001f}
+.rdr-list{flex:1;overflow-y:auto;padding:4px 0 40px;scrollbar-width:thin;scrollbar-color:#7b2dff #041206}
 .rdr-list::-webkit-scrollbar{width:8px}
-.rdr-list::-webkit-scrollbar-track{background:#10001f}
+.rdr-list::-webkit-scrollbar-track{background:#041206}
 .rdr-list::-webkit-scrollbar-thumb{background:linear-gradient(180deg,#7b2dff,#39ff14)}
 
 /* ── tree ──
@@ -125,29 +125,29 @@
 .rdr-kids .rdr-kids{margin-left:11px;border-left:1px solid rgba(123,45,255,.22)}
 
 .rdr-frow{display:flex;align-items:center;gap:8px;width:100%;background:none;border:0;cursor:pointer;
-  font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:#c3b0e8;letter-spacing:.06em;
+  font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:#b7e6c6;letter-spacing:.06em;
   padding:5px 12px 5px 16px;text-align:left;transition:color .12s,background .12s}
 .rdr-frow:hover{color:#fff;background:rgba(123,45,255,.16)}
 .rdr-frow i{font-style:normal;font-size:7.5px;width:8px;color:var(--d);transition:transform .16s}
 .rdr-frow.open i{transform:rotate(90deg)}
 .rdr-frow s{flex:1;text-decoration:none}
-.rdr-frow u{text-decoration:none;font-size:8.5px;opacity:.75;color:#c9a8ff}
+.rdr-frow u{text-decoration:none;font-size:8.5px;opacity:.75;color:#e0aaff}
 .rdr-frow.ltr s{font-weight:700;letter-spacing:.2em;color:var(--d)}
 
 .rdr-it{display:block;width:100%;text-align:left;background:none;border:0;cursor:pointer;
-  font-family:'IBM Plex Mono',monospace;font-size:10.5px;line-height:1.42;color:#c9bce8;
+  font-family:'IBM Plex Mono',monospace;font-size:10.5px;line-height:1.42;color:#bfe9cd;
   padding:5px 12px 5px 22px;border-left:2px solid transparent;position:relative;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:color .12s,background .12s}
 .rdr-it:hover{color:#fff;background:linear-gradient(90deg,rgba(123,45,255,.24),transparent);border-left-color:var(--d)}
-.rdr-it.on{color:#10001f;background:var(--d);border-left-color:#fff;font-weight:600;
+.rdr-it.on{color:#041206;background:var(--d);border-left-color:#fff;font-weight:600;
   text-shadow:none;box-shadow:0 0 26px -6px var(--d)}
 .rdr-it.on::after{content:'◄';position:absolute;right:9px;font-size:8px}
 .rdr-it.idx{color:#d6ffc7}
 .rdr-it .k{opacity:.4;margin-right:6px}
 .rdr-it mark{background:none;color:#39ff14;text-shadow:0 0 10px #39ff14}
-.rdr-it.on mark{color:#10001f;text-shadow:none;text-decoration:underline}
+.rdr-it.on mark{color:#041206;text-shadow:none;text-decoration:underline}
 .rdr-sub{display:block;font-size:8.5px;letter-spacing:.05em;color:#5f7a4e;margin-top:2px}
-.rdr-it.on .rdr-sub{color:rgba(2,0,8,.65)}
+.rdr-it.on .rdr-sub{color:rgba(1,8,3,.65)}
 .rdr-empty{padding:26px 16px;font-size:10px;letter-spacing:.18em;color:#8fd97a;line-height:2}
 .rdr-hits{padding:11px 14px 6px;font-size:8.5px;letter-spacing:.26em;color:#39ff14}
 
@@ -168,10 +168,10 @@
        nine domains are bright greens, and white eyebrow text on acid yellow
        is unreadable without it. Fades out to the right so the watermark and
        the aurora stay at full strength where no text sits. */
-    linear-gradient(100deg,rgba(16,0,31,.96) 0%,rgba(16,0,31,.88) 44%,rgba(36,0,70,.72) 72%,rgba(36,0,70,.45) 100%),
+    linear-gradient(100deg,rgba(4,18,6,.96) 0%,rgba(4,18,6,.88) 44%,rgba(10,44,17,.72) 72%,rgba(10,44,17,.45) 100%),
     radial-gradient(ellipse 120% 150% at 8% -30%,color-mix(in srgb,var(--d) 62%,transparent),transparent 60%),
     radial-gradient(ellipse 90% 120% at 92% 0%,color-mix(in srgb,#7b2dff 44%,transparent),transparent 62%),
-    linear-gradient(180deg,color-mix(in srgb,var(--d) 20%,transparent),rgba(3,1,9,.2) 70%,transparent)}
+    linear-gradient(180deg,color-mix(in srgb,var(--d) 20%,transparent),rgba(1,9,3,.2) 70%,transparent)}
 /* drifting aurora wash */
 .rdr-head::before{content:'';position:absolute;inset:-40%;z-index:-2;pointer-events:none;opacity:.55;
   background:conic-gradient(from 0deg,transparent,color-mix(in srgb,var(--d) 55%,transparent),
@@ -197,7 +197,7 @@
   font-size:9.5px;letter-spacing:.42em;color:#fff;margin-bottom:22px;
   text-shadow:0 0 4px var(--d),0 0 18px var(--d),0 0 40px var(--d)}
 .rdr-eyebrow s{text-decoration:none;opacity:.45}
-.rdr-eyebrow em{font-style:normal;padding:3px 9px;background:var(--d);color:#10001f;font-weight:700;
+.rdr-eyebrow em{font-style:normal;padding:3px 9px;background:var(--d);color:#041206;font-weight:700;
   letter-spacing:.24em;box-shadow:0 0 22px var(--d)}
 
 /* the title: Unbounded 900 (same family as the splash) sitting WHITE and legible
@@ -206,7 +206,7 @@
 .rdr-title{position:relative;margin:0;font-family:'Unbounded',sans-serif;font-weight:900;
   font-size:clamp(36px,5.6vw,76px);line-height:1.02;letter-spacing:-.018em;color:#fff;
   text-wrap:balance;
-  -webkit-text-stroke:3px #0a0014;paint-order:stroke fill;
+  -webkit-text-stroke:3px #020a04;paint-order:stroke fill;
   text-shadow:4px 0 rgba(176,38,255,.9),-4px 0 rgba(57,255,20,.9),
     0 0 34px color-mix(in srgb,var(--d) 75%,transparent),
     0 0 96px color-mix(in srgb,var(--d) 55%,transparent)}
@@ -246,83 +246,83 @@
 
 /* ── body ── */
 .rdr-body{padding:44px 0 0;font-family:'Space Grotesk',sans-serif;position:relative}
-.rdr-body p{margin:0 0 19px;font-size:16.6px;line-height:1.86;color:#0d0018;max-width:72ch;font-weight:500}
+.rdr-body p{margin:0 0 19px;font-size:16.6px;line-height:1.86;color:#030e05;max-width:72ch;font-weight:500}
 /* lead-in: weight and a domain rule rather than a drop cap, which straddles
    two lines and reads as if it belongs to both */
-.rdr-body p.lead{position:relative;font-size:19px;line-height:1.76;color:#0d0018;font-weight:600;
+.rdr-body p.lead{position:relative;font-size:19px;line-height:1.76;color:#030e05;font-weight:600;
   padding-left:22px;margin-bottom:26px}
 .rdr-body p.lead::before{content:'';position:absolute;left:0;top:.34em;bottom:.24em;width:3px;
   background:linear-gradient(180deg,var(--d),transparent);
   box-shadow:0 0 16px color-mix(in srgb,var(--d) 75%,transparent)}
 .rdr-body strong{color:#000;font-weight:700;
   background:rgba(255,255,255,.42);padding:0 3px;box-shadow:0 0 0 1px rgba(74,0,128,.35)}
-.rdr-body em{color:#4a0080;font-style:italic;font-weight:600}
-.rdr-body code{font-family:'IBM Plex Mono',monospace;font-size:12.5px;background:#10001f;
+.rdr-body em{color:#127020;font-style:italic;font-weight:600}
+.rdr-body code{font-family:'IBM Plex Mono',monospace;font-size:12.5px;background:#041206;
   border:1px solid #b026ff;padding:1px 6px;color:#39ff14}
 
 .rdr-body h2{position:relative;margin:52px 0 20px;padding-left:18px;
   font-family:'Unbounded',sans-serif;font-weight:700;font-size:clamp(19px,2.3vw,27px);
   line-height:1.2;color:#fff;letter-spacing:-.005em;
-  -webkit-text-stroke:2px #0a0014;paint-order:stroke fill;
+  -webkit-text-stroke:2px #020a04;paint-order:stroke fill;
   text-shadow:3px 0 rgba(176,38,255,.75),-3px 0 rgba(57,255,20,.75)}
 .rdr-body h2::before{content:'';position:absolute;left:0;top:.1em;bottom:.1em;width:4px;
   background:linear-gradient(180deg,var(--d),transparent);box-shadow:0 0 14px var(--d)}
 .rdr-body h3{margin:34px 0 13px;font-family:'IBM Plex Mono',monospace;font-weight:600;
-  font-size:11px;letter-spacing:.28em;text-transform:uppercase;color:#4a0080}
+  font-size:11px;letter-spacing:.28em;text-transform:uppercase;color:#127020}
 .rdr-body h4,.rdr-body h5,.rdr-body h6{margin:24px 0 10px;font-family:'IBM Plex Mono',monospace;
-  font-size:10.5px;letter-spacing:.2em;text-transform:uppercase;color:#5b1a8f;font-weight:700}
+  font-size:10.5px;letter-spacing:.2em;text-transform:uppercase;color:#1d8a34;font-weight:700}
 
 .rdr-body ul,.rdr-body ol{margin:0 0 20px;padding-left:24px;max-width:72ch}
-.rdr-body li{font-size:16px;line-height:1.8;color:#0d0018;margin-bottom:7px;font-weight:500}
-.rdr-body li::marker{color:#4a0080}
+.rdr-body li{font-size:16px;line-height:1.8;color:#030e05;margin-bottom:7px;font-weight:500}
+.rdr-body li::marker{color:#127020}
 
 .rdr-body hr{border:0;height:1px;margin:36px 0;
-  background:linear-gradient(90deg,transparent,#4a0080,transparent)}
+  background:linear-gradient(90deg,transparent,#127020,transparent)}
 
 /* tables — 2,634 rows in this corpus, so they are a first-class citizen */
-.rdr-tw{overflow-x:auto;margin:0 0 26px;border:2px solid #b026ff;background:#10001f;box-shadow:0 0 30px rgba(74,0,128,.5)}
+.rdr-tw{overflow-x:auto;margin:0 0 26px;border:2px solid #b026ff;background:#041206;box-shadow:0 0 30px rgba(74,0,128,.5)}
 .rdr-body table{border-collapse:collapse;width:100%;font-family:'IBM Plex Mono',monospace;font-size:12px}
-.rdr-body th{text-align:left;padding:10px 14px;background:#240046;
+.rdr-body th{text-align:left;padding:10px 14px;background:#0a2c11;
   color:#39ff14;font-weight:700;letter-spacing:.16em;font-size:9.5px;text-transform:uppercase;
   border-bottom:2px solid #b026ff;white-space:nowrap}
-.rdr-body td{padding:10px 14px;color:#ded4f5;line-height:1.66;border-bottom:1px solid rgba(176,38,255,.22);vertical-align:top}
+.rdr-body td{padding:10px 14px;color:#dcffe6;line-height:1.66;border-bottom:1px solid rgba(176,38,255,.22);vertical-align:top}
 .rdr-body tr:last-child td{border-bottom:0}
 .rdr-body tbody tr:hover td{background:rgba(176,38,255,.20);color:#fff}
 
 /* quotes — and the CONTRADICTION callout the corpus actually uses */
 .rdr-body blockquote{margin:0 0 24px;padding:15px 22px;max-width:72ch;
-  border-left:5px solid #4a0080;background:rgba(255,255,255,.30);
-  font-size:15.8px;line-height:1.8;color:#0d0018;font-weight:500}
-.rdr-body blockquote.contra{border-left-color:#39ff14;background:#2a0050;
-  color:#f3e6ff;box-shadow:0 0 34px rgba(74,0,128,.7)}
+  border-left:5px solid #127020;background:rgba(255,255,255,.30);
+  font-size:15.8px;line-height:1.8;color:#030e05;font-weight:500}
+.rdr-body blockquote.contra{border-left-color:#39ff14;background:#0b2f12;
+  color:#f2fff4;box-shadow:0 0 34px rgba(74,0,128,.7)}
 .rdr-body blockquote.contra::before{content:'⚠ CONTRADICTION';display:block;margin-bottom:9px;
   font-family:'IBM Plex Mono',monospace;font-size:8.5px;letter-spacing:.3em;color:#39ff14;
   text-shadow:0 0 14px #39ff14;animation:rdrBlink 2.4s steps(1) infinite}
 @keyframes rdrBlink{0%,72%,100%{opacity:1}80%{opacity:.35}}
 
 /* wikilinks — the signature interaction, 2,723 of them */
-.rdr-wl{color:#3d006b;text-decoration:none;cursor:pointer;position:relative;
+.rdr-wl{color:#0f5c1c;text-decoration:none;cursor:pointer;position:relative;
   border-bottom:2px solid var(--d);background:rgba(255,255,255,.34);padding:0 2px;
   font-weight:600;transition:all .12s}
-.rdr-wl:hover{color:#eaffe4;background:#4a0080;border-bottom-color:#39ff14;
+.rdr-wl:hover{color:#eaffe4;background:#127020;border-bottom-color:#39ff14;
   box-shadow:0 0 20px rgba(74,0,128,.8)}
 .rdr-wl.dead{color:#4a5c3a;background:rgba(0,0,0,.12);border-bottom:1px dotted #2a3a1e;cursor:not-allowed;font-weight:500}
 .rdr-wl.dead:hover{background:rgba(0,0,0,.12);box-shadow:none;color:#4a5c3a}
-.rdr-body a[href]{color:#3d006b;font-weight:600;text-decoration:none;border-bottom:2px solid #b026ff}
-.rdr-body a[href]:hover{color:#eaffe4;background:#4a0080}
+.rdr-body a[href]{color:#0f5c1c;font-weight:600;text-decoration:none;border-bottom:2px solid #b026ff}
+.rdr-body a[href]:hover{color:#eaffe4;background:#127020}
 
 /* ── dossier (infobox) ── */
 .rdr-dossier{float:right;width:298px;margin:6px 0 24px 30px;border:2px solid #b026ff;
-  background:linear-gradient(180deg,#240046,#10001f);
+  background:linear-gradient(180deg,#0a2c11,#041206);
   box-shadow:0 0 40px rgba(74,0,128,.6)}
 .rdr-dossier h4{margin:0;padding:9px 13px;font-family:'IBM Plex Mono',monospace;font-size:8.5px;
-  letter-spacing:.3em;color:#10001f;background:var(--d);text-transform:none}
+  letter-spacing:.3em;color:#041206;background:var(--d);text-transform:none}
 .rdr-dl{display:flex;gap:10px;padding:8px 13px;border-top:1px solid rgba(176,38,255,.28)}
 .rdr-dl dt{flex:0 0 88px;font-size:8.5px;letter-spacing:.12em;color:#39ff14;padding-top:2px;text-transform:uppercase}
-.rdr-dl dd{margin:0;flex:1;font-size:11px;line-height:1.6;color:#ede4ff;font-family:'IBM Plex Mono',monospace}
+.rdr-dl dd{margin:0;flex:1;font-size:11px;line-height:1.6;color:#e4ffe9;font-family:'IBM Plex Mono',monospace}
 
 /* ── signal manifest (typed connections) ── */
-.rdr-manifest{margin:0 0 30px;border:2px solid #b026ff;background:#10001f;box-shadow:0 0 36px rgba(74,0,128,.55)}
+.rdr-manifest{margin:0 0 30px;border:2px solid #b026ff;background:#041206;box-shadow:0 0 36px rgba(74,0,128,.55)}
 .rdr-mhead{display:flex;align-items:center;gap:10px;padding:10px 16px;
   border-bottom:2px solid #b026ff;font-size:8.5px;letter-spacing:.3em;color:#39ff14}
 .rdr-mhead b{flex:1;height:1px;background:linear-gradient(90deg,#7b2dff,transparent);opacity:.6}
@@ -333,37 +333,37 @@
   border-right:1px solid color-mix(in srgb,var(--e) 30%,transparent);text-align:right;line-height:1.5}
 .rdr-ebody{padding:11px 16px}
 .rdr-ebody .t{display:block;font-family:'IBM Plex Mono',monospace;font-size:11.5px;margin-bottom:5px}
-.rdr-ebody .c{font-family:'Space Grotesk',sans-serif;font-size:13.4px;line-height:1.7;color:#cdbdf0;font-style:italic}
+.rdr-ebody .c{font-family:'Space Grotesk',sans-serif;font-size:13.4px;line-height:1.7;color:#d9f2e0;font-style:italic}
 
 /* ── inbound / footer ── */
-.rdr-foot{max-width:1080px;margin:66px auto 0;padding:26px 56px 0;border-top:3px solid #4a0080;
+.rdr-foot{max-width:1080px;margin:66px auto 0;padding:26px 56px 0;border-top:3px solid #127020;
   position:relative;z-index:2}
-.rdr-flabel{font-size:8.5px;letter-spacing:.3em;color:#3d006b;font-weight:700;margin-bottom:13px}
+.rdr-flabel{font-size:8.5px;letter-spacing:.3em;color:#0f5c1c;font-weight:700;margin-bottom:13px}
 .rdr-back{display:flex;flex-wrap:wrap;gap:7px}
-.rdr-bl{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.05em;color:#3d006b;
-  border:2px solid #4a0080;padding:5px 11px;cursor:pointer;font-weight:600;
+.rdr-bl{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.05em;color:#0f5c1c;
+  border:2px solid #127020;padding:5px 11px;cursor:pointer;font-weight:600;
   background:rgba(255,255,255,.34);transition:all .12s}
-.rdr-bl:hover{background:#4a0080;color:#39ff14;box-shadow:0 0 22px rgba(74,0,128,.9)}
+.rdr-bl:hover{background:#127020;color:#39ff14;box-shadow:0 0 22px rgba(74,0,128,.9)}
 .rdr-src{margin-top:26px}
 .rdr-src div{font-size:9.5px;line-height:1.9;color:#2f4a22;font-family:'IBM Plex Mono',monospace;
   overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.rdr-src div::before{content:'▸ ';color:#4a0080}
+.rdr-src div::before{content:'▸ ';color:#127020}
 
 /* ── hover preview for wikilinks ── */
 .rdr-pv{position:fixed;z-index:120;width:310px;pointer-events:none;opacity:0;
-  border:2px solid var(--d);background:#10001f;
+  border:2px solid var(--d);background:#041206;
   box-shadow:0 0 50px -10px var(--d),0 18px 50px rgba(0,0,0,.75);transition:opacity .11s}
 .rdr-pv.on{opacity:1}
-.rdr-pv .h{padding:8px 12px;font-size:8.5px;letter-spacing:.26em;color:#10001f;background:var(--d)}
+.rdr-pv .h{padding:8px 12px;font-size:8.5px;letter-spacing:.26em;color:#041206;background:var(--d)}
 .rdr-pv .t{padding:11px 12px 4px;font-family:'Unbounded',sans-serif;font-weight:700;font-size:14px;color:#fff;line-height:1.25}
-.rdr-pv .s{padding:0 12px 12px;font-family:'Space Grotesk',sans-serif;font-size:12px;line-height:1.62;color:#cdbdf0}
+.rdr-pv .s{padding:0 12px 12px;font-family:'Space Grotesk',sans-serif;font-size:12px;line-height:1.62;color:#d9f2e0}
 .rdr-pv .m{padding:7px 12px;border-top:1px solid rgba(176,38,255,.4);font-size:8.5px;letter-spacing:.16em;color:#39ff14}
 
 /* ── 404 ── */
 .rdr-404{padding:120px 56px;text-align:center}
 .rdr-404 div:first-child{font-family:'Unbounded',sans-serif;font-weight:900;font-size:54px;color:#b026ff;
   text-shadow:3px 0 #39ff14,-3px 0 #7b2dff;animation:rdrGa 3s steps(1) infinite}
-.rdr-404 div:last-child{margin-top:18px;font-size:10px;letter-spacing:.3em;color:#3d006b;font-weight:700}
+.rdr-404 div:last-child{margin-top:18px;font-size:10px;letter-spacing:.3em;color:#0f5c1c;font-weight:700}
 
 @media (max-width:1100px){
   .rdr-dossier{float:none;width:auto;margin:0 0 24px}

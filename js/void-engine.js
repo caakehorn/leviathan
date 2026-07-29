@@ -37,7 +37,20 @@
     '  for(int i=0;i<4;i++){ v+=amp*noise(p); p=rot(0.55)*p*2.03; amp*=0.5; }',
     '  return v;',
     '}',
-    'vec3 pal(float t){ return 0.55+0.45*cos(6.28318*(t+vec3(0.0,0.33,0.64))); }',
+    /* SLIME ramp — the same four stops the galaxy runs: slime, cerulean,
+       purple, hot pink. A cosine palette here would drift through hues the
+       site does not own (orange, teal, indigo), so the stops are explicit. */
+    'vec3 pal(float t){',
+    '  float h=fract(t)*4.0;',
+    '  vec3 c0=vec3(0.224,1.0,0.078);',
+    '  vec3 c1=vec3(0.0,0.718,1.0);',
+    '  vec3 c2=vec3(0.69,0.149,1.0);',
+    '  vec3 c3=vec3(1.0,0.184,0.616);',
+    '  if(h<1.0) return mix(c0,c1,h);',
+    '  if(h<2.0) return mix(c1,c2,h-1.0);',
+    '  if(h<3.0) return mix(c2,c3,h-2.0);',
+    '  return mix(c3,c0,h-3.0);',
+    '}',
     'float scene(vec2 uv, float off){',
     '  float a=atan(uv.y, uv.x);',
     '  float r=length(uv);',
@@ -121,7 +134,7 @@
          fast swap path. galaxy-cluster.js already omits it. */
       var gl = this._gl = c.getContext('webgl', { antialias: false });
       if (!gl) {
-        this.style.background = 'radial-gradient(circle at 50% 45%, #1a0030 0%, #10001f 70%)';
+        this.style.background = 'radial-gradient(circle at 50% 45%, #06180a 0%, #041206 70%)';
         return;
       }
       var vs = compile(gl, gl.VERTEX_SHADER, VERT);
@@ -450,7 +463,7 @@
           p.vy += (mdy / md) * f;
         }
         p.x += p.vx; p.y += p.vy;
-        var hue = (180 + (p.hx / w) * 160 + T * 22) % 360 | 0;
+        var hue = (105 + (p.hx / w) * 230 + T * 22) % 360 | 0;
         if (drawGlow) {
           ctx.fillStyle = 'hsla(' + hue + ',100%,68%,0.28)';
           ctx.fillRect(p.x - 3, p.y - 3, 8, 8);
