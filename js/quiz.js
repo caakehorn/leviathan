@@ -11,6 +11,8 @@
   // CSS for the quiz and the decoy loading bar + transcript layout.
   // The @import loads Unbounded (used by the real page for taunts) so
   // the decoy doesn't use a different font stack than the real transcript.
+  // IMPORTANT: include the same atmospheric layers (scanlines, bloom) so
+  // the decoy is visually indistinguishable from the real page.
   var _QS = [
     '@import url("https://fonts.googleapis.com/css2?family=Unbounded:wght@700;900&family=Space+Grotesk:wght@400;500;700&family=IBM+Plex+Mono:wght@400;600&display=swap")',
     '#lv-quiz{position:fixed;inset:0;z-index:2147483647;display:flex;align-items:center;',
@@ -60,14 +62,15 @@
     '#lv-decoy .row.dan .who{color:#39ff14}',
     '#lv-decoy .row.annie .who{color:#ff86c9}',
     '#lv-decoy .tx{font-family:Space Grotesk,sans-serif;font-size:15.5px;line-height:1.58;white-space:pre-wrap;overflow-wrap:anywhere;color:#e9ffe6}',
-    '#lv-decoy .row.dan .tx{border-left:3px solid #39ff14;padding-left:11px}',
-    '#lv-decoy .row.annie .tx{border-left:3px solid #ff2f9d;padding-left:11px;color:#ffe1f2}',
-    '#lv-decoy .note{font-size:12.5px;line-height:1.6;font-family:Space Grotesk,sans-serif;color:#9db38f;padding:16px 0;max-width:80ch}',
-    // ── atmosphere layers (match index.html — scanlines + bloom + glow line) ──
-    '#lv-decoy header{position:relative;border-bottom-color:transparent !important}',
-    '#lv-decoy header::after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:1px;background:linear-gradient(90deg,#39ff14,#00ffa3 22%,#b026ff 50%,#ff2f9d 74%,#00b7ff);box-shadow:0 0 14px rgba(57,255,20,0.55)}',
-    '#lv-decoy::before{position:fixed;inset:0;z-index:1;pointer-events:none;background:repeating-linear-gradient(0deg,rgba(0,7,2,0.22) 0px,rgba(0,7,2,0.22) 1px,rgba(57,255,20,0.035) 1px,transparent 3px)}',
-    '#lv-decoy::after{position:fixed;inset:0;z-index:1;pointer-events:none;mix-blend-mode:screen;background:radial-gradient(ellipse 120% 60% at 50% 108%,rgba(57,255,20,0.16) 0%,transparent 62%),radial-gradient(ellipse 100% 50% at 50% -8%,rgba(176,38,255,0.13) 0%,transparent 60%)}'
+        '#lv-decoy .row.dan .tx{border-left:3px solid #39ff14;padding-left:11px}',
+        '#lv-decoy .row.annie .tx{border-left:3px solid #ff2f9d;padding-left:11px;color:#ffe1f2}',
+        '#lv-decoy .note{font-size:12.5px;line-height:1.6;font-family:Space Grotesk,sans-serif;color:#9db38f;padding:16px 0;max-width:80ch}',
+        // ── atmosphere layers (match index.html — scanlines + bloom + glow line) ──
+        '#lv-decoy h1{text-shadow:0 0 18px rgba(57,255,20,0.55),0 0 46px rgba(57,255,20,0.22)}',
+        '#lv-decoy header{position:relative;border-bottom-color:transparent !important}',
+        '#lv-decoy header::after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:1px;background:linear-gradient(90deg,#39ff14,#00ffa3 22%,#b026ff 50%,#ff2f9d 74%,#00b7ff);box-shadow:0 0 14px rgba(57,255,20,0.55)}',
+        '#lv-decoy::before{position:fixed;inset:0;z-index:1;pointer-events:none;background:repeating-linear-gradient(0deg,rgba(0,7,2,0.22) 0px,rgba(0,7,2,0.22) 1px,rgba(57,255,20,0.035) 1px,transparent 3px)}',
+        '#lv-decoy::after{position:fixed;inset:0;z-index:1;pointer-events:none;mix-blend-mode:screen;background:radial-gradient(ellipse 120% 60% at 50% 108%,rgba(57,255,20,0.16) 0%,transparent 62%),radial-gradient(ellipse 100% 50% at 50% -8%,rgba(176,38,255,0.13) 0%,transparent 60%)}'
   ].join('');
 
   function sOnce() {
