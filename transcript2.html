@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./js/gate.js"></script>
+<title>TRANSCRIPT — RECONSTRUCTION 02</title>
+<meta name="robots" content="noindex,nofollow">
+<meta name="referrer" content="no-referrer">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="./css/slime.css">
+<style>
+*{box-sizing:border-box}html,body{margin:0;background:#041206;color:#e9ffe6;font-family:'IBM Plex Mono',monospace}
+::selection{background:#b026ff;color:#041206}.wrap{max-width:1120px;margin:0 auto;padding:0 20px 100px}
+header{border-bottom:1px solid #14471f;padding:22px 0 14px}h1{font-family:'Space Grotesk',sans-serif;font-size:24px;letter-spacing:.12em;color:#39ff14;margin:0 0 6px}
+.sub{font-size:11px;letter-spacing:.14em;color:#8fae7c}.status{margin:18px 0;padding:13px;border:1px solid #1c6b2e;background:#0a2410;font-size:10px;letter-spacing:.12em}
+.status b{color:#39ff14}.meter{height:7px;margin-top:10px;background:#061b0b;border:1px solid #1c6b2e}.fill{height:100%;width:0;background:#39ff14;box-shadow:0 0 10px rgba(57,255,20,.65);transition:width .5s linear}
+#doc{padding-top:12px}.row{display:grid;grid-template-columns:58px 112px 1fr;gap:10px;padding:10px 0;border-bottom:1px solid #082310;opacity:0;transform:translateY(4px);animation:arrive .5s ease forwards}.ln{color:#2f6b45;font-size:11px;text-align:right}.ts{color:#6f8a5e;font-size:11px}.tx{font-family:'Space Grotesk',sans-serif;font-size:15.5px;line-height:1.58;color:#e9ffe6;border-left:3px solid #b026ff;padding-left:11px}.sys{color:#b026ff;font-size:10px;letter-spacing:.12em;margin:18px 0 8px}.foot{display:none;margin-top:30px;border-top:1px solid #14471f;padding-top:20px}.foot p{font-family:'Space Grotesk',sans-serif;line-height:1.6;color:#9db38f;max-width:72ch}.btn{display:inline-block;background:#39ff14;color:#041206;text-decoration:none;border:1px solid #39ff14;padding:12px 16px;font-size:10px;letter-spacing:.18em;font-weight:700}.btn:hover{background:#b6ff8f}
+@keyframes arrive{to{opacity:1;transform:none}}@media(max-width:640px){.row{grid-template-columns:40px 1fr;gap:4px 8px}.ts{grid-column:2}.tx{grid-column:2}}
+</style>
+</head>
+<body>
+<div class="sl-drips l" aria-hidden="true"><i style="left:2px;--h:210px;--dur:15s;--del:0s"></i><i class="pink" style="left:10px;--h:128px;--dur:19s;--del:3.5s"></i><i style="left:6px;--h:300px;--dur:23s;--del:8s"></i></div>
+<div class="sl-drips r" aria-hidden="true"><i style="right:3px;--h:250px;--dur:17s;--del:1.4s"></i><i class="cer" style="right:11px;--h:110px;--dur:21s;--del:5s"></i><i class="pink" style="right:14px;--h:340px;--dur:26s;--del:12s"></i></div>
+<div class="wrap"><header><h1>THE TRANSCRIPT / RECONSTRUCTION 02</h1><div class="sub">RECOVERED FRAGMENT · CONTEXTUAL INTEGRITY: UNRESOLVED</div></header>
+<div class="status"><b>ARCHIVE RECOVERY</b> · reconstructing contextual order<div class="meter"><div class="fill" id="fill"></div></div></div>
+<div class="sys">SYSTEM NOTE: THE PREVIOUS TRANSCRIPT WAS NOT THE TRANSCRIPT.</div>
+<div id="doc"></div>
+<div class="foot" id="foot"><p>The reconstruction has reached the point at which another reconstruction is required. No error has occurred. The archive considers this satisfactory.</p><a class="btn" href="./archive.html">CONTINUE TO ARCHIVE INDEX</a></div>
+</div>
+<script>
+(function(){
+var rows=[
+['00:00:04','RECORD','The archive has acknowledged the recovered fragment.'],
+['00:00:11','SYSTEM','Contextual ordering cannot be established from the available material.'],
+['00:00:19','RECORD','A second ordering pass has been requested.'],
+['00:00:28','SYSTEM','The second ordering pass requires the first ordering pass.'],
+['00:00:37','RECORD','The first ordering pass has been marked complete.'],
+['00:00:46','SYSTEM','Completion does not imply correctness.'],
+['00:00:55','RECORD','The record remains available.'],
+['00:01:04','SYSTEM','Availability does not imply accessibility.'],
+['00:01:13','RECORD','A new access path has been generated.'],
+['00:01:22','SYSTEM','Please do not interpret the path as an invitation.'],
+['00:01:31','RECORD','The archive has no further comments at this time.'],
+['00:01:40','SYSTEM','This statement is provisional.']
+];
+var doc=document.getElementById('doc'),fill=document.getElementById('fill'),foot=document.getElementById('foot');
+var i=0;
+function add(){if(i>=rows.length){fill.style.width='100%';foot.style.display='block';return}var r=rows[i],el=document.createElement('div');el.className='row';el.innerHTML='<a class="ln">'+(i+1)+'</a><div class="ts">'+r[0]+' · '+r[1]+'</div><div class="tx">'+r[2]+'</div>';doc.appendChild(el);i++;fill.style.width=(i/rows.length*100)+'%';setTimeout(add,7000)}
+add();
+})();
+</script>
+</body>
+</html>
