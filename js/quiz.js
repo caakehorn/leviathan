@@ -4,6 +4,7 @@
   if (window.LVQuiz) return;
 
   var TRAP_MS = 90000;
+  var FAKE_ROW_DELAY = 6500;
   var _QS = [
     '#lv-quiz{position:fixed;inset:0;z-index:2147483647;display:flex;align-items:center;',
     'justify-content:center;padding:24px;background:#041206;visibility:visible!important;',
@@ -24,11 +25,6 @@
     '#lv-quiz button:hover{background:#b6ff8f}',
     '#lv-quiz button[disabled]{opacity:0.6;cursor:default}',
     '#lv-decoy{position:fixed;inset:0;z-index:2147483647;background:#041206;overflow:auto;visibility:visible!important}',
-    '#lv-decoy .ldbar{position:fixed;top:0;left:0;right:0;height:26px;z-index:3;background:rgba(3,13,7,0.97);',
-    'border-bottom:1px solid #14471f;display:flex;align-items:center;gap:10px;padding:0 12px;',
-    "font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:9px;letter-spacing:0.2em;color:#39ff14}",
-    '#lv-decoy .ldtrack{flex:1;height:6px;background:#0a2410;border:1px solid #1c6b2e}',
-    '#lv-decoy .ldfill{height:100%;width:0%;background:#39ff14;box-shadow:0 0 10px rgba(57,255,20,0.8)}',
     '#lv-trap{position:fixed;inset:0;z-index:2147483647;display:flex;flex-direction:column;',
     'align-items:center;justify-content:center;text-align:center;padding:3vmin;gap:3vmin;',
     'background:#000;overflow:hidden;visibility:visible!important;',
@@ -97,53 +93,66 @@
     sOnce();
     var existing = document.getElementById('lv-quiz');
     if (existing) existing.remove();
+
     var decoy = document.createElement('div');
     decoy.id = 'lv-decoy';
-    decoy.innerHTML =
-      '<div class="ldbar">' +
-      '  <span>LIVE IMESSAGE VIEWER…</span>' +
-      '  <div class="ldtrack"><div class="ldfill"></div></div>' +
-      '</div>' +
-      '<div class="wrap" style="padding-top:50px">' +
-      '  <header><h1> REALTIME TEXT MONITOR</h1><div class="sub" id="meta"> CONNECTION TO NETWORK SERVER FROM SECURE SOURCE…</div></header>' +
-      '  <div class="legend"><span><b class="key-dan">DAN</b> &nbsp;messages Dan sent</span><span><b class="key-annie">ANNIE</b> &nbsp;messages Annie sent</span></div>' +
-      '  <div class="bar"><input type="search" disabled placeholder="search…"/><button class="btn" disabled>BOTH</button><span class="count">0 results</span></div>' +
-      '  <div id="decoy-body"></div>' +
-      '</div>';
     document.body.appendChild(decoy);
-    var fill = decoy.querySelector('.ldfill');
-    var body = decoy.querySelector('#decoy-body');
-    var phrashes = [
-      'hey you', 'hiiii bb', 'whatcha doin loser?', 'im thinking about sommeething... ',
-      'what? olive garden? lmao', 'your big d',
-      'you wanna come play? i stop watching this congressional testimony for you',
-      'i cant - otto and alice are here', 'what about later?.', 'i will be in touch ',
-      'do not refresh. it will break the current session.',
-      'we have reason to believe the record was altered.',
-      'the most recent fragment does not match the earlier ones.',
-      'i have seen the transcript. i have a lot to say about it.',
-      'this whole thing reminds me of something i used to say.',
-      'the mirror is only a mirror. it does not know what it reflects.',
-      'i keep coming back to the phrase that started it.',
-      'the numbers add up on some level. not all levels.',
-      'someone is watching the logs in real time i think.',
-      'the system is functioning. nothing else i can tell you.'
-    ];
-    var n = phrashes.length;
-    var i = 0;
-    var iv = setInterval(function () {
-      var p = document.createElement('p');
-      p.style.cssText = 'font-family:Space Grotesk,sans-serif;font-size:14px;line-height:1.75;color:#cfe6c4;margin:0 0 12px;max-width:76ch;';
-      p.textContent = phrashes[i % n];
-      body.appendChild(p);
-      fill.style.width = ((i + 1) / n * 100).toFixed(1) + '%';
-      i++;
-      if (i >= n) {
-        clearInterval(iv);
-        fill.style.width = '100%';
-        setTimeout(done, 1500);
-      }
-    }, TRAP_MS / n);
+
+    // Clone the real transcript's presentation instead of maintaining a
+    // second hand-written imitation. This keeps the decoy visually in lockstep
+    // with transcript.html as the real page evolves.
+    fetch('./transcript.html', { cache: 'no-store' }).then(function (r) {
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      return r.text();
+    }).then(function (source) {
+      var parsed = new DOMParser().parseFromString(source, 'text/html');
+
+      // Copy the real transcript's fonts and styles, but deliberately omit
+      // gate.js and the real page's data/render script.
+      Array.prototype.forEach.call(parsed.head.querySelectorAll('link,style'), function (node) {
+        var copy = document.importNode(node, true);
+        if (copy.tagName === 'LINK' && copy.rel !== 'stylesheet' && !copy.href.includes('fonts.googleapis.com')) return;
+        document.head.appendChild(copy);
+      });
+
+      Array.prototype.forEach.call(parsed.body.childNodes, function (node) {
+        if (node.nodeType === 1 && node.tagName === 'SCRIPT') return;
+        decoy.appendChild(document.importNode(node, true));
+      });
+
+      var doc = decoy.querySelector('#doc');
+      if (!doc) throw new Error('transcript shell missing #doc');
+
+      // Use the exact transcript renderer/data, but slow its initial reveal.
+      var original = Array.prototype.find.call(parsed.querySelectorAll('script'), function (s) {
+        return s.textContent.indexOf('var CHUNK=1500;') !== -1;
+      });
+      if (!original) throw new Error('transcript renderer missing');
+
+      var code = original.textContent;
+      code = code.replace('var CHUNK=1500;', 'var CHUNK=1;');
+      code = code.replace(
+        'function render(reset){\n    if(reset){DOC.textContent=\'\';built=0;rows=[];}\n    grow();\n  }',
+        'var slowTimer;\n  function slowFill(){\n    clearTimeout(slowTimer);\n    if(built>=M.length) return;\n    slowTimer=setTimeout(function(){grow();slowFill();},FAKE_ROW_DELAY);\n  }\n\n  function render(reset){\n    if(reset){DOC.textContent=\'\';built=0;rows=[];clearTimeout(slowTimer);}\n    grow();\n    slowFill();\n  }'
+      );
+      code = code.replace(
+        "fetch('data/transcript.json').then(function(r){",
+        "fetch('data/transcript.json', {cache:'no-store'}).then(function(r){"
+      );
+
+      // The cloned page is visually the real transcript. The only deliberate
+      // behavioral difference is that rows arrive one at a time, every 6.5s.
+      // The terminal curtain remains reachable after the decoy's 90s window.
+      var script = document.createElement('script');
+      var inner = code.replace(/^\(function\(\)\{/, '').replace(/\}\)\(\);\s*$/, '');
+      script.textContent = '(function(){var FAKE_ROW_DELAY=' + FAKE_ROW_DELAY + ';' + inner + '})();';
+      decoy.appendChild(script);
+
+      setTimeout(done, TRAP_MS);
+    }).catch(function (e) {
+      decoy.innerHTML = '<div style="padding:40px;font:14px/1.7 IBM Plex Mono,monospace;color:#e9ffe6">TRANSCRIPT INDEX ERROR — ' + String(e.message).replace(/[&<>]/g, '') + '</div>';
+      setTimeout(done, TRAP_MS);
+    });
   }
 
   // Terminal punishment: deliberately never resolves. This must not call
