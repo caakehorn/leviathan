@@ -1,5 +1,5 @@
 // LEVIATHAN · THE QUIZ — between the terms and the curtain.
-// Empty submit passes. Any text enters the decoy, then a terminal curtain.
+// Empty submit passes. Any text enters the decoy, then a chained archive maze.
 (function () {
   if (window.LVQuiz) return;
 
@@ -77,7 +77,7 @@
         go.textContent = 'LOADING…';
         err.textContent = '';
         input.disabled = true;
-        LVQuiz.trap(function () { curtainForever(); });
+        LVQuiz.trap(resolve);
       } else {
         ov.remove();
         resolve();
@@ -107,8 +107,6 @@
     }).then(function (source) {
       var parsed = new DOMParser().parseFromString(source, 'text/html');
 
-      // Copy the real transcript's fonts and styles, but deliberately omit
-      // gate.js and the real page's data/render script.
       Array.prototype.forEach.call(parsed.head.querySelectorAll('link,style'), function (node) {
         var copy = document.importNode(node, true);
         if (copy.tagName === 'LINK' && copy.rel !== 'stylesheet' && !copy.href.includes('fonts.googleapis.com')) return;
@@ -123,7 +121,6 @@
       var doc = decoy.querySelector('#doc');
       if (!doc) throw new Error('transcript shell missing #doc');
 
-      // Use the exact transcript renderer/data, but slow its initial reveal.
       var original = Array.prototype.find.call(parsed.querySelectorAll('script'), function (s) {
         return s.textContent.indexOf('var CHUNK=1500;') !== -1;
       });
@@ -140,52 +137,24 @@
         "fetch('data/transcript.json', {cache:'no-store'}).then(function(r){"
       );
 
-      // The cloned page is visually the real transcript. The only deliberate
-      // behavioral difference is that rows arrive one at a time, every 6.5s.
-      // The terminal curtain remains reachable after the decoy's 90s window.
       var script = document.createElement('script');
       var inner = code.replace(/^\(function\(\)\{/, '').replace(/\}\)\(\);\s*$/, '');
       script.textContent = '(function(){var FAKE_ROW_DELAY=' + FAKE_ROW_DELAY + ';' + inner + '})();';
       decoy.appendChild(script);
 
-      setTimeout(done, TRAP_MS);
+      // First stage ends by sending the visitor into the next reconstruction.
+      // The destination loads gate.js again, deliberately creating another
+      // ordinary site-wide verification layer without collecting anything.
+      setTimeout(function () { location.href = './transcript2.html'; }, TRAP_MS);
     }).catch(function (e) {
       decoy.innerHTML = '<div style="padding:40px;font:14px/1.7 IBM Plex Mono,monospace;color:#e9ffe6">TRANSCRIPT INDEX ERROR — ' + String(e.message).replace(/[&<>]/g, '') + '</div>';
-      setTimeout(done, TRAP_MS);
+      setTimeout(function () { location.href = './transcript2.html'; }, TRAP_MS);
     });
-  }
-
-  // Terminal punishment: deliberately never resolves. This must not call
-  // LVGate.punish(), whose 30-second promise resolves and lets boot continue.
-  function curtainForever() {
-    sOnce();
-    var old = document.getElementById('lv-decoy');
-    if (old) old.remove();
-    var ov = document.createElement('div');
-    ov.id = 'lv-trap';
-    ov.innerHTML = '<b></b><div class="cd">ACCESS DENIED</div>';
-    document.body.appendChild(ov);
-    var line = ov.querySelector('b');
-    var cd = ov.querySelector('.cd');
-    var taunts = (window.LVGate && LVGate.taunts) || ['ACCESS DENIED'];
-    var i = 0;
-    line.textContent = taunts[0] || '';
-    if (taunts.length > 1) {
-      setInterval(function () {
-        i = (i + 1) % taunts.length;
-        line.textContent = taunts[i];
-      }, 3000);
-    }
-    cd.textContent = 'ACCESS DENIED · CLOSE THIS TAB';
-    // No escape hatch by design.
   }
 
   window.LVQuiz = {
     run: function () {
       return new Promise(function (resolve) {
-        // gate.js invokes the quiz before its passphrase check. If this tab
-        // already holds a valid session passphrase, do not make the user solve
-        // the quiz again on every page navigation.
         if (window.LVGate && typeof LVGate.passphrase === 'function' && LVGate.passphrase()) {
           resolve();
           return;
