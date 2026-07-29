@@ -11,6 +11,7 @@
   var TOS_VERSION = '1.0';
   var EFFECTIVE = 'JULY 27, 2026';
   var TOS_KEY = 'lv.tos.accepted';
+  var LOG_KEY = 'lv.tos.log';
   var TITLE = 'TERMS OF SERVICE — VOID + LEVIATHAN';
   var CONTACT = 'dfrank88@gmail.com';
 
@@ -96,6 +97,14 @@
     SECTIONS: SECTIONS,
     VERSION: TOS_VERSION,
     EFFECTIVE: EFFECTIVE,
+    LOG_KEY: LOG_KEY,
+
+    // Read the local acceptance log (name + client signals). The real visitor
+    // IP lives in the host/CDN access logs, not here — client JS can't see it
+    // without handing every visitor's address to a third party, which we don't.
+    log: function () {
+      try { return JSON.parse(localStorage.getItem(LOG_KEY) || '[]'); } catch (e) { return []; }
+    },
 
     accepted: function () {
       try { return localStorage.getItem(TOS_KEY) === TOS_VERSION; } catch (e) { return false; }
@@ -143,6 +152,7 @@
         ov.innerHTML = '<div class="bx">'
           + '<div class="tag">⬢ LEVIATHAN · TERMS OF SERVICE</div>'
           + '<div class="doc" tabindex="0"></div>'
+          + '<label class="nm">FIRST NAME (as shown on your ID)<input type="text" autocomplete="off" aria-label="First name" placeholder="first name"></label>'
           + '<label class="ck"><input type="checkbox"> <span></span></label>'
           + '<div class="row">'
           + '<button type="button" class="no">DECLINE AND LEAVE</button>'
@@ -159,14 +169,33 @@
           'Version ' + TOS_VERSION + ' · Effective ' + EFFECTIVE + ' · Acceptance is recorded on this device.';
         document.body.appendChild(ov);
 
-        var ck = ov.querySelector('input');
+        var nm = ov.querySelector('.nm input');
+        var ck = ov.querySelector('.ck input');
         var yes = ov.querySelector('.yes');
         var no = ov.querySelector('.no');
 
-        ck.addEventListener('change', function () { yes.disabled = !ck.checked; });
+        function syncBtn() { yes.disabled = !(ck.checked && nm.value.trim().length > 0); }
+        ck.addEventListener('change', syncBtn);
+        nm.addEventListener('input', syncBtn);
+        syncBtn();
         yes.addEventListener('click', function () {
-          if (!ck.checked) return;
-          try { localStorage.setItem(TOS_KEY, TOS_VERSION); } catch (e) { /* private mode: ask again next time */ }
+          if (!ck.checked || !nm.value.trim()) return;
+          try { localStorage.setItem(TOS_KEY, TOS_VERSION); } catch (e) { /* private mode */ }
+          // Record the acceptance + visitor signals locally. IP is server-side.
+          try {
+            var log = JSON.parse(localStorage.getItem(LOG_KEY) || '[]');
+            log.push({
+              name: nm.value.trim(),
+              page: location.pathname,
+              ts: new Date().toISOString(),
+              ua: navigator.userAgent,
+              lang: navigator.language || '',
+              tz: (new Date()).getTimezoneOffset(),
+              screen: (window.screen && (window.screen.width + 'x' + window.screen.height)) || '',
+              ip: '(server-side — read from host/CDN access logs)'
+            });
+            localStorage.setItem(LOG_KEY, JSON.stringify(log));
+          } catch (e) { /* private mode */ }
           if (onEvent) onEvent('tos-agreed');
           ov.remove();
           st.remove();
@@ -222,6 +251,9 @@
     '#lv-tos .no{background:none;border:1px solid rgba(255,47,157,0.6);color:#ff86c9}',
     '#lv-tos .no:hover{background:rgba(255,47,157,0.14);border-color:#ff2f9d}',
     '#lv-tos .ft{font-size:9px;letter-spacing:0.18em;color:#4f8a63;line-height:1.8}',
+    "#lv-tos .nm{display:flex;flex-direction:column;gap:7px;font-size:10px;letter-spacing:0.18em;color:#39ff14;margin-bottom:14px}",
+    "#lv-tos .nm input{background:rgba(0,0,0,0.55);border:1px solid rgba(57,255,20,0.45);color:#b6ff8f;font-family:inherit;font-size:13px;padding:11px 13px;letter-spacing:0.05em;outline:none}",
+    "#lv-tos .nm input:focus{border-color:#00b7ff;box-shadow:0 0 0 1px rgba(0,183,255,0.35)}",
     '@media (max-width:640px){#lv-tos .bx{padding:16px 14px}#lv-tos .doc{padding:14px 15px}}'
   ].join('');
 })();
