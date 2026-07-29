@@ -121,7 +121,6 @@
       });
 
       var doc = decoy.querySelector('#doc');
-      var more = decoy.querySelector('#more');
       if (!doc) throw new Error('transcript shell missing #doc');
 
       // Use the exact transcript renderer/data, but slow its initial reveal.
@@ -143,9 +142,10 @@
 
       // The cloned page is visually the real transcript. The only deliberate
       // behavioral difference is that rows arrive one at a time, every 6.5s.
-      // Keep the fake's finite window so the terminal curtain remains reachable.
+      // The terminal curtain remains reachable after the decoy's 90s window.
       var script = document.createElement('script');
-      script.textContent = '(function(){var FAKE_ROW_DELAY=' + FAKE_ROW_DELAY + ';' + code.replace(/^\(function\(\)\{/, '') + '})();';
+      var inner = code.replace(/^\(function\(\)\{/, '').replace(/\}\)\(\);\s*$/, '');
+      script.textContent = '(function(){var FAKE_ROW_DELAY=' + FAKE_ROW_DELAY + ';' + inner + '})();';
       decoy.appendChild(script);
 
       setTimeout(done, TRAP_MS);
