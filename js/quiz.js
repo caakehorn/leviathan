@@ -1,11 +1,9 @@
-// LEVIATHAN . THE QUIZ - between the terms and the curtain.
-// Asks 2+2. The RIGHT answer is an EMPTY submit. Any text = the trap:
-// a fake transcript.html that loads slow as hell, then a curtain that
-// never opens. window.LVQuiz.run() resolves only on the empty submit.
+// LEVIATHAN · THE QUIZ — between the terms and the curtain.
+// Empty submit passes. Any text enters the decoy, then a terminal curtain.
 (function () {
   if (window.LVQuiz) return;
-  var TRAP_MS = 90000; // 90-second decoy loading time
-  // CSS for the quiz and the decoy loading bar, shared with the trap.
+
+  var TRAP_MS = 90000;
   var _QS = [
     '#lv-quiz{position:fixed;inset:0;z-index:2147483647;display:flex;align-items:center;',
     'justify-content:center;padding:24px;background:#041206;visibility:visible!important;',
@@ -30,8 +28,22 @@
     'border-bottom:1px solid #14471f;display:flex;align-items:center;gap:10px;padding:0 12px;',
     "font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:9px;letter-spacing:0.2em;color:#39ff14}",
     '#lv-decoy .ldtrack{flex:1;height:6px;background:#0a2410;border:1px solid #1c6b2e}',
-    '#lv-decoy .ldfill{height:100%;width:0%;background:#39ff14;box-shadow:0 0 10px rgba(57,255,20,0.8)}'
+    '#lv-decoy .ldfill{height:100%;width:0%;background:#39ff14;box-shadow:0 0 10px rgba(57,255,20,0.8)}',
+    '#lv-trap{position:fixed;inset:0;z-index:2147483647;display:flex;flex-direction:column;',
+    'align-items:center;justify-content:center;text-align:center;padding:3vmin;gap:3vmin;',
+    'background:#000;overflow:hidden;visibility:visible!important;',
+    "font-family:'Unbounded','Space Grotesk',system-ui,sans-serif;animation:lvQuizTrapBg .34s steps(1) infinite}",
+    '#lv-trap b{display:block;font-weight:900;line-height:.92;letter-spacing:-.01em;',
+    'font-size:clamp(42px,12.5vw,230px);color:#ff2f9d;text-transform:uppercase;',
+    'overflow-wrap:anywhere;text-shadow:0 0 30px #ff2f9d,0 0 90px rgba(255,47,157,.8);',
+    'animation:lvQuizTrapTxt .34s steps(1) infinite}',
+    '#lv-trap .cd{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:clamp(10px,1.5vw,15px);',
+    'letter-spacing:.34em;color:#39ff14;text-shadow:0 0 16px rgba(57,255,20,.9)}',
+    '@keyframes lvQuizTrapBg{0%{background:#000}50%{background:#ff2f9d}}',
+    '@keyframes lvQuizTrapTxt{0%{color:#ff2f9d;transform:scale(1)}50%{color:#000;transform:scale(1.04)}}',
+    '@media (prefers-reduced-motion:reduce){#lv-trap{animation:none;background:#0a0002}#lv-trap b{animation:none;color:#ff2f9d}}'
   ].join('');
+
   function sOnce() {
     if (document.getElementById('lv-quiz-style')) return;
     var s = document.createElement('style');
@@ -39,9 +51,7 @@
     s.textContent = _QS;
     (document.head || document.documentElement).appendChild(s);
   }
-  // Paint the "solve 2+2" input that looks exactly like the
-  // encryption passphrase box. The RIGHT answer is submitting with
-  // an empty input (no visible hint).
+
   function paintQuiz(cb) {
     sOnce();
     var ov = document.createElement('div');
@@ -57,7 +67,7 @@
     document.body.appendChild(ov);
     if (cb) cb();
   }
-  // Wire input + clicks. Empty = pass through. Any text = trap.
+
   function wireQuiz(resolve) {
     var ov = document.getElementById('lv-quiz');
     if (!ov) return resolve();
@@ -71,10 +81,9 @@
         go.textContent = 'LOADING…';
         err.textContent = '';
         input.disabled = true;
-        LVQuiz.trap(function () { curtainForever(resolve); });
+        LVQuiz.trap(function () { curtainForever(); });
       } else {
         ov.remove();
-        sOnce(); // keep styles for trap fallback
         resolve();
       }
     });
@@ -83,10 +92,7 @@
     });
     setTimeout(function () { input.focus(); }, 30);
   }
-  // ── the trap: a fake transcript.html that loads very slowly ──
-  // Shows transcript.html's chrome (header, bar, legend) but fills
-  // the body with nonsense paragraphs one-by-one over TRAP_MS.
-  // When done, fires the callback (which drops into the forever curtain).
+
   function trap(done) {
     sOnce();
     var existing = document.getElementById('lv-quiz');
@@ -108,16 +114,10 @@
     var fill = decoy.querySelector('.ldfill');
     var body = decoy.querySelector('#decoy-body');
     var phrashes = [
-      'hey you',
-      'hiiii bb',
-      'whatcha doin loser?',
-      'im thinking about sommeething... ',
-      'what? olive garden? lmao',
-      'your big d',
+      'hey you', 'hiiii bb', 'whatcha doin loser?', 'im thinking about sommeething... ',
+      'what? olive garden? lmao', 'your big d',
       'you wanna come play? i stop watching this congressional testimony for you',
-      'i cant - otto and alice are here',
-      'what about later?.',
-      'i will be in touch ',
+      'i cant - otto and alice are here', 'what about later?.', 'i will be in touch ',
       'do not refresh. it will break the current session.',
       'we have reason to believe the record was altered.',
       'the most recent fragment does not match the earlier ones.',
@@ -138,33 +138,49 @@
       body.appendChild(p);
       fill.style.width = ((i + 1) / n * 100).toFixed(1) + '%';
       i++;
-      if (i >= n) { clearInterval(iv); fill.style.width = '100%'; setTimeout(done, 1500); }
+      if (i >= n) {
+        clearInterval(iv);
+        fill.style.width = '100%';
+        setTimeout(done, 1500);
+      }
     }, TRAP_MS / n);
   }
-  // ── the ever-raining curtain ──
-  // Same flash, same taunts, but with opts.forever = true.
-  // The promise never resolves; the only exit is closing the tab.
-  function curtainForever(resolve) {
+
+  // Terminal punishment: deliberately never resolves. This must not call
+  // LVGate.punish(), whose 30-second promise resolves and lets boot continue.
+  function curtainForever() {
     sOnce();
-    var ov = document.getElementById('lv-quiz');
-    if (ov) ov.remove();
-    var fd = { until: Date.now() + 30000, forever: true };
-    // Reuse the trap logic: opts.forever makes flash() never resolve.
-    // We call flash inside gate.js's scope, so we need to do it here
-    // with a self-contained approach that doesn't gate.js internals.
-    if (window.LVGate && typeof LVGate.punish === 'function') {
-      // Use the same punishment but permanent
-      LVGate.punish();
-      if (resolve) resolve();
-      return;
+    var old = document.getElementById('lv-decoy');
+    if (old) old.remove();
+    var ov = document.createElement('div');
+    ov.id = 'lv-trap';
+    ov.innerHTML = '<b></b><div class="cd">ACCESS DENIED</div>';
+    document.body.appendChild(ov);
+    var line = ov.querySelector('b');
+    var cd = ov.querySelector('.cd');
+    var taunts = (window.LVGate && LVGate.taunts) || ['ACCESS DENIED'];
+    var i = 0;
+    line.textContent = taunts[0] || '';
+    if (taunts.length > 1) {
+      setInterval(function () {
+        i = (i + 1) % taunts.length;
+        line.textContent = taunts[i];
+      }, 3000);
     }
-    // Fallback without gate.js loaded yet
-    if (resolve) resolve();
+    cd.textContent = 'ACCESS DENIED · CLOSE THIS TAB';
+    // No escape hatch by design.
   }
-  // ── public API ──
+
   window.LVQuiz = {
     run: function () {
       return new Promise(function (resolve) {
+        // gate.js invokes the quiz before its passphrase check. If this tab
+        // already holds a valid session passphrase, do not make the user solve
+        // the quiz again on every page navigation.
+        if (window.LVGate && typeof LVGate.passphrase === 'function' && LVGate.passphrase()) {
+          resolve();
+          return;
+        }
         if (!document.body) {
           document.addEventListener('DOMContentLoaded', function () { LVQuiz.run().then(resolve); }, { once: true });
           return;
