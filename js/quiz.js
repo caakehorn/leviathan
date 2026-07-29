@@ -167,6 +167,10 @@
       '  </div>' +
       '  <div id="doc"></div>' +
       '  <div class="note" id="foot"></div>' +
+      '</div>' +
+      '<div class="ldbar">' +
+      '  <span>LOADING TRANSCRIPT…</span>' +
+      '  <div class="ldtrack"><div class="ldfill"></div></div>' +
       '</div>';
     document.body.appendChild(decoy);
 
