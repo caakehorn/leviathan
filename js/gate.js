@@ -396,6 +396,7 @@
   function paintGate() {
     styleOnce();
     tally('passphrase-shown');
+    score();   // load the score engine now, so LVScore.prewarm() exists on submit
 
     var ov = document.createElement('div');
     ov.id = 'lv-gate';
@@ -419,6 +420,10 @@
     var submit = async function () {
       var v = input.value;
       if (!v || go.disabled) return;
+      // Pre-warm audio inside this gesture, before the await below spends the
+      // user activation. On success the score starts the moment we unlock, with
+      // no second click needed. Harmless if the passphrase turns out wrong.
+      try { if (window.LVScore) window.LVScore.prewarm(); } catch (e) { }
       err.textContent = ''; go.disabled = true; go.textContent = 'CHECKING…';
       try {
         await tryPassphrase(v);

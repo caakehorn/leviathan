@@ -439,6 +439,16 @@
     schedule();
   }
 
+  // Create and resume the context from *inside* a user gesture, before any
+  // await spends the activation. The gate calls this the instant a passphrase
+  // is submitted, so by the time the page unlocks the context is already
+  // running and the music can start with no second click. Silent on its own —
+  // master stays at zero until begin().
+  function prewarm() {
+    if (!build()) return;
+    if (AC.state === 'suspended') { try { AC.resume(); } catch (e) { } }
+  }
+
   // Never schedule into a suspended context — the nodes would be built and then
   // discarded, and Chrome logs an autoplay warning for every one of them.
   function start() {
@@ -576,14 +586,25 @@
   // inspectable and still downloadable.
   window.LVScore = {
     compose: compose, toMidi: toMidi, download: download,
-    start: start, stop: stop, setOn: setOn, isOn: on,
+    prewarm: prewarm, start: start, stop: stop, setOn: setOn, isOn: on,
     piece: function () { return piece || (piece = compose(seedFor())); },
     hour: hourNow, profile: P, DENSITY: DENSITY, LENGTH: LENGTH, seed: seedFor
   };
 
-  function init() {
+  // The transport must not paint over the gate. If the page is still sealed,
+  // hold it until unlock — at which point the context the gate pre-warmed is
+  // already running, so start() begins immediately with no extra gesture.
+  function mount() {
     if (document.getElementById('lv-score')) return;
     try { ui(); } catch (e) { /* no transport; the page is unaffected */ }
+  }
+  function gated() {
+    return document.documentElement.classList.contains('lv-locked')
+      || !!document.getElementById('lv-gate');
+  }
+  function init() {
+    if (gated()) window.addEventListener('lv-unlocked', mount, { once: true });
+    else mount();
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
   else init();
