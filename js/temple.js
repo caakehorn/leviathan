@@ -247,6 +247,10 @@
     return AC;
   }
   function startDrone() {
+    // THE SCORE (js/score.js) is the music bed on every page now, and its pad
+    // occupies exactly this register. Yield the drone to it and keep the bells,
+    // which are event-driven and pitched per passage — those still layer.
+    if (window.LVScore && window.LVScore.isOn()) return;
     if (!audio() || droneOn) return;
     droneOn = true;
     var filt = AC.createBiquadFilter();
