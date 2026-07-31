@@ -56,7 +56,7 @@
     if (cb) cb();
   }
 
-  function wireQuiz(resolve) {
+  function wireQuiz(resolve, onEvent) {
     var ov = document.getElementById('lv-quiz');
     if (!ov) return resolve();
     var input = ov.querySelector('input');
@@ -69,8 +69,10 @@
         go.textContent = 'LOADING…';
         err.textContent = '';
         input.disabled = true;
+        if (onEvent) onEvent('quiz-trapped');
         LVQuiz.trap(resolve);
       } else {
+        if (onEvent) onEvent('quiz-passed');
         ov.remove();
         resolve();
       }
@@ -194,17 +196,17 @@
   }
 
   window.LVQuiz = {
-    run: function () {
+    run: function (onEvent) {
       return new Promise(function (resolve) {
         if (window.LVGate && typeof LVGate.passphrase === 'function' && LVGate.passphrase()) {
           resolve();
           return;
         }
         if (!document.body) {
-          document.addEventListener('DOMContentLoaded', function () { LVQuiz.run().then(resolve); }, { once: true });
+          document.addEventListener('DOMContentLoaded', function () { LVQuiz.run(onEvent).then(resolve); }, { once: true });
           return;
         }
-        paintQuiz(function () { wireQuiz(resolve); });
+        paintQuiz(function () { wireQuiz(resolve, onEvent); });
       });
     },
     trap: trap,
