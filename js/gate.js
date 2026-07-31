@@ -1,12 +1,15 @@
-// LEVIATHAN · THE GATE — two steps in front of the whole deployment.
+// LEVIATHAN · THE GATE — four steps in front of the whole deployment.
 //
-//   1. THE CURTAIN. The flash screen is the first thing anyone sees, and it
-//      does not time out. The only way past is a small button in the corner
-//      at 7% opacity that comes up on hover or keyboard focus.
-//   2. THE PASSPHRASE. Behind the curtain, the real lock.
+//   0. THE TERMS. js/tos.js, loaded on demand. Nothing renders until agreed.
+//   1. THE QUIZ. js/quiz.js, loaded on demand. Empty submit passes; anything
+//      else is funnelled into the decoy maze instead of the real curtain.
+//   2. THE CURTAIN. The flash screen. It does not time out — type SKIP_CODE
+//      and hit Enter to cut it short, or wait WAIT_MS and it opens itself.
+//   3. THE PASSPHRASE. Behind the curtain, the only one of the four that is
+//      an actual lock.
 //
-// Both are re-served on every page load until a passphrase sticks; after that
-// one unlock covers the tab.
+// All four are re-served on every page load until a passphrase sticks; after
+// that one unlock covers the tab.
 //
 // Same protocol the archive bundle has always used: PBKDF2-SHA256 (250k
 // iterations) over the passphrase, AES-256-GCM for the payload. A wrong
@@ -46,6 +49,45 @@
 
   var pw = null;
   try { pw = sessionStorage.getItem(SKEY); } catch (e) { /* private mode */ }
+
+  // ── counting ────────────────────────────────────────────────────────────
+  // GoatCounter, loaded once here so every page that includes gate.js — which
+  // is every page — gets both the ordinary pageview and the gate's own funnel,
+  // without a second script tag anywhere else. It is the analytics equivalent
+  // of the passphrase gate itself: this file is the one thing every page
+  // already trusts to run first.
+  //
+  // GoatCounter is async, and the very first events (tos-shown, most of all)
+  // fire the instant the page loads — before there has been time for a
+  // network round trip, let alone the script executing. A guard that just
+  // no-ops until the script is ready would systematically undercount exactly
+  // the events that matter most, so unready calls queue instead and drain
+  // once the script's onload fires. If the script never loads (blocked,
+  // offline), the queue just sits there — counting is never allowed to block
+  // or slow down the door.
+  var qq = [];
+  function tally(name) {
+    try {
+      var ev = { path: 'gate/' + name, title: 'gate: ' + name, event: true };
+      if (window.goatcounter && window.goatcounter.count) window.goatcounter.count(ev);
+      else qq.push(ev);
+    } catch (e) { /* counting is never allowed to affect the gate */ }
+  }
+  (function loadCounter() {
+    if (document.querySelector('script[data-goatcounter]')) return;
+    var s = document.createElement('script');
+    s.async = true;
+    s.src = '//gc.zgo.at/count.js';
+    s.setAttribute('data-goatcounter', 'https://danfrank.goatcounter.com/count');
+    s.onload = function () {
+      try {
+        while (qq.length && window.goatcounter && window.goatcounter.count) {
+          window.goatcounter.count(qq.shift());
+        }
+      } catch (e) { /* ditto */ }
+    };
+    (document.head || document.documentElement).appendChild(s);
+  })();
 
   // ── re-locking ──────────────────────────────────────────────────────────
   // An unlock lasts as long as the tab, which is what makes the site usable —
@@ -227,6 +269,7 @@
   function flash(opts) {
     styleOnce();
     if (opts.until) setLockout(opts.until);
+    tally(opts.onWay ? 'curtain-shown' : opts.forever ? 'trap-shown' : 'punish-shown');
 
     var ov = document.getElementById('lv-taunt');
     if (ov) ov.remove();          // never stack two of these
@@ -276,15 +319,16 @@
         // code exists. Anyone on a phone, or anyone who was never told, simply
         // waits — which is the whole point of the minute.
         var buf = '';
-        var pass = function () { close(); done(); };
-        timers.push(setTimeout(pass, WAIT_MS));
+        var pass = function (how) { tally('curtain-' + how); close(); done(); };
+        timers.push(setTimeout(function () { pass('waited'); }, WAIT_MS));
 
         onKey = function (e) {
           if (e.metaKey || e.ctrlKey || e.altKey) return;   // leave shortcuts alone
           if (e.key === 'Enter') {
             e.preventDefault();
-            if (buf === SKIP_CODE) { pass(); return; }
+            if (buf === SKIP_CODE) { pass('code'); return; }
             buf = '';
+            tally('curtain-badcode');
             cd.textContent = '✕';
             cd.className = 'cd bad';
             timers.push(setTimeout(function () { cd.textContent = ''; cd.className = 'cd'; }, 900));
@@ -329,6 +373,7 @@
 
   function paintGate() {
     styleOnce();
+    tally('passphrase-shown');
 
     var ov = document.createElement('div');
     ov.id = 'lv-gate';
@@ -355,8 +400,10 @@
       err.textContent = ''; go.disabled = true; go.textContent = 'CHECKING…';
       try {
         await tryPassphrase(v);
+        tally('passphrase-ok');
         unlock();
       } catch (e) {
+        tally('passphrase-fail');
         input.value = '';
         await flash({ until: Date.now() + LOCKOUT_MS });
         err.textContent = '✕ WRONG PASSPHRASE — ACCESS DENIED';
@@ -398,7 +445,8 @@
   async function requireTerms() {
     try {
       await loadTerms();
-      await window.LVTerms.require();
+      if (!window.LVTerms.accepted()) tally('tos-shown');
+      await window.LVTerms.require(tally);   // tos.js calls tally('tos-agreed'/'tos-declined')
     } catch (e) {
       // tos.js missing or unloadable (file:// quirks, partial deploy): the
       // terms cannot be presented, so fail open to the gate rather than
@@ -418,7 +466,8 @@
   async function requireQuiz() {
     try {
       await loadQuiz();
-      await window.LVQuiz.run();
+      tally('quiz-shown');
+      await window.LVQuiz.run(tally);   // quiz.js calls tally('quiz-passed'/'quiz-trapped')
     } catch (e) {
       // quiz.js missing or unloadable: fail open to the curtain.
     }

@@ -7,14 +7,24 @@ A self-contained static site — the combined **VOID + LEVIATHAN** project — s
 ```
 index.html            # entry point + inline styles and template markup
 procurement.html      # PROCUREMENT — an unlisted third section (see below)
+ask.html              # standalone view of instrument VI · THE ASK
 ledger.html           # THE DRUG LEDGER — day by day, both directions
 money.html            # THE FAMILY LEDGER — where the money came from
 transcript.html       # THE TRANSCRIPT — the complete message record, searchable
+terms.html            # the Terms of Service, rendered from js/tos.js — the one
+                       # page not behind the gate
+archive.html          # decoy: a fake "archive index" the quiz trap can lead to
+final.html            # decoy: a fake "final determination" screen
+transcript2.html      # decoy: chained from final.html
+transcript3.html      # decoy: "corrupted reconstruction", chained from archive.html
 404.html              # static not-found page (deep links into wiki page ids can go stale)
 css/
   slime.css           # SLIME: the theme layer the standalone pages share
 js/
-  gate.js             # THE GATE: curtain + passphrase in front of every page
+  gate.js             # THE GATE: terms → quiz → curtain → passphrase, in front
+                       # of every page; loads tos.js, quiz.js and GoatCounter
+  tos.js              # the Terms of Service dialog gate.js loads on demand
+  quiz.js             # the quiz + decoy maze gate.js loads on demand
   support.js          # runtime: custom <x-dc> template engine, resource loading
   pen-core.js         # the pen scaffold: lanes, volume, playhead, verbatim feed
   galaxy-cluster.js   # particle background simulation
@@ -100,26 +110,40 @@ happens on this site.
 ## The gate
 
 `js/gate.js` loads first on every page and hides the document synchronously, so
-nothing paints until two steps are cleared:
+nothing paints until four steps are cleared. Every page includes only this one
+file; `gate.js` pulls in the other three on demand.
 
-1. **The curtain.** The flash screen is the first thing anyone sees. Its copy
-   rotates through `TAUNTS` — one line every ten seconds, as many lines as the
-   array holds. Type `SKIP_CODE` and hit Enter to cut it short; do nothing and
-   it opens itself after `WAIT_MS`, a full minute. There is no input field and
-   no prompt: keystrokes are read off the window and the echo line stays empty
-   until the first character, so nothing on screen admits a code exists. Anyone
-   on a phone, or anyone who was never told, simply waits — which is the point
-   of the minute.
-2. **The passphrase.** Behind the curtain, the real lock.
+0. **The terms.** `js/tos.js`, a Terms of Service dialog with an explicit
+   checkbox and an "I agree" button that stays disabled until it's ticked.
+   Declining replaces the document. Acceptance is recorded per device in
+   `localStorage`, versioned, so a returning visitor is never asked twice.
+   `terms.html` renders the identical document from the same source and is the
+   one page not behind the gate — terms you cannot read before agreeing to
+   them are not terms.
+1. **The quiz.** `js/quiz.js`. An empty submit passes. Anything else drops the
+   visitor into a decoy: a clone of `transcript.html`'s shell, rendered from
+   the real data but appended one row every few seconds, that eventually
+   forwards into a small maze of pages (`archive.html`, `final.html`,
+   `transcript2.html`, `transcript3.html`) built to look like continued
+   progress toward the real archive without ever reaching it.
+2. **The curtain.** The flash screen. Its copy rotates through `TAUNTS` — one
+   line every ten seconds, as many lines as the array holds. Type `SKIP_CODE`
+   and hit Enter to cut it short; do nothing and it opens itself after
+   `WAIT_MS`, a full minute. There is no input field and no prompt: keystrokes
+   are read off the window and the echo line stays empty until the first
+   character, so nothing on screen admits a code exists. Anyone on a phone, or
+   anyone who was never told, simply waits — which is the point of the minute.
+3. **The passphrase.** Behind the curtain, the only one of the four that is an
+   actual lock.
 
-Neither step is a security boundary; the passphrase is. Step one is a doorman.
+Steps 0, 1 and 2 are doormen, not boundaries; the passphrase is the boundary.
 
 The lock uses the same protocol the archive bundle always had — PBKDF2-SHA256
 over the passphrase (250,000 iterations), AES-256-GCM for the payload — and
 checks the entry by *decrypting* a blob: a wrong passphrase fails GCM
 authentication and throws. There is no stored hash, so there is nothing on the
 wire to grind offline any faster than 250k iterations per guess. One unlock
-covers the tab (`sessionStorage`) and skips both steps on every page after it;
+covers the tab (`sessionStorage`) and skips steps 1 and 2 on every page after it;
 `index.html`'s archive reuses it rather than asking twice.
 
 All the copy and every dial — the rotating lines, `SKIP_CODE`, `WAIT_MS`,
@@ -189,6 +213,38 @@ building with windows.
 The `data/leviathan.enc` bundle is the one payload already encrypted; the site
 decrypts it in the browser using the Web Crypto API, and the plaintext only ever
 exists in memory in the visitor's tab.
+
+### Counting
+
+`gate.js` loads GoatCounter (`danfrank.goatcounter.com`) once, in itself, so
+every page gets both an ordinary pageview and the gate's own funnel without a
+second script tag anywhere — `terms.html` is the one exception, since it
+deliberately does not load `gate.js` and carries its own tag instead.
+
+`tally(name)` fires a `gate/<name>` event. The whole path — how many people
+see the gate, how many bounce at each step, how many are actively trying to
+get past the passphrase — is legible from these:
+
+| event | fires when |
+| --- | --- |
+| `gate/tos-shown` · `gate/tos-agreed` · `gate/tos-declined` | the terms dialog, and which button |
+| `gate/quiz-shown` · `gate/quiz-passed` · `gate/quiz-trapped` | the quiz, and whether it was passed or triggered the decoy maze |
+| `gate/curtain-shown` | the flash screen, in its normal (skippable) form |
+| `gate/curtain-code` · `gate/curtain-waited` | cleared with `SKIP_CODE`, or by waiting out `WAIT_MS` |
+| `gate/curtain-badcode` | a wrong code was typed |
+| `gate/punish-shown` | the flash screen shown as the 30-second passphrase punishment |
+| `gate/passphrase-shown` · `gate/passphrase-fail` · `gate/passphrase-ok` | reaching the lock, and every attempt against it |
+
+Because the earliest events fire before GoatCounter's async script has had
+time to load, `tally()` queues anything called too soon and drains the queue
+from the script's `onload` — a plain readiness guard would otherwise silently
+undercount exactly the events (`tos-shown`, most of all) that matter most. If
+the script never loads at all (blocked, offline), the queue just sits there;
+counting is never allowed to slow down or affect the gate itself.
+
+A returning visitor who already holds a passphrase in `sessionStorage` skips
+steps 0–2 entirely and generates no `gate/*` events at all — the funnel only
+measures people who are actually being asked to get past something.
 
 The WIKI section's dataset (`data/wiki-data.json`) is the exception: it is built
 from the [wiki-brain](https://github.com/caakehorn/wiki-brain) repository — the
