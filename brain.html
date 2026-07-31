@@ -80,6 +80,38 @@
   .reader .body p { margin: 0 0 15px; text-wrap: pretty; }
   .reader .draftflag { margin-top: 20px; font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: .16em;
     color: #8a7a5a; border-top: 1px solid rgba(176,38,255,.2); padding-top: 14px; line-height: 1.8; }
+  .reader .lede { margin-top: 16px; font-family: 'Space Grotesk', sans-serif; font-size: 13px; line-height: 1.75;
+    color: #8f96b2; text-wrap: pretty; }
+
+  /* the derived findings */
+  ol.findings { margin: 24px 0 0; padding: 0; list-style: none; counter-reset: f; }
+  ol.findings li { counter-increment: f; position: relative; padding: 0 0 15px 40px; margin-bottom: 14px;
+    border-bottom: 1px solid rgba(176,38,255,.12);
+    font-family: 'Newsreader', Georgia, serif; font-size: 18.5px; line-height: 1.62; color: #ded6ee; text-wrap: pretty; }
+  ol.findings li:last-child { border-bottom: none; }
+  ol.findings li::before { content: counter(f, decimal-leading-zero); position: absolute; left: 0; top: 4px;
+    font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .1em; color: #cf9dff; }
+
+  /* the completeness meter */
+  .meterwrap { margin-top: 26px; border-top: 1px solid rgba(176,38,255,.22); padding-top: 20px; }
+  .meterhead { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap;
+    font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: .26em; color: #cf9dff; }
+  .meterhead .key { color: #6b7690; letter-spacing: .14em; display: flex; align-items: center; gap: 6px; }
+  .meterhead .key i { width: 9px; height: 9px; display: inline-block; }
+  .meterhead .key i.v { background: #00b7ff; }
+  .meterhead .key i.l { background: #cf9dff; }
+  .mrow { margin-top: 13px; font-family: 'IBM Plex Mono', monospace; }
+  .mrow .lbl { display: flex; justify-content: space-between; font-size: 9.5px; letter-spacing: .14em; color: #9aa6b8; }
+  .mrow .lbl b { color: #fff; font-weight: 600; text-transform: capitalize; }
+  .mrow .lbl .n { color: #6b7690; }
+  .mrow .bars { margin-top: 5px; display: flex; flex-direction: column; gap: 3px; }
+  .mrow .bar { height: 5px; background: rgba(255,255,255,.06); position: relative; overflow: hidden; }
+  .mrow .bar i { position: absolute; left: 0; top: 0; bottom: 0; display: block; }
+  .mrow .bar i.v { background: linear-gradient(90deg, rgba(0,183,255,.45), #00b7ff); }
+  .mrow .bar i.l { background: linear-gradient(90deg, rgba(207,157,255,.45), #cf9dff); }
+  .mrow.zero .lbl b { color: #ff9a9a; }
+  .method { margin-top: 18px; font-family: 'IBM Plex Mono', monospace; font-size: 8.5px; letter-spacing: .1em;
+    line-height: 1.9; color: #55607a; }
   .reader .close { position: absolute; top: 14px; right: 16px; font-size: 11px; letter-spacing: .2em; color: #cf9dff;
     background: none; border: none; cursor: pointer; }
 
@@ -137,27 +169,26 @@
 <div class="reader" id="reader">
   <div class="card">
     <button class="close" id="readerclose">CLOSE ✕</button>
-    <div class="ec">THE CORE · THE SELF-MODEL · THE ONLY READABLE SURFACE</div>
-    <h2 id="portrait-title">The Self, So Far</h2>
-    <div class="body" id="portrait">
-      <p>This is a mind rendered as its own shape. Every point is something the
-        record proves about one person — a fact, a pattern, a conclusion the
-        graph reached by reading itself — and every line between two points is an
-        argument with a type. Nothing here is stored as an opinion; the whole is
-        assembled from counts, sources, and typed claims, and none of the
-        underlying pages can be opened from the outside.</p>
-      <p>What you are looking at is deliberately unbalanced. The districts are
-        sized by how much has been built, so the crowded regions are the parts of
-        a life that left the most evidence, and the thin slivers — work, place,
-        the body — are not what matters least. They are what has not yet been
-        written down. The point of the thing is to watch those fill.</p>
-      <p>The center is the part that does not exist yet: a single, honest account
-        of who this adds up to, re-derived as the graph grows. It is left open on
-        purpose, because a self-model that claims to be finished is lying.</p>
+    <div class="ec" id="core-ec">THE CORE · THE SELF-MODEL · DERIVED, NOT WRITTEN</div>
+    <h2 id="portrait-title">What The Graph Says About Itself</h2>
+    <div class="lede">Nobody wrote this page. Every line below is recomputed from
+      the shape of the graph each time it is built — so it cannot flatter, and it
+      goes out of date the moment the mind changes.</div>
+
+    <ol class="findings" id="findings"></ol>
+
+    <div class="meterwrap">
+      <div class="meterhead">
+        <span>HOW BUILT EACH DISTRICT IS</span>
+        <span class="key"><i class="v"></i>VOLUME <i class="l"></i>LIFT</span>
+      </div>
+      <div id="meters"></div>
+      <div class="method" id="method"></div>
     </div>
-    <div class="draftflag">◆ PLACEHOLDER CORE — this text is a scaffold, written
-      only from the public shape of the graph. It states no private fact and is
-      meant to be replaced by a self-portrait written by hand.</div>
+
+    <div class="draftflag">◆ The one thing still missing is a self-portrait in
+      Dan's own words. Until it exists the graph speaks for itself, which is
+      arguably the more honest arrangement.</div>
   </div>
 </div>
 
@@ -209,6 +240,43 @@
       '<b>' + (c.nodes || 0) + '</b> NODES · <b>' + (c.edges || 0) + '</b> ARGUMENTS · <b>' +
       (c.domains || 0) + '</b> DISTRICTS';
     buildLegend(brain, api);
+    buildCore(brain);
+  }
+
+  // ── the apex ───────────────────────────────────────────────────────────────
+  // The self-model is not written into the page; it is read out of brain.json,
+  // where the builder derived it from the topology. Rebuild the graph and this
+  // section says something different.
+  function buildCore(brain) {
+    var s = brain.self;
+    if (!s) return;
+    document.getElementById('core-ec').textContent =
+      'THE CORE · THE SELF-MODEL · DERIVED ' + s.derived_at;
+
+    var F = document.getElementById('findings');
+    F.innerHTML = '';
+    (s.statements || []).forEach(function (line) {
+      var li = document.createElement('li');
+      li.textContent = line;
+      F.appendChild(li);
+    });
+
+    var M = document.getElementById('meters');
+    M.innerHTML = '';
+    (s.composition || []).forEach(function (c) {
+      var row = document.createElement('div');
+      row.className = 'mrow' + (c.built === 0 ? ' zero' : '');
+      var pct = function (x) { return Math.round(x * 100); };
+      row.innerHTML =
+        '<div class="lbl"><b>' + c.domain + '</b>' +
+        '<span class="n">' + c.count + ' nodes · built ' + pct(c.built) + '%</span></div>' +
+        '<div class="bars">' +
+        '<div class="bar"><i class="v" style="width:' + pct(c.volume) + '%"></i></div>' +
+        '<div class="bar"><i class="l" style="width:' + pct(c.lift) + '%"></i></div>' +
+        '</div>';
+      M.appendChild(row);
+    });
+    document.getElementById('method').textContent = s.method || '';
   }
 
   function buildLegend(brain, api) {

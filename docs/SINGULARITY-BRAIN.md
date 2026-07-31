@@ -281,10 +281,25 @@ Each phase is independently shippable. We stop and look after each.
 
 ## 10. Build status
 
-- **Phase 1 — the opaque projection: IN PROGRESS.** `tools/build-brain.js`
-  compiles `data/wiki-data.json` (itself the synced projection of `wiki-brain`)
-  into `data/brain.json`: anonymized nodes (opaque id, domain, altitude, mass)
-  and edges (opaque endpoints, type only). Fail-closed — the builder asserts the
-  output carries no title, summary, source, or claim text before it writes. The
-  readable self-portrait and the consent layer arrive with Phase 2 (the
-  renderer).
+- **Phase 1 — the opaque projection: SHIPPED.** `tools/build-brain.js` compiles
+  `data/wiki-data.json` into `data/brain.json`: anonymized nodes (opaque id,
+  domain, altitude, mass) and edges (opaque endpoints, type only). Fail-closed —
+  the builder asserts the output carries no title, summary, source, or claim
+  text before it writes, and runs inside the sync workflow.
+- **Phase 2 — the static mind: SHIPPED.** `brain.html` + `js/brain.js`. Depth is
+  altitude, districts are domains sized by share, mass drives size and light,
+  selecting a node isolates its typed arguments. Plus the consent layer.
+- **Phase 3 — the apex: SHIPPED.** The core is no longer a placeholder. The
+  builder derives a **self-model from the topology alone** — seven statements
+  recomputed on every build, plus a two-bar completeness meter per district
+  (VOLUME = how much exists, LIFT = how much is conclusion rather than raw fact,
+  BUILT = their geometric mean). It cannot flatter, because nobody writes it.
+
+  What it says today, unprompted: *46% of this mind is people. 78% of it is raw
+  fact and only 12% is conclusion. Four of nine districts carry nothing above
+  ground level — including the largest, which has 143 facts and no conclusions
+  drawn from them. One district is inverted: mind is 41 nodes of pure conclusion
+  resting on no ground of its own.*
+
+  That is the Phase 5 rebalance brief, written by the graph about itself.
+- **Phase 4 — the loop, visible:** next.

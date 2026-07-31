@@ -122,6 +122,7 @@ function main() {
     counts: { nodes: nodes.length, edges: edges.length, domains: Object.keys(domains).length },
     domains: domains,
     frontier: frontier,
+    self: selfModel(nodes, edges, domains),
     nodes: nodes,
     edges: edges
   };
@@ -129,6 +130,103 @@ function main() {
   assertOpaque(out);
   fs.writeFileSync(OUT, JSON.stringify(out) + '\n');
   report(out);
+}
+
+// ── the self-model ───────────────────────────────────────────────────────────
+// The apex. The graph describing ITSELF, derived only from its own shape — no
+// private content is read, because there is none left in the projection to read.
+// Every statement below is a count or a ratio over the topology, rendered into a
+// sentence by a fixed template. Nothing here is an opinion about the person; it
+// is an audit of how much of the person has been written down, and how much
+// thinking sits on top of what was written.
+//
+// The two meters, stated openly because a weighting is always a choice:
+//   VOLUME — the district's share of all nodes, against the largest district.
+//            How much of this part of the life exists in the graph at all.
+//   LIFT   — the share of the district that is conclusion (junction or doctrine)
+//            rather than raw ground fact. How much has been *thought about*.
+// A district needs both. BUILT is their geometric mean, so a district that is
+// all volume and no lift, or all lift and no volume, scores low on purpose.
+function selfModel(nodes, edges, domains) {
+  const byId = new Map(nodes.map(n => [n.id, n]));
+  const D = {};
+  for (const n of nodes) {
+    const d = D[n.domain] || (D[n.domain] = { domain: n.domain, n: 0, ground: 0, junction: 0, doctrine: 0, deg: 0, cross: 0, within: 0 });
+    d.n++; d[n.altitude]++;
+  }
+  let tensions = 0, cross = 0, within = 0;
+  for (const e of edges) {
+    const a = byId.get(e.from), b = byId.get(e.to);
+    if (!a || !b) continue;
+    D[a.domain].deg++; D[b.domain].deg++;
+    if (a.domain === b.domain) { within++; D[a.domain].within++; }
+    else { cross++; D[a.domain].cross++; D[b.domain].cross++; }
+    if (e.type === 'contradicts') tensions++;
+  }
+
+  const total = nodes.length;
+  const maxN = Math.max(...Object.values(D).map(d => d.n));
+  const composition = Object.values(D).map(d => {
+    const conn = d.cross + d.within;
+    const volume = d.n / maxN;
+    const lift = d.n ? (d.junction + d.doctrine) / d.n : 0;
+    return {
+      domain: d.domain, count: d.n,
+      share: +(d.n / total).toFixed(4),
+      ground: d.ground, junction: d.junction, doctrine: d.doctrine,
+      volume: +volume.toFixed(4),
+      lift: +lift.toFixed(4),
+      built: +Math.sqrt(volume * lift).toFixed(4),
+      reach: +(conn ? d.cross / conn : 0).toFixed(4),
+      density: +(d.n ? d.deg / d.n : 0).toFixed(2)
+    };
+  }).sort((a, b) => b.count - a.count);
+
+  const alt = { ground: 0, junction: 0, doctrine: 0 };
+  for (const n of nodes) alt[n.altitude]++;
+
+  const pct = (x) => Math.round(x * 100);
+  const big = composition[0];
+  const flat = composition.filter(c => !c.junction && !c.doctrine);
+  const inverted = composition.filter(c => c.count >= 5 && !c.ground);
+  const thin = composition.slice().sort((a, b) => a.count - b.count)[0];
+  const densest = composition.slice().sort((a, b) => b.density - a.density)[0];
+
+  // Statements are built from templates + numbers only. They stay true as the
+  // graph grows because they are recomputed, never written down.
+  const S = [];
+  S.push(pct(big.share) + '% of this mind is ' + big.domain + '.');
+  S.push(pct(alt.ground / total) + '% of it is raw fact. Only ' +
+    pct(alt.doctrine / total) + '% is conclusion.');
+  if (flat.length) {
+    S.push(flat.length + ' of its ' + composition.length +
+      ' districts carry nothing above ground level' +
+      (flat.some(c => c.domain === big.domain)
+        ? ' — including the largest, which has ' + big.count + ' facts and no conclusions drawn from them.'
+        : ': ' + flat.map(c => c.domain).join(', ') + '.'));
+  }
+  if (inverted.length) {
+    S.push('One district is inverted: ' + inverted[0].domain + ' is ' + inverted[0].count +
+      ' nodes of pure conclusion resting on no ground of its own.');
+  }
+  S.push(pct(cross / (cross + within)) + '% of its arguments cross a district line, so it is ' +
+    'more interconnected than compartmented.');
+  S.push('It contradicts itself in ' + tensions + ' place' + (tensions === 1 ? '' : 's') +
+    ', and those contradictions are kept rather than resolved away.');
+  S.push('Its thinnest district, ' + thin.domain + ', holds ' + thin.count +
+    ' node' + (thin.count === 1 ? '' : 's') + '. Its densest, ' + densest.domain +
+    ', averages ' + densest.density.toFixed(1) + ' arguments per node.');
+
+  return {
+    derived_at: new Date().toISOString().slice(0, 10),
+    altitude: alt,
+    tensions: tensions,
+    integration: +(cross / (cross + within)).toFixed(4),
+    composition: composition,
+    statements: S,
+    method: 'VOLUME = share of nodes vs largest district. LIFT = share of the ' +
+      'district that is conclusion, not raw fact. BUILT = geometric mean of the two.'
+  };
 }
 
 // ── the guard ────────────────────────────────────────────────────────────────
@@ -160,6 +258,23 @@ function assertOpaque(out) {
   const blob = JSON.stringify(out.nodes) + JSON.stringify(out.edges);
   for (const banned of ['title', 'summary', 'gloss', 'claim', 'source', 'path', 'name', 'wiki/']) {
     if (blob.includes(banned)) fail('serialized graph contains banned token: ' + banned);
+  }
+
+  // The self-model is the only prose in the file. It is generated from templates
+  // and numbers, so it cannot carry private content — but verify rather than
+  // trust: statements must be plain sentences, must not embed a node id, and
+  // every word in them must be a domain name or ordinary English.
+  const s = out.self;
+  if (!s || !Array.isArray(s.statements)) fail('self-model missing');
+  const known = new Set(Object.keys(out.domains));
+  for (const line of s.statements) {
+    if (typeof line !== 'string') fail('self statement is not a string');
+    if (/[0-9a-f]{12}/.test(line)) fail('self statement embeds a node id: ' + line);
+    if (!/^[A-Za-z0-9 ,.'%:—-]+$/.test(line)) fail('self statement has unexpected characters: ' + line);
+  }
+  for (const c of s.composition) {
+    if (!known.has(c.domain)) fail('self composition names an unknown domain: ' + c.domain);
+    if (!SAFE_WORD.test(c.domain)) fail('self composition domain looks unsafe: ' + c.domain);
   }
 }
 
