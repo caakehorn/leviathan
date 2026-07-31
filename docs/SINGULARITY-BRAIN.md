@@ -139,21 +139,25 @@ else is falling toward.
 
 ### 5.1 The substrate feed
 `wiki-brain` stays the source of truth and stays private. The Singularity reads
-a **compiled, curated projection** of it — not the raw private prose. Concretely:
-a build step turns the graph into a public projection `data/brain.json`:
+a **compiled, opaque projection** of it — never the private prose. Per the
+locked decision (§9), the projection is **fully anonymized topology**: nodes
+carry no title, no summary, no sources, no readable text of any kind. Concretely:
 
 ```
-node   := { id, domain, altitude, title, gloss, mass, sources, public }
-edge   := { from, to, type, claim, public }
-frontier := { domain, gap, weight }        // named holes the graph knows it has
-self   := { derived_at, portrait, tensions, growth_edges }
+node   := { id: opaque-hash, domain, altitude, mass }   // NO title, NO gloss, NO sources
+edge   := { from: opaque-hash, to: opaque-hash, type }   // NO claim text
+domains := { <domain>: count }                           // the district sizes
+frontier := { domain, gap, weight }                      // named holes the graph knows it has
 ```
 
-- `altitude` ∈ {ground, junction, doctrine, self} — drives depth.
-- `mass` — how load-bearing the node is (in-degree × sources × words), drives
+- `id` is a stable hash of the real page path, so edges resolve consistently
+  while the path itself (which can name a person or a condition) never ships.
+- `altitude` ∈ {ground, junction, doctrine} — derived from page type, drives depth.
+- `mass` — how load-bearing the node is (degree × sources × words), drives
   gravity and size.
-- `public` — the redaction flag. **This is the whole privacy story (§6).**
-- `gloss` — a short, safe synopsis; the full private prose never ships.
+- The **only** readable text in the whole public projection is a single,
+  separately-**curated** self-portrait (§5.3) that Dan approves by hand — it is
+  never auto-extracted from private prose. Everything else is gravity.
 
 ### 5.2 The rendering — the mind you fall into
 A WebGL / canvas force-graph in the Singularity palette:
@@ -196,7 +200,7 @@ rewarding thing on the page:
 
 ---
 
-## 6. The fork that gates everything: privacy
+## 6. The decision that gates everything: privacy — LOCKED
 
 **THE SINGULARITY IS THE PUBLIC, UNGATED WING.** The `wiki-brain` graph contains
 some of the most sensitive material a person has — health and substance detail,
@@ -205,24 +209,28 @@ that can be rendered publicly and ungated.** This is not a small caveat; it is
 the first architectural decision, and I will not ship a build that resolves it
 by accident.
 
-Three options, my recommendation first:
+**Dan's decision (2026-07-31): a new consent layer + only the self-overview
+readable + live sync.** The most conservative posture on the board, and the
+right one for a public model of a real person. In practice this is stricter
+than the original "abstract-by-default": there, marked nodes could ship a
+`gloss`; here, **nothing ships readable except one hand-curated self-portrait.**
 
-- **(A) Recommended — the public projection is abstract by default.** Only nodes
-  explicitly marked `public: true` ship readable `gloss` text; everything else
-  ships as **mass without content** — it has gravity, size, a domain, and edges,
-  so the *shape* of the mind is honest and complete, but you cannot *read* the
-  private nodes. The sensitive regions are present as dark mass you can feel but
-  not open. The relationship and health districts exist, pull on everything, and
-  stay shut. This fits the aesthetic *and* the ethics, and it is the honest
-  "deemphasize Annie" — she becomes gravity, not text.
-- **(B)** Put the whole brain behind the existing gate (in the Temple). Safe, but
-  contradicts "ingest into the Singularity," and re-buries the thing you want
-  visible.
-- **(C)** A new consent/gate layer specific to the brain — a third posture
-  between the two wings.
+The build therefore fails closed at the hardest setting:
 
-Whichever we pick, the default is **redact-unless-marked-public**, never
-publish-unless-marked-private. The build fails closed.
+- **Every node is gravity.** The projection is anonymized topology — opaque
+  hashes, domain, altitude, mass, edge types — and carries **no title, no
+  summary, no sources, no claim text.** There is no per-node readable content to
+  leak because there is none in the file. The relationship and health districts
+  are present as mass and pull on everything; they cannot be opened because there
+  is nothing inside them to open.
+- **One readable surface: the self-portrait.** A single curated apex text (§5.3)
+  that Dan writes/approves by hand. It is never auto-extracted from the private
+  prose; the pipeline cannot promote a private page to readable.
+- **A consent layer** stands in front of the whole thing — a third posture,
+  lighter than the Temple's quiz→curtain→passphrase but a deliberate threshold
+  and acknowledgement before the mind opens.
+- **Live sync**, with the redaction running **inside** the sync so the fail-closed
+  rule is enforced on every update, not once at build time.
 
 ---
 
@@ -258,18 +266,25 @@ Each phase is independently shippable. We stop and look after each.
 
 ---
 
-## 9. The three forks I need from Dan
+## 9. Decisions — LOCKED (2026-07-31)
 
-1. **Privacy posture** — A (abstract-by-default public projection), B (gate it in
-   the Temple), or C (a new consent layer)? *My strong default: A, fail-closed.*
-2. **The public/private line** — under A, which domains are readable in public by
-   default (my default: work, interests, mind, timeline, places, self-overview),
-   and which are gravity-only (my default: health, legal, and the relationship
-   detail)? Annie exists as mass; her page does not open in public.
-3. **Source coupling** — do we build the projection from a periodic checkout of
-   `wiki-brain` (loose, safe, manual refresh), or wire the existing
-   `repository_dispatch` sync so the mind updates when the brain does (tight,
-   live, but every push must pass the redaction gate)? *My default: loose first,
-   tighten in Phase 4.*
+1. **Privacy posture → a new consent layer.** Not the Temple gate, not wide
+   open: the brain gets its own deliberate threshold, and the projection behind
+   it is fully opaque (§6).
+2. **Public/private line → only the self-overview is readable.** All nine
+   domains render as shape/gravity; the single curated self-portrait is the only
+   readable text. Every underlying node — Annie included — is gravity, present
+   and unreadable.
+3. **Source coupling → live sync now.** The projection is built inside the
+   existing `wiki-brain` sync so the mind updates when the brain moves, with the
+   fail-closed redaction enforced on every sync.
 
-Answer those and Phase 1 starts immediately.
+## 10. Build status
+
+- **Phase 1 — the opaque projection: IN PROGRESS.** `tools/build-brain.js`
+  compiles `data/wiki-data.json` (itself the synced projection of `wiki-brain`)
+  into `data/brain.json`: anonymized nodes (opaque id, domain, altitude, mass)
+  and edges (opaque endpoints, type only). Fail-closed — the builder asserts the
+  output carries no title, summary, source, or claim text before it writes. The
+  readable self-portrait and the consent layer arrive with Phase 2 (the
+  renderer).

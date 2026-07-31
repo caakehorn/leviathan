@@ -87,6 +87,15 @@ jobs:
         if: steps.check.outputs.stale == 'true'
         run: python3 tools/build-wiki-data.py --wiki-brain .wiki-brain
 
+      # THE SINGULARITY BRAIN (docs/SINGULARITY-BRAIN.md). The opaque public
+      # projection is rebuilt here, inside the sync, so the fail-closed redaction
+      # runs on every update — never a stale hand-built dump. node is preinstalled
+      # on ubuntu-latest; the builder exits non-zero if any readable field would
+      # survive into brain.json, which fails the whole sync rather than publish it.
+      - name: Rebuild brain.json (opaque projection)
+        if: steps.check.outputs.stale == 'true'
+        run: node tools/build-brain.js
+
       # The "Discard a date-only rebuild" step that used to sit here is gone:
       # the dataset no longer carries a "generated" timestamp, so an unchanged
       # source now produces a byte-identical file and the `git diff --quiet`
@@ -98,7 +107,7 @@ jobs:
         env:
           UPSTREAM: ${{ steps.check.outputs.upstream }}
         run: |
-          if git diff --quiet -- data/wiki-data.json; then
+          if git diff --quiet -- data/wiki-data.json data/brain.json; then
             echo "changed=false" >> "$GITHUB_OUTPUT"
             echo "wiki-data.json is unchanged"
             exit 0
@@ -119,7 +128,7 @@ jobs:
           ")"
           git config user.name  'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add data/wiki-data.json
+          git add data/wiki-data.json data/brain.json
           git commit -m "Sync wiki data from wiki-brain@$UPSTREAM" -m "$stats"
           git push
           echo "changed=true" >> "$GITHUB_OUTPUT"
