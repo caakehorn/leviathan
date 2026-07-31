@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>THE MIND — THE SINGULARITY</title>
+<!-- THE SINGULARITY BRAIN — the rendered mind (docs/SINGULARITY-BRAIN.md).
+     Ungated like the rest of the Singularity, but gated by its own CONSENT
+     LAYER: a deliberate threshold before a model of a real person opens. The
+     graph it draws is data/brain.json — opaque topology, no readable content.
+     The single readable surface is the curated self-portrait below, which is
+     the ONLY place words about the person appear, and is edited by hand. -->
+<meta name="robots" content="noindex, nofollow">
+<meta name="referrer" content="no-referrer">
+<meta name="theme-color" content="#03040a">
+<link rel="icon" href="data:,">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous">
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@700;900&amp;family=Space+Grotesk:wght@400;500;700&amp;family=IBM+Plex+Mono:wght@400;600;700&amp;family=Newsreader:ital,opsz@0,6..72;1,6..72&amp;display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; height: 100%; background: #03040a; color: #e7e0f2;
+    font-family: 'IBM Plex Mono', ui-monospace, monospace; overflow: hidden; }
+  #mind { position: fixed; inset: 0; z-index: 0; display: block; width: 100%; height: 100%; cursor: grab; }
+  #mind:active { cursor: grabbing; }
+  #grain { position: fixed; inset: 0; z-index: 1; pointer-events: none; opacity: .45;
+    background: repeating-linear-gradient(0deg, rgba(0,0,0,.28) 0 1px, transparent 1px 3px); }
+
+  /* ── HUD ── */
+  .hud { position: fixed; z-index: 3; pointer-events: none; }
+  .top { top: 0; left: 0; right: 0; padding: 20px 22px 0; display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; }
+  .brandwrap { pointer-events: auto; }
+  .kick { font-size: 9.5px; letter-spacing: .4em; color: #cf9dff; text-transform: uppercase; }
+  h1 { margin: 6px 0 0; font-family: 'Unbounded', sans-serif; font-weight: 900; font-size: clamp(24px, 4.4vw, 46px);
+    line-height: .9; letter-spacing: -.02em; color: #fff; text-shadow: 0 0 30px rgba(176,38,255,.55); }
+  .count { margin-top: 8px; font-size: 10px; letter-spacing: .16em; color: #7f8aa6; }
+  .count b { color: #9fe0ff; }
+  .exit { pointer-events: auto; font-size: 9.5px; letter-spacing: .2em; color: #5a6b60; text-decoration: none;
+    border: 1px solid rgba(120,140,120,.3); padding: 8px 12px; }
+  .exit:hover { color: #b6ff8f; border-color: #b6ff8f; }
+
+  /* legend + frontier, bottom-left */
+  .legend { position: fixed; left: 22px; bottom: 16px; z-index: 3; pointer-events: auto;
+    display: flex; flex-direction: column; gap: 5px; font-size: 9.5px; letter-spacing: .1em; }
+  .legend .row { display: flex; align-items: center; gap: 7px; cursor: pointer; color: #9aa6b8; opacity: .85; }
+  .legend .row:hover { opacity: 1; color: #fff; }
+  .legend .dot { width: 8px; height: 8px; border-radius: 50%; box-shadow: 0 0 8px currentColor; }
+  .legend .row .n { color: #6b7690; margin-left: 2px; }
+  .legend .row.thin .name { color: #ff9a9a; }
+  .legend .row.thin::after { content: ' ◂ THIN'; color: #ff5a5a; font-size: 8px; letter-spacing: .12em; }
+  .legend .hint { margin-top: 8px; color: #55607a; font-size: 8.5px; letter-spacing: .14em; max-width: 210px; line-height: 1.7; }
+
+  /* inspector, bottom-right */
+  .inspect { position: fixed; right: 22px; bottom: 16px; z-index: 3; width: 258px; pointer-events: auto;
+    border: 1px solid rgba(176,38,255,.28); background: rgba(6,8,16,.82); backdrop-filter: blur(10px);
+    padding: 16px 16px 14px; transform: translateY(140%); transition: transform .28s cubic-bezier(.2,.7,.2,1); }
+  .inspect.on { transform: translateY(0); }
+  .inspect .h { font-size: 9px; letter-spacing: .28em; color: #cf9dff; }
+  .inspect .dom { margin-top: 8px; font-family: 'Unbounded', sans-serif; font-weight: 900; font-size: 22px; color: #fff; text-transform: capitalize; }
+  .inspect .meta { margin-top: 6px; font-size: 10px; letter-spacing: .1em; color: #8f9ab2; line-height: 1.9; }
+  .inspect .meta b { color: #9fe0ff; }
+  .inspect .types { margin-top: 10px; display: flex; flex-wrap: wrap; gap: 5px; }
+  .inspect .types span { font-size: 8.5px; letter-spacing: .08em; color: #cbd8ee; border: 1px solid rgba(120,140,160,.3); padding: 3px 6px; }
+  .inspect .note { margin-top: 11px; font-size: 8.5px; letter-spacing: .1em; color: #55607a; line-height: 1.6; }
+
+  /* the core button + reader */
+  .corebtn { position: fixed; left: 50%; bottom: 20px; transform: translateX(-50%); z-index: 3; pointer-events: auto;
+    font-size: 10px; letter-spacing: .26em; color: #03040a; background: #cf9dff; border: none; padding: 12px 20px; cursor: pointer;
+    transition: background .16s, transform .16s; }
+  .corebtn:hover { background: #fff; transform: translateX(-50%) translateY(-2px); }
+
+  .reader { position: fixed; inset: 0; z-index: 5; display: none; align-items: center; justify-content: center; padding: 24px;
+    background: radial-gradient(ellipse 60% 60% at 50% 46%, rgba(10,6,20,.7), rgba(3,4,10,.94)); backdrop-filter: blur(6px); }
+  .reader.on { display: flex; }
+  .reader .card { position: relative; width: min(680px, 94vw); max-height: 88vh; overflow-y: auto;
+    border: 1px solid rgba(176,38,255,.4); background: rgba(6,8,16,.96); padding: 40px clamp(22px,5vw,50px) 44px; }
+  .reader .ec { font-size: 9px; letter-spacing: .3em; color: #6b6280; }
+  .reader h2 { margin: 14px 0 0; font-family: 'Unbounded', sans-serif; font-weight: 900; font-size: clamp(26px,5vw,42px); color: #fff; letter-spacing: -.02em; }
+  .reader .body { margin-top: 20px; font-family: 'Newsreader', Georgia, serif; font-size: 18px; line-height: 1.75; color: #ded6ee; }
+  .reader .body p { margin: 0 0 15px; text-wrap: pretty; }
+  .reader .draftflag { margin-top: 20px; font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: .16em;
+    color: #8a7a5a; border-top: 1px solid rgba(176,38,255,.2); padding-top: 14px; line-height: 1.8; }
+  .reader .close { position: absolute; top: 14px; right: 16px; font-size: 11px; letter-spacing: .2em; color: #cf9dff;
+    background: none; border: none; cursor: pointer; }
+
+  /* ── the consent layer ── */
+  .consent { position: fixed; inset: 0; z-index: 20; display: flex; align-items: center; justify-content: center; padding: 24px;
+    background: #03040a; }
+  .consent.off { display: none; }
+  .consent .bx { width: min(560px, 94vw); text-align: center; }
+  .consent .mark { font-size: 10px; letter-spacing: .44em; color: #cf9dff; text-transform: uppercase; }
+  .consent h2 { margin: 16px 0 0; font-family: 'Unbounded', sans-serif; font-weight: 900; font-size: clamp(30px, 7vw, 60px);
+    line-height: .9; letter-spacing: -.02em; color: #fff; text-shadow: 0 0 40px rgba(176,38,255,.5); }
+  .consent p { margin: 22px auto 0; max-width: 52ch; font-family: 'Space Grotesk', sans-serif; font-size: 14.5px;
+    line-height: 1.85; color: #b9add0; text-wrap: pretty; }
+  .consent p em { color: #7fe3ff; font-style: normal; }
+  .consent .terms { margin: 22px auto 0; max-width: 54ch; text-align: left; border: 1px solid rgba(176,38,255,.24);
+    background: rgba(8,8,16,.6); padding: 16px 18px; font-size: 10.5px; letter-spacing: .04em; line-height: 1.95; color: #8f96b2; }
+  .consent .terms b { color: #cf9dff; font-weight: 600; }
+  .consent .go { margin-top: 24px; font-size: 11px; letter-spacing: .24em; color: #03040a; background: #cf9dff; border: none;
+    padding: 15px 26px; cursor: pointer; transition: background .16s, transform .16s; }
+  .consent .go:hover { background: #fff; transform: translateY(-2px); }
+  .consent .leave { display: block; margin: 16px auto 0; font-size: 9.5px; letter-spacing: .2em; color: #5a6b60; text-decoration: none; }
+  .consent .leave:hover { color: #b6ff8f; }
+
+  @media (max-width: 720px) { .inspect { width: 210px; } .legend .hint { display: none; } }
+  @media (prefers-reduced-motion: reduce) { .corebtn, .inspect, .consent .go { transition: none; } }
+</style>
+</head>
+<body>
+<canvas id="mind"></canvas>
+<div id="grain" aria-hidden="true"></div>
+
+<div class="hud top">
+  <div class="brandwrap">
+    <div class="kick">THE SINGULARITY · A MODEL OF A PERSON</div>
+    <h1>THE MIND</h1>
+    <div class="count" id="count">—</div>
+  </div>
+  <a class="exit" href="./singularity.html">◂ THE SINGULARITY</a>
+</div>
+
+<div class="legend" id="legend" aria-hidden="true"></div>
+
+<div class="inspect" id="inspect" aria-live="polite">
+  <div class="h">NODE</div>
+  <div class="dom" id="i-dom">—</div>
+  <div class="meta" id="i-meta"></div>
+  <div class="types" id="i-types"></div>
+  <div class="note">This node has no readable content — by design. What you can
+    know about it is its place, its weight, and how it argues. The words live
+    only at the core.</div>
+</div>
+
+<button class="corebtn" id="corebtn">◇ OPEN THE CORE</button>
+
+<div class="reader" id="reader">
+  <div class="card">
+    <button class="close" id="readerclose">CLOSE ✕</button>
+    <div class="ec">THE CORE · THE SELF-MODEL · THE ONLY READABLE SURFACE</div>
+    <h2 id="portrait-title">The Self, So Far</h2>
+    <div class="body" id="portrait">
+      <p>This is a mind rendered as its own shape. Every point is something the
+        record proves about one person — a fact, a pattern, a conclusion the
+        graph reached by reading itself — and every line between two points is an
+        argument with a type. Nothing here is stored as an opinion; the whole is
+        assembled from counts, sources, and typed claims, and none of the
+        underlying pages can be opened from the outside.</p>
+      <p>What you are looking at is deliberately unbalanced. The districts are
+        sized by how much has been built, so the crowded regions are the parts of
+        a life that left the most evidence, and the thin slivers — work, place,
+        the body — are not what matters least. They are what has not yet been
+        written down. The point of the thing is to watch those fill.</p>
+      <p>The center is the part that does not exist yet: a single, honest account
+        of who this adds up to, re-derived as the graph grows. It is left open on
+        purpose, because a self-model that claims to be finished is lying.</p>
+    </div>
+    <div class="draftflag">◆ PLACEHOLDER CORE — this text is a scaffold, written
+      only from the public shape of the graph. It states no private fact and is
+      meant to be replaced by a self-portrait written by hand.</div>
+  </div>
+</div>
+
+<div class="consent" id="consent">
+  <div class="bx">
+    <div class="mark">THE SINGULARITY · A THRESHOLD</div>
+    <h2>THIS IS A REAL PERSON</h2>
+    <p>What is behind this door is a working model of an actual human being,
+      assembled from the record of a real life. <em>It is not a character.</em>
+      You are about to look at the shape of someone's mind.</p>
+    <div class="terms">
+      Before you enter you acknowledge that: <b>·</b> this is a model of a real
+      person, not a fiction; <b>·</b> you will not attempt to deanonymize,
+      identify, or contact anyone represented as a node; <b>·</b> nothing here is
+      a readable record — the graph is opaque by design and you will not treat
+      its shape as a claim about any named individual; <b>·</b> you enter out of
+      curiosity, not for use.
+    </div>
+    <button class="go" id="consentgo">I UNDERSTAND — OPEN THE MIND</button>
+    <a class="leave" href="./singularity.html">no — take me back</a>
+  </div>
+</div>
+
+<script defer src="./js/score.js"></script>
+<script src="./js/brain.js"></script>
+<script>
+(function () {
+  var CKEY = 'lv.brain.consent';
+  var consent = document.getElementById('consent');
+  var started = false;
+
+  function begin() {
+    if (started) return; started = true;
+    consent.classList.add('off');
+    fetch('./data/brain.json', { cache: 'no-cache' }).then(function (r) { return r.json(); }).then(boot)
+      .catch(function () { document.getElementById('count').textContent = 'the mind failed to load'; });
+  }
+  document.getElementById('consentgo').addEventListener('click', function () {
+    try { localStorage.setItem(CKEY, '1'); } catch (e) {}
+    begin();
+  });
+  // Consent is per-browser and remembered; a returning visitor skips the gate.
+  try { if (localStorage.getItem(CKEY) === '1') begin(); } catch (e) {}
+
+  function boot(brain) {
+    var api = window.LVBrain.build(document.getElementById('mind'), brain, { onPick: inspect });
+    var c = brain.counts || {};
+    document.getElementById('count').innerHTML =
+      '<b>' + (c.nodes || 0) + '</b> NODES · <b>' + (c.edges || 0) + '</b> ARGUMENTS · <b>' +
+      (c.domains || 0) + '</b> DISTRICTS';
+    buildLegend(brain, api);
+  }
+
+  function buildLegend(brain, api) {
+    var L = document.getElementById('legend');
+    var doms = brain.domains || {}, thin = api.frontier();
+    var cols = { self:[57,255,20], mind:[176,38,255], people:[255,47,157], interests:[0,183,255],
+      work:[255,196,60], timeline:[0,255,163], places:[123,45,255], health:[255,90,90], legal:[160,200,180] };
+    Object.keys(doms).sort(function (a, b) { return doms[b] - doms[a]; }).forEach(function (d) {
+      var c = cols[d] || [180,200,190];
+      var row = document.createElement('div');
+      row.className = 'row' + (thin.indexOf(d) >= 0 ? ' thin' : '');
+      row.innerHTML = '<span class="dot" style="background:rgb(' + c.join(',') + ');color:rgb(' + c.join(',') + ')"></span>' +
+        '<span class="name">' + d + '</span><span class="n">' + doms[d] + '</span>';
+      row.addEventListener('click', function () { api.focusDomain(d); });
+      L.appendChild(row);
+    });
+    var hint = document.createElement('div');
+    hint.className = 'hint';
+    hint.textContent = 'drag to turn · scroll to fall in · click a node · click a district to face it';
+    L.appendChild(hint);
+  }
+
+  function inspect(node) {
+    var box = document.getElementById('inspect');
+    if (!node) { box.classList.remove('on'); return; }
+    document.getElementById('i-dom').textContent = node.domain;
+    document.getElementById('i-meta').innerHTML =
+      'altitude <b>' + node.altitude + '</b><br>mass <b>' + node.mass.toFixed(3) + '</b>' +
+      '<br>arguments <b>' + node.degree + '</b>';
+    var t = document.getElementById('i-types'); t.innerHTML = '';
+    Object.keys(node.types).sort(function (a, b) { return node.types[b] - node.types[a]; }).slice(0, 8).forEach(function (k) {
+      var s = document.createElement('span'); s.textContent = k + ' ×' + node.types[k]; t.appendChild(s);
+    });
+    box.classList.add('on');
+  }
+
+  var reader = document.getElementById('reader');
+  document.getElementById('corebtn').addEventListener('click', function () { reader.classList.add('on'); });
+  document.getElementById('readerclose').addEventListener('click', function () { reader.classList.remove('on'); });
+  reader.addEventListener('click', function (e) { if (e.target === reader) reader.classList.remove('on'); });
+  addEventListener('keydown', function (e) { if (e.key === 'Escape') { reader.classList.remove('on'); if (window.LVBrain) window.LVBrain.deselect(); } });
+})();
+</script>
+</body>
+</html>
