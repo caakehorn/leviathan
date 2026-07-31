@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>THE SINGULARITY — the endless encyclopedia</title>
+<!-- THE SINGULARITY — Wing II. Deliberately outside the gate: no gate.js here.
+     Nothing on this page touches the archive or her record. It is generative all
+     the way down.
+
+     THE ENDLESS ENCYCLOPEDIA is the wiki rethought. A normal wiki documents
+     things that exist; this one documents things that do not, and there is no
+     bottom to it. Every entry is coined and written on the spot from a seed —
+     and the seed is the entry's own name, so a given name always produces the
+     same article, in every browser, forever. That is the one law it shares with
+     the Temple: determinism. You are not being shown a database. You are
+     watching a definition condense out of a name the instant you ask for it,
+     and every name it hands you is a door to another one. -->
+<meta name="robots" content="noindex, nofollow">
+<meta name="referrer" content="no-referrer">
+<meta name="theme-color" content="#03040a">
+<link rel="icon" href="data:,">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous">
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@700;900&amp;family=Space+Grotesk:wght@400;500;700&amp;family=IBM+Plex+Mono:wght@400;600;700&amp;family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&amp;display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; min-height: 100%; background: #03040a; color: #e7e0f2;
+    font-family: 'Space Grotesk', sans-serif; overflow-x: hidden; }
+  #hole { position: fixed; inset: 0; z-index: 0; display: block; width: 100%; height: 100%; }
+  #veil { position: fixed; inset: 0; z-index: 1; pointer-events: none;
+    background: linear-gradient(180deg, rgba(3,4,10,.08), rgba(3,4,10,.4) 40%, rgba(3,4,10,.9)); }
+  #grain { position: fixed; inset: 0; z-index: 1; pointer-events: none; opacity: .5;
+    background: repeating-linear-gradient(0deg, rgba(0,0,0,.26) 0 1px, transparent 1px 3px); }
+
+  .top { position: relative; z-index: 3; text-align: center; padding: 12vh 22px 4vh; }
+  .kick { font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .46em;
+    color: #cf9dff; text-transform: uppercase; }
+  h1.big { margin: 14px 0 0; font-family: 'Unbounded', sans-serif; font-weight: 900;
+    font-size: clamp(40px, 11.5vw, 150px); line-height: .82; letter-spacing: -.035em; color: #fff;
+    text-shadow: 0 0 44px rgba(176,38,255,.6), 0 0 150px rgba(0,183,255,.4); }
+  .creed { margin: 24px auto 0; max-width: 64ch; font-size: 15px; line-height: 1.82; color: #b9add0;
+    text-wrap: pretty; text-shadow: 0 1px 14px #03040a; }
+  .creed em { color: #7fe3ff; font-style: normal; }
+
+  .rail { position: relative; z-index: 3; display: flex; flex-wrap: wrap; gap: 10px; justify-content: center;
+    align-items: center; padding: 6px 22px 0; font-family: 'IBM Plex Mono', monospace; }
+  .rail button { all: unset; cursor: pointer; font-size: 10.5px; letter-spacing: .2em; color: #cf9dff;
+    border: 1px solid rgba(176,38,255,.42); padding: 10px 15px; transition: background .18s, color .18s; }
+  .rail button:hover { background: #b026ff; color: #fff; }
+  .rail button:focus-visible { outline: 1px solid #cf9dff; outline-offset: 3px; }
+  .rail .coord { font-size: 9.5px; letter-spacing: .16em; color: #6b6280; }
+  .rail .coord b { color: #9fe0ff; }
+  .rail a.exit { font-size: 9.5px; letter-spacing: .2em; color: #5a6b60; text-decoration: none; }
+  .rail a.exit:hover { color: #b6ff8f; }
+
+  main { position: relative; z-index: 3; max-width: 760px; margin: 40px auto 0; padding: 0 22px 16vh; }
+  article { border: 1px solid rgba(176,38,255,.2); background: rgba(6,8,16,.74);
+    backdrop-filter: blur(11px); -webkit-backdrop-filter: blur(11px); padding: 40px clamp(20px, 5vw, 54px) 46px; }
+
+  .ec { font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; letter-spacing: .28em; color: #6b6280;
+    border-bottom: 1px solid rgba(176,38,255,.18); padding-bottom: 14px; }
+  h2.title { margin: 20px 0 0; font-family: 'Unbounded', sans-serif; font-weight: 900; line-height: 1.02;
+    font-size: clamp(30px, 6vw, 58px); color: #fff; letter-spacing: -.02em; }
+  .pron { margin: 12px 0 0; font-family: 'Newsreader', Georgia, serif; font-style: italic; font-size: 16px;
+    color: #8fa6c9; }
+  .pron .pos { font-style: normal; font-family: 'IBM Plex Mono', monospace; font-size: 10px;
+    letter-spacing: .2em; color: #cf9dff; margin-right: 8px; }
+  .epi { margin: 22px 0 0; padding-left: 18px; border-left: 2px solid rgba(0,183,255,.4);
+    font-family: 'Newsreader', Georgia, serif; font-style: italic; font-size: 17px; line-height: 1.65;
+    color: #9fe0ff; text-wrap: pretty; }
+  .epi .who { display: block; margin-top: 8px; font-size: 12px; font-style: normal;
+    font-family: 'IBM Plex Mono', monospace; letter-spacing: .12em; color: #6b6280; }
+
+  section.body { margin-top: 30px; }
+  section.body h3 { margin: 30px 0 12px; font-family: 'IBM Plex Mono', monospace; font-size: 11px;
+    letter-spacing: .28em; text-transform: uppercase; color: #cf9dff; }
+  section.body p { margin: 0 0 16px; font-family: 'Newsreader', Georgia, serif; font-size: 18px;
+    line-height: 1.72; color: #ded6ee; text-wrap: pretty; }
+  a.link { color: #7fe3ff; text-decoration: none; border-bottom: 1px solid rgba(0,183,255,.34);
+    cursor: pointer; transition: color .15s, border-color .15s; }
+  a.link:hover { color: #b6ffff; border-color: #7fe3ff; }
+
+  .seealso { margin-top: 34px; border-top: 1px solid rgba(176,38,255,.18); padding-top: 20px; }
+  .seealso .lbl { font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .28em;
+    color: #cf9dff; }
+  .seealso .grid { margin-top: 14px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  @media (max-width: 620px) { .seealso .grid { grid-template-columns: 1fr; } }
+  .seealso a { display: block; text-decoration: none; border: 1px solid rgba(120,140,160,.2);
+    padding: 12px 14px; font-family: 'Newsreader', serif; font-size: 15px; color: #cbd8ee;
+    transition: border-color .16s, transform .16s, color .16s; cursor: pointer; }
+  .seealso a:hover { border-color: #7fe3ff; color: #fff; transform: translateX(3px); }
+  .seealso a .n { font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: .18em;
+    color: #6b6280; display: block; margin-bottom: 5px; }
+
+  .deeper { margin: 26px auto 0; text-align: center; }
+  .deeper button { all: unset; cursor: pointer; font-family: 'IBM Plex Mono', monospace; font-size: 11px;
+    letter-spacing: .28em; color: #03040a; background: #cf9dff; padding: 14px 26px;
+    transition: background .18s, transform .18s; }
+  .deeper button:hover { background: #fff; transform: translateY(-2px); }
+
+  .disclaim { position: relative; z-index: 3; max-width: 760px; margin: 0 auto; padding: 0 22px 12vh;
+    font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; letter-spacing: .14em; line-height: 2;
+    color: #55607a; text-align: center; }
+  .disclaim b { color: #9a8fb8; }
+
+  @media (prefers-reduced-motion: reduce) { .seealso a, .deeper button { transition: none; } }
+</style>
+</head>
+<body>
+<canvas id="hole" aria-hidden="true"></canvas>
+<div id="veil" aria-hidden="true"></div>
+<div id="grain" aria-hidden="true"></div>
+
+<div class="top">
+  <div class="kick">VOID + LEVIATHAN · WING II · UNSEALED</div>
+  <h1 class="big">THE SINGULARITY</h1>
+  <p class="creed">A wiki documents what exists. <em>This one documents what does not,
+    and it has no bottom.</em> Every entry is coined and written the instant you ask
+    for it, from a seed that is its own name — so the same name always yields the same
+    article, and every name is a door to another one. Fall as far as you like.</p>
+</div>
+
+<div class="rail">
+  <button id="deeper">◇ FALL DEEPER</button>
+  <button id="copy" title="Copy a permanent link to this entry">⧉ PERMALINK</button>
+  <span class="coord">HORIZON <b id="coord">—</b></span>
+  <a class="exit" href="./">◂ BACK TO THE THRESHOLD</a>
+</div>
+
+<main><article id="art" aria-live="polite"></article></main>
+
+<div class="disclaim">
+  THE ENDLESS ENCYCLOPEDIA · <b>EVERY ENTRY IS FALSE.</b> NOTHING DESCRIBED HERE IS
+  REAL, WAS EVER REAL, OR REFERS TO ANYONE. IT IS A DEFINITION MACHINE POINTED AT
+  THE EMPTY SET.
+</div>
+
+<script defer src="./js/score.js"></script>
+<script src="./js/endless.js"></script>
+<script>
+(function () {
+  // ── the black hole ────────────────────────────────────────────────────────
+  // Canvas 2D, additive blend. An accretion disk of orbiting motes spiralling
+  // inward toward a dark core ringed by a bright photon band; the approaching
+  // side is brightened, a cheap nod to relativistic beaming. No shader compile
+  // to fail, capped far under any flash threshold, stilled for reduced-motion.
+  var cv = document.getElementById('hole'), g = cv.getContext('2d');
+  var DPR = Math.min(2, window.devicePixelRatio || 1), W, H, cx, cy, R;
+  var reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var M = 900, mote = [];
+  function seed() {
+    mote = [];
+    for (var i = 0; i < M; i++) {
+      mote.push({
+        a: Math.random() * Math.PI * 2,
+        r: 0.16 + Math.pow(Math.random(), 0.5) * 0.84,
+        w: 0.2 + Math.random() * 0.9,
+        h: Math.random() < 0.2 ? '0,183,255' : (Math.random() < 0.3 ? '176,38,255' : '255,180,120'),
+        z: 0.4 + Math.random() * 0.6
+      });
+    }
+  }
+  function resize() {
+    W = cv.clientWidth = innerWidth; H = cv.clientHeight = innerHeight;
+    cv.width = W * DPR; cv.height = H * DPR; g.setTransform(DPR, 0, 0, DPR, 0, 0);
+    cx = W / 2; cy = H * 0.34; R = Math.min(W, H) * 0.46; seed();
+  }
+  addEventListener('resize', resize); resize();
+  var t = 0;
+  function frame() {
+    t += 0.006;
+    g.clearRect(0, 0, W, H);
+    g.globalCompositeOperation = 'lighter';
+    // photon ring
+    var ring = g.createRadialGradient(cx, cy, R * 0.30, cx, cy, R * 0.54);
+    ring.addColorStop(0, 'rgba(0,0,0,0)');
+    ring.addColorStop(0.60, 'rgba(255,196,140,0.28)');
+    ring.addColorStop(0.71, 'rgba(255,255,238,0.52)');
+    ring.addColorStop(0.80, 'rgba(0,183,255,0.20)');
+    ring.addColorStop(0.9, 'rgba(176,38,255,0.16)');
+    ring.addColorStop(1, 'rgba(0,0,0,0)');
+    g.fillStyle = ring; g.beginPath(); g.arc(cx, cy, R * 0.95, 0, 7); g.fill();
+    for (var i = 0; i < mote.length; i++) {
+      var m = mote[i];
+      if (!reduce) {
+        m.a += (0.5 + (1 - m.r) * 1.7) * 0.010 * m.w;   // inner motes orbit faster
+        m.r -= 0.00035 * (1.1 - m.r);                    // slow inward spiral
+        if (m.r < 0.16) { m.r = 1.0; m.a = Math.random() * Math.PI * 2; }
+      }
+      var rr = m.r * R;
+      var x = cx + Math.cos(m.a) * rr;
+      var y = cy + Math.sin(m.a) * rr * 0.42;            // disk seen near edge-on
+      var beam = 0.55 + 0.45 * Math.sin(m.a);            // approaching side brighter
+      var s = m.z * (1.5 - m.r) * 2.4;
+      var al = (0.08 + 0.72 * beam) * (1.05 - m.r);
+      g.fillStyle = 'rgba(' + m.h + ',' + al.toFixed(3) + ')';
+      g.fillRect(x, y - (y > cy ? 0 : 0), Math.max(0.7, s), Math.max(0.7, s));
+    }
+    // the dark core, drawn last, normal blend so it truly occludes
+    g.globalCompositeOperation = 'source-over';
+    var core = g.createRadialGradient(cx, cy, 0, cx, cy, R * 0.34);
+    core.addColorStop(0, 'rgba(3,4,10,1)');
+    core.addColorStop(0.72, 'rgba(3,4,10,1)');
+    core.addColorStop(1, 'rgba(3,4,10,0)');
+    g.fillStyle = core; g.beginPath(); g.arc(cx, cy, R * 0.34, 0, 7); g.fill();
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+})();
+
+(function () {
+  // ── the reader ────────────────────────────────────────────────────────────
+  // All generation lives in js/endless.js (window.LVEndless). This wires it to
+  // the URL: the hash is the entry's slug, so every article is permalinkable and
+  // the back button walks your fall. Empty hash coins a fresh one.
+  var E = window.LVEndless, art = document.getElementById('art'), coord = document.getElementById('coord');
+  if (!E) { art.textContent = 'the encyclopedia failed to load.'; return; }
+
+  function slugFromHash() {
+    var h = decodeURIComponent(location.hash.replace(/^#\/?/, '')).trim();
+    return h || '';
+  }
+  function go(slug, push) {
+    if (push) location.hash = '#/' + encodeURIComponent(slug);
+    render(slug);
+  }
+  function render(slug) {
+    var entry = E.entry(slug);
+    coord.textContent = entry.coord;
+    document.title = entry.title + ' — THE SINGULARITY';
+    art.innerHTML = '';
+    art.appendChild(E.toDOM(entry, function (nextSlug) { go(nextSlug, true); }));
+    // deeper button under the article
+    var d = document.createElement('div'); d.className = 'deeper';
+    var b = document.createElement('button'); b.textContent = 'FALL DEEPER ◇';
+    b.addEventListener('click', function () { go(E.coin(), true); });
+    d.appendChild(b); art.appendChild(d);
+    if (art.scrollIntoView) window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  document.getElementById('deeper').addEventListener('click', function () { go(E.coin(), true); });
+  document.getElementById('copy').addEventListener('click', function () {
+    var url = location.href;
+    try { navigator.clipboard.writeText(url); this.textContent = '⧉ COPIED'; }
+    catch (e) { this.textContent = '⧉ ' + url.slice(-24); }
+    var self = this; setTimeout(function () { self.textContent = '⧉ PERMALINK'; }, 1400);
+  });
+  window.addEventListener('hashchange', function () { render(slugFromHash() || E.coin()); });
+
+  var start = slugFromHash();
+  if (!start) { start = E.coin(); location.replace('#/' + encodeURIComponent(start)); }
+  render(start);
+})();
+</script>
+</body>
+</html>
