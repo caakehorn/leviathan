@@ -3,13 +3,14 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./js/singate.js"></script>
 <title>THE MIND — THE SINGULARITY</title>
 <!-- THE SINGULARITY BRAIN — the rendered mind (docs/SINGULARITY-BRAIN.md).
-     Ungated like the rest of the Singularity, but gated by its own CONSENT
-     LAYER: a deliberate threshold before a model of a real person opens. The
+     Sealed by js/singate.js like the rest of the Singularity: consent + IP,
+     then a name (both logged), then the passphrase. The
      graph it draws is data/brain.json — opaque topology, no readable content.
-     The single readable surface is the curated self-portrait below, which is
-     the ONLY place words about the person appear, and is edited by hand. -->
+     The one readable surface is the self-model at the core, which the builder
+     derives from the topology rather than from any private page. -->
 <meta name="robots" content="noindex, nofollow">
 <meta name="referrer" content="no-referrer">
 <meta name="theme-color" content="#03040a">
@@ -192,46 +193,16 @@
   </div>
 </div>
 
-<div class="consent" id="consent">
-  <div class="bx">
-    <div class="mark">THE SINGULARITY · A THRESHOLD</div>
-    <h2>THIS IS A REAL PERSON</h2>
-    <p>What is behind this door is a working model of an actual human being,
-      assembled from the record of a real life. <em>It is not a character.</em>
-      You are about to look at the shape of someone's mind.</p>
-    <div class="terms">
-      Before you enter you acknowledge that: <b>·</b> this is a model of a real
-      person, not a fiction; <b>·</b> you will not attempt to deanonymize,
-      identify, or contact anyone represented as a node; <b>·</b> nothing here is
-      a readable record — the graph is opaque by design and you will not treat
-      its shape as a claim about any named individual; <b>·</b> you enter out of
-      curiosity, not for use.
-    </div>
-    <button class="go" id="consentgo">I UNDERSTAND — OPEN THE MIND</button>
-    <a class="leave" href="./singularity.html">no — take me back</a>
-  </div>
-</div>
-
 <script defer src="./js/score.js"></script>
 <script src="./js/brain.js"></script>
 <script>
 (function () {
-  var CKEY = 'lv.brain.consent';
-  var consent = document.getElementById('consent');
-  var started = false;
-
-  function begin() {
-    if (started) return; started = true;
-    consent.classList.add('off');
-    fetch('./data/brain.json', { cache: 'no-cache' }).then(function (r) { return r.json(); }).then(boot)
-      .catch(function () { document.getElementById('count').textContent = 'the mind failed to load'; });
-  }
-  document.getElementById('consentgo').addEventListener('click', function () {
-    try { localStorage.setItem(CKEY, '1'); } catch (e) {}
-    begin();
-  });
-  // Consent is per-browser and remembered; a returning visitor skips the gate.
-  try { if (localStorage.getItem(CKEY) === '1') begin(); } catch (e) {}
+  // Gated by js/singate.js (consent + IP, name, passphrase). By the time this
+  // runs the visitor is already through all three checks, so just load.
+  fetch('./data/brain.json', { cache: 'no-cache' })
+    .then(function (r) { return r.json(); })
+    .then(boot)
+    .catch(function () { document.getElementById('count').textContent = 'the mind failed to load'; });
 
   function boot(brain) {
     var api = window.LVBrain.build(document.getElementById('mind'), brain, { onPick: inspect });

@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./js/singate.js"></script>
+<title>THE WIKI — THE SINGULARITY</title>
+<!-- THE WIKI, moved to the Singularity side. Self-contained: it reads
+     data/wiki-data.json directly (wikiPages for the index and the typed
+     connections, wikiText for the prose) with no React and no runtime from the
+     Temple app. Sealed by js/singate.js — consent + IP, name, passphrase. -->
+<meta name="robots" content="noindex, nofollow">
+<meta name="referrer" content="no-referrer">
+<meta name="theme-color" content="#03040a">
+<link rel="icon" href="data:,">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous">
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@700;900&amp;family=Space+Grotesk:wght@400;500;700&amp;family=IBM+Plex+Mono:wght@400;600;700&amp;family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&amp;display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; height: 100%; background: #03040a; color: #ded6ee;
+    font-family: 'IBM Plex Mono', ui-monospace, monospace; }
+  body { display: flex; flex-direction: column; overflow: hidden; }
+
+  header.bar { flex: none; display: flex; align-items: center; gap: 16px; padding: 12px 18px;
+    border-bottom: 1px solid rgba(176,38,255,.24); background: rgba(6,8,16,.9); z-index: 5; }
+  header.bar .brand { font-family: 'Unbounded', sans-serif; font-weight: 900; font-size: 15px; color: #fff;
+    letter-spacing: -.01em; white-space: nowrap; }
+  header.bar .brand span { color: #7fe3ff; }
+  header.bar .stat { font-size: 9px; letter-spacing: .18em; color: #6b7690; white-space: nowrap; }
+  header.bar input { flex: 1; min-width: 90px; background: rgba(0,0,0,.5); border: 1px solid rgba(176,38,255,.4);
+    color: #fff; padding: 9px 12px; font: inherit; font-size: 12px; letter-spacing: .04em; }
+  header.bar input:focus { outline: none; border-color: #00b7ff; }
+  header.bar a.out { font-size: 9px; letter-spacing: .2em; color: #5a6b60; text-decoration: none;
+    border: 1px solid rgba(120,140,120,.3); padding: 8px 11px; white-space: nowrap; }
+  header.bar a.out:hover { color: #b6ff8f; border-color: #b6ff8f; }
+  #burger { display: none; background: none; border: 1px solid rgba(176,38,255,.4); color: #cf9dff;
+    font: inherit; font-size: 11px; padding: 8px 10px; cursor: pointer; }
+
+  .cols { flex: 1; display: flex; min-height: 0; }
+  nav.side { flex: none; width: 290px; overflow-y: auto; border-right: 1px solid rgba(176,38,255,.2);
+    background: rgba(5,6,12,.7); padding: 12px 0 40px; }
+  nav.side .dom { padding: 11px 16px 5px; font-size: 9px; letter-spacing: .3em; color: #cf9dff;
+    text-transform: uppercase; position: sticky; top: 0; background: #05060c; }
+  nav.side .dom .c { color: #55607a; letter-spacing: .1em; }
+  nav.side a { display: block; padding: 6px 16px 6px 22px; font-size: 12px; line-height: 1.45;
+    color: #9aa6b8; text-decoration: none; border-left: 2px solid transparent; }
+  nav.side a:hover { color: #fff; background: rgba(176,38,255,.08); }
+  nav.side a.on { color: #fff; border-left-color: #7fe3ff; background: rgba(0,183,255,.1); }
+  nav.side .none { padding: 16px; font-size: 11px; color: #55607a; }
+
+  main.doc { flex: 1; overflow-y: auto; padding: 34px clamp(18px,4vw,60px) 14vh; }
+  .inner { max-width: 780px; margin: 0 auto; }
+  .crumb { font-size: 9px; letter-spacing: .24em; color: #6b6280; }
+  .crumb b { color: #cf9dff; }
+  h1.title { margin: 14px 0 0; font-family: 'Unbounded', sans-serif; font-weight: 900;
+    font-size: clamp(28px,5.4vw,50px); line-height: 1.02; color: #fff; letter-spacing: -.02em; }
+  .facts { margin-top: 14px; display: flex; flex-wrap: wrap; gap: 6px; }
+  .facts span { font-size: 8.5px; letter-spacing: .14em; color: #cbd8ee;
+    border: 1px solid rgba(120,140,160,.3); padding: 4px 8px; text-transform: uppercase; }
+
+  article { margin-top: 26px; font-family: 'Newsreader', Georgia, serif; font-size: 18px; line-height: 1.72; }
+  article h1, article h2, article h3 { font-family: 'IBM Plex Mono', monospace; color: #cf9dff;
+    letter-spacing: .12em; text-transform: uppercase; line-height: 1.4; }
+  article h1 { font-size: 13px; margin: 34px 0 12px; }
+  article h2 { font-size: 12px; margin: 30px 0 11px; }
+  article h3 { font-size: 10.5px; margin: 24px 0 9px; color: #9fe0ff; }
+  article p { margin: 0 0 15px; text-wrap: pretty; }
+  article ul, article ol { margin: 0 0 15px; padding-left: 22px; }
+  article li { margin-bottom: 6px; }
+  article strong { color: #fff; font-weight: 600; }
+  article em { color: #9fe0ff; font-style: italic; }
+  article code { font-family: 'IBM Plex Mono', monospace; font-size: 13px; color: #b6ff8f;
+    background: rgba(0,0,0,.5); padding: 1px 5px; }
+  article blockquote { margin: 0 0 15px; padding-left: 16px; border-left: 2px solid rgba(0,183,255,.45);
+    color: #9fe0ff; font-style: italic; }
+  article hr { border: none; border-top: 1px solid rgba(176,38,255,.2); margin: 26px 0; }
+  article table { width: 100%; border-collapse: collapse; margin: 0 0 18px;
+    font-family: 'IBM Plex Mono', monospace; font-size: 12px; }
+  article th, article td { border: 1px solid rgba(176,38,255,.22); padding: 7px 9px; text-align: left; }
+  article th { color: #cf9dff; font-weight: 600; letter-spacing: .08em; }
+  article a { color: #7fe3ff; text-decoration: none; border-bottom: 1px solid rgba(0,183,255,.35); }
+  article a:hover { color: #b6ffff; }
+
+  .conns { margin-top: 34px; border-top: 1px solid rgba(176,38,255,.22); padding-top: 20px; }
+  .conns .lbl { font-size: 9.5px; letter-spacing: .28em; color: #cf9dff; }
+  .conns .c { margin-top: 12px; padding: 12px 14px; border: 1px solid rgba(120,140,160,.2);
+    background: rgba(6,8,16,.5); }
+  .conns .c .t { font-size: 9px; letter-spacing: .18em; color: #ff2f9d; text-transform: uppercase; }
+  .conns .c a { display: block; margin-top: 5px; font-family: 'Newsreader', serif; font-size: 15px;
+    color: #fff; text-decoration: none; }
+  .conns .c a:hover { color: #7fe3ff; }
+  .conns .c .claim { margin-top: 7px; font-family: 'Newsreader', serif; font-size: 14.5px;
+    line-height: 1.6; color: #b3aac8; text-wrap: pretty; }
+
+  .hint { margin-top: 40px; font-size: 9px; letter-spacing: .14em; color: #45506a; line-height: 1.9; }
+
+  @media (max-width: 820px) {
+    nav.side { position: fixed; top: 53px; bottom: 0; left: 0; z-index: 6; transform: translateX(-102%);
+      transition: transform .22s ease; width: 84vw; max-width: 320px; background: #05060c; }
+    nav.side.open { transform: translateX(0); }
+    #burger { display: block; }
+    header.bar .stat { display: none; }
+  }
+</style>
+</head>
+<body>
+<header class="bar">
+  <button id="burger" type="button" aria-label="Toggle index">☰</button>
+  <div class="brand">THE <span>WIKI</span></div>
+  <input id="q" type="search" placeholder="search 320 pages…" autocomplete="off" aria-label="Search the wiki">
+  <div class="stat" id="stat">—</div>
+  <a class="out" href="./singularity.html">◂ SINGULARITY</a>
+</header>
+
+<div class="cols">
+  <nav class="side" id="side"><div class="none">loading…</div></nav>
+  <main class="doc" id="doc">
+    <div class="inner" id="inner"><div class="crumb">loading the wiki…</div></div>
+  </main>
+</div>
+
+<script>
+(function () {
+  var PAGES = [], TEXT = {}, BY = {}, cur = null;
+  var side = document.getElementById('side'), inner = document.getElementById('inner');
+
+  fetch('./data/wiki-data.json', { cache: 'force-cache' })
+    .then(function (r) { return r.json(); })
+    .then(function (d) {
+      PAGES = (d.wikiPages && d.wikiPages.pages) || [];
+      TEXT = d.wikiText || {};
+      PAGES.forEach(function (p) { BY[p.id] = p; });
+      document.getElementById('stat').textContent =
+        PAGES.length + ' PAGES · ' + Object.keys(TEXT).length + ' TEXTS';
+      buildIndex('');
+      route();
+    })
+    .catch(function () { inner.innerHTML = '<div class="crumb">the wiki failed to load.</div>'; });
+
+  // ── index ────────────────────────────────────────────────────────────────
+  function buildIndex(filter) {
+    var f = filter.trim().toLowerCase();
+    var groups = {};
+    PAGES.forEach(function (p) {
+      if (f) {
+        var hay = (p.title + ' ' + p.id + ' ' + (p.summary || '') + ' ' + (p.tags || []).join(' ')).toLowerCase();
+        if (hay.indexOf(f) < 0) return;
+      }
+      (groups[p.domain] = groups[p.domain] || []).push(p);
+    });
+    side.innerHTML = '';
+    var keys = Object.keys(groups).sort(function (a, b) { return groups[b].length - groups[a].length; });
+    if (!keys.length) { side.innerHTML = '<div class="none">nothing matches.</div>'; return; }
+    keys.forEach(function (dom) {
+      var h = document.createElement('div');
+      h.className = 'dom';
+      h.innerHTML = dom + ' <span class="c">' + groups[dom].length + '</span>';
+      side.appendChild(h);
+      groups[dom].sort(function (a, b) { return a.title.localeCompare(b.title); }).forEach(function (p) {
+        var a = document.createElement('a');
+        a.href = '#/' + p.id; a.textContent = p.title; a.dataset.id = p.id;
+        if (cur === p.id) a.className = 'on';
+        side.appendChild(a);
+      });
+    });
+  }
+  document.getElementById('q').addEventListener('input', function () { buildIndex(this.value); });
+  document.getElementById('burger').addEventListener('click', function () { side.classList.toggle('open'); });
+
+  // ── routing ──────────────────────────────────────────────────────────────
+  function route() {
+    var id = decodeURIComponent(location.hash.replace(/^#\/?/, ''));
+    if (!id || !BY[id]) id = BY['wiki/self/overview'] ? 'wiki/self/overview' : (PAGES[0] && PAGES[0].id);
+    show(id);
+  }
+  addEventListener('hashchange', route);
+
+  function show(id) {
+    var p = BY[id];
+    if (!p) return;
+    cur = id;
+    side.classList.remove('open');
+    Array.prototype.forEach.call(side.querySelectorAll('a'), function (a) {
+      a.className = a.dataset.id === id ? 'on' : '';
+    });
+    document.title = p.title + ' — THE WIKI';
+
+    var h = '';
+    h += '<div class="crumb"><b>' + esc(p.domain) + '</b> · ' + esc(p.page_type || 'page') +
+      ' · ' + esc(p.status || '') + '</div>';
+    h += '<h1 class="title">' + esc(p.title) + '</h1>';
+    h += '<div class="facts">' +
+      '<span>' + (p.words || 0).toLocaleString() + ' words</span>' +
+      '<span>' + ((p.connections || []).length) + ' typed edges</span>' +
+      '<span>' + ((p.sources || []).length) + ' sources</span>' +
+      (p.tags || []).slice(0, 6).map(function (t) { return '<span>' + esc(t) + '</span>'; }).join('') +
+      '</div>';
+    h += '<article>' + md(TEXT[id] || '_No text for this page._') + '</article>';
+
+    var cs = (p.connections || []).filter(function (c) { return BY[c.page]; });
+    if (cs.length) {
+      h += '<div class="conns"><div class="lbl">TYPED CONNECTIONS — ' + cs.length + '</div>';
+      cs.forEach(function (c) {
+        h += '<div class="c"><div class="t">' + esc(c.type || 'relates') + '</div>' +
+          '<a href="#/' + encodeURIComponent(c.page) + '">' + esc(BY[c.page].title) + '</a>' +
+          (c.claim ? '<div class="claim">' + esc(c.claim) + '</div>' : '') + '</div>';
+      });
+      h += '</div>';
+    }
+    h += '<div class="hint">EVERY CONNECTION ABOVE CARRIES A TYPE AND AN ARGUED CLAIM. ' +
+      'THAT IS THE DIFFERENCE BETWEEN AN INDEX AND A BRAIN.</div>';
+    inner.innerHTML = h;
+    document.getElementById('doc').scrollTop = 0;
+  }
+
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c];
+    });
+  }
+
+  // ── a small markdown renderer ────────────────────────────────────────────
+  // Escape first, then promote a fixed set of constructs. Nothing from the
+  // dataset is ever inserted as raw HTML.
+  function md(src) {
+    var lines = String(src).replace(/\r/g, '').split('\n');
+    var out = [], para = [], inList = null, inTable = false;
+    function flushPara() {
+      if (para.length) { out.push('<p>' + inline(para.join(' ')) + '</p>'); para = []; }
+    }
+    function flushList() { if (inList) { out.push('</' + inList + '>'); inList = null; } }
+    function flushTable() { if (inTable) { out.push('</table>'); inTable = false; } }
+    function flushAll() { flushPara(); flushList(); flushTable(); }
+
+    for (var i = 0; i < lines.length; i++) {
+      var L = lines[i];
+      if (/^\s*$/.test(L)) { flushAll(); continue; }
+      var hm = L.match(/^(#{1,6})\s+(.*)$/);
+      if (hm) { flushAll(); var lv = Math.min(3, hm[1].length); out.push('<h' + lv + '>' + inline(hm[2]) + '</h' + lv + '>'); continue; }
+      if (/^\s*(---|\*\*\*|___)\s*$/.test(L)) { flushAll(); out.push('<hr>'); continue; }
+      if (/^\s*>\s?/.test(L)) { flushAll(); out.push('<blockquote>' + inline(L.replace(/^\s*>\s?/, '')) + '</blockquote>'); continue; }
+      // table — only a line that actually STARTS with a pipe. Prose in this
+      // corpus is full of [[a|b]] wiki links, and treating any line containing
+      // a pipe as a table row shreds it.
+      if (/^\s*\|/.test(L)) {
+        var cells = L.trim().replace(/^\||\|$/g, '').split('|');
+        if (/^[\s|:-]+$/.test(L)) continue;                  // separator row
+        flushPara(); flushList();
+        if (!inTable) { out.push('<table>'); inTable = true;
+          out.push('<tr>' + cells.map(function (c) { return '<th>' + inline(c.trim()) + '</th>'; }).join('') + '</tr>');
+          continue; }
+        out.push('<tr>' + cells.map(function (c) { return '<td>' + inline(c.trim()) + '</td>'; }).join('') + '</tr>');
+        continue;
+      } else flushTable();
+      var um = L.match(/^\s*[-*+]\s+(.*)$/);
+      var om = L.match(/^\s*\d+[.)]\s+(.*)$/);
+      if (um || om) {
+        flushPara();
+        var want = um ? 'ul' : 'ol';
+        if (inList !== want) { flushList(); out.push('<' + want + '>'); inList = want; }
+        out.push('<li>' + inline((um || om)[1]) + '</li>');
+        continue;
+      }
+      flushList();
+      para.push(L.trim());
+    }
+    flushAll();
+    return out.join('\n');
+  }
+  function inline(s) {
+    s = esc(s);
+    s = s.replace(/`([^`]+)`/g, function (m, c) { return '<code>' + c + '</code>'; });
+    s = s.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+    s = s.replace(/(^|[^*])\*([^*]+)\*/g, '$1<em>$2</em>');
+    s = s.replace(/(^|[^_])_([^_]+)_/g, '$1<em>$2</em>');
+    // wiki links: [[wiki/x/y]] and [text](wiki/x/y) route internally
+    // [[target]] and [[target|label]]
+    s = s.replace(/\[\[([^\]]+)\]\]/g, function (m, t) {
+      var bits = t.split('|');
+      var id = bits[0].trim().replace(/\.md$/, '');
+      var label = bits.length > 1 ? bits.slice(1).join('|').trim() : (BY[id] ? BY[id].title : id);
+      return '<a href="#/' + encodeURIComponent(id) + '">' + esc(label) + '</a>';
+    });
+    s = s.replace(/\[([^\]]+)\]\(([^)]+)\)/g, function (m, t, href) {
+      if (/^https?:/.test(href)) return '<a href="' + href + '" rel="noopener noreferrer nofollow">' + t + '</a>';
+      var id = href.replace(/^\.\//, '').replace(/\.md$/, '');
+      return '<a href="#/' + encodeURIComponent(id) + '">' + t + '</a>';
+    });
+    return s;
+  }
+})();
+</script>
+</body>
+</html>

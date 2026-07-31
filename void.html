@@ -234,7 +234,7 @@
       <div style="font-size: 12px; font-weight: 700; letter-spacing: 0.3em; color: #ffffff; text-shadow: 0 0 16px rgba(57,255,20,0.85);">@danfrank<span style="color: #b026ff; animation: blink 1.1s steps(1) infinite;">_</span></div>
       <div style="display: flex; gap: 22px; align-items: center; font-size: 10px; letter-spacing: 0.25em; text-transform: uppercase;">
         <a href="#corpus" style="color: #39ff14; text-decoration: none;" style-hover="color: #ffffff; text-shadow: 0 0 12px #39ff14;">corpus</a>
-        <a href="#wiki" style="color: #b026ff; text-decoration: none;" style-hover="color: #ffffff; text-shadow: 0 0 12px #b026ff;">wiki</a>
+        <a href="./wiki.html" style="color: #b026ff; text-decoration: none;" style-hover="color: #ffffff; text-shadow: 0 0 12px #b026ff;">wiki</a>
         <a href="#annie" style="color: #00ffa3; text-decoration: none;" style-hover="color: #ffffff; text-shadow: 0 0 12px #00ffa3;">annie</a>
         <a href="#temple" style="color: #ff2f9d; text-decoration: none;" style-hover="color: #ffffff; text-shadow: 0 0 12px #ff2f9d;">temple</a>
         <a href="#transmit" style="color: #00b7ff; text-decoration: none;" style-hover="color: #ffffff; text-shadow: 0 0 12px #00b7ff;">transmit</a>
@@ -4544,7 +4544,7 @@ class Component extends DCLogic {
       // for the archive. requestArchive may put a passphrase gate in the way;
       // the section is already staged for whenever it clears.
       enterCorpus: () => { this.setState({ section: 'corpus', tab: 'pulse' }); this.requestArchive(); },
-      enterWiki: () => { this.setState({ section: 'wiki', tab: 'reader' }); this.requestArchive(); },
+      enterWiki: () => { location.href = './wiki.html'; },
       exitArchive: () => this._setPhase('void'),
       msg,
       setMsg: (e) => this.setState({ msg: e.target.value.slice(0, 270) }),
@@ -4561,7 +4561,7 @@ class Component extends DCLogic {
       hint: s.section === 'wiki' ? ((this.WHINTS && this.WHINTS[s.tab]) || '') : (hints[s.tab] || ''),
       stageLabel: 'module ' + s.tab,
       toCorpus: () => this.setState({ section: 'corpus', tab: 'pulse' }),
-      toWiki: () => this.setState({ section: 'wiki', tab: 'reader' }),
+      toWiki: () => { location.href = './wiki.html'; },
       corpusBtnStyle: this.sectionBtnStyle ? this.sectionBtnStyle(s.section !== 'wiki', C.amber) : {},
       wikiBtnStyle: this.sectionBtnStyle ? this.sectionBtnStyle(s.section === 'wiki', C.violet) : {},
       readerOn: s.section === 'wiki' && s.tab === 'reader',
