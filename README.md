@@ -11,7 +11,10 @@ ask.html              # standalone view of instrument VI · THE ASK
 ledger.html           # THE DRUG LEDGER — day by day, both directions
 money.html            # THE FAMILY LEDGER — where the money came from
 transcript.html       # THE TRANSCRIPT — the complete message record, searchable
-temple.html           # THE TEMPLE — an oracle over that record (see below)
+temple.html           # THE TEMPLE — the section index (see below)
+oracle.html           #   CHAPEL I · the seeded oracle over the whole record
+voice.html            #   CHAPEL II · a trigram chain over Annie's messages
+clock.html            #   CHAPEL III · eleven years of her messages as a spiral
 terms.html            # the Terms of Service, rendered from js/tos.js — the one
                        # page not behind the gate
 archive.html          # decoy: a fake "archive index" the quiz trap can lead to
@@ -24,7 +27,8 @@ css/
 js/
   gate.js             # THE GATE: terms → quiz → curtain → passphrase, in front
                        # of every page; loads tos.js, quiz.js and GoatCounter
-  temple.js           # THE TEMPLE's engine: field, oracle, sigil, voice
+  temple.js           # THE TEMPLE's shared runtime: field, seeded rng, sigil, audio
+  annie.js            # ANNIE: her half of the corpus, reduced to structure
   tos.js              # the Terms of Service dialog gate.js loads on demand
   quiz.js             # the quiz + decoy maze gate.js loads on demand
   support.js          # runtime: custom <x-dc> template engine, resource loading
@@ -94,10 +98,14 @@ and `neonRGB()` in the CPU fallback (`js/galaxy-cluster.js`), and `pal()` in
 ## The three phases
 
 `index.html` is one page in three states. **PHASE 00** is the splash — the
-gravity well, a live particle cluster you can grab. **PHASE 01** is the gate:
-the wordmark, the way into the archive, and one channel out. **PHASE 02** is
-the LEVIATHAN console itself, 37 instruments over two sections. Phase 01 is
-deliberately thin — it is a door, not a page with an argument to make.
+gravity well, a live particle cluster you can grab. **PHASE 01** is the void
+console, which indexes the whole site in five numbered sections: `01 — THE
+CORPUS` (the record and its nineteen instruments), `02 — THE WIKI` (the reader
+and its eighteen), `03 — ANNIE` (the standalone evidence pages), `04 — THE
+TEMPLE`, and `05 — OPEN A CHANNEL`. **PHASE 02** is the LEVIATHAN console
+itself, 37 instruments over two sections; the corpus and wiki halves have
+separate entry points from the void (`enterCorpus` / `enterWiki`) that stage
+the section before the passphrase gate is asked for.
 
 The page renders through a small client-side template engine (the `<x-dc>` element
 and `{{ ... }}` bindings). React and ReactDOM are loaded at runtime from the unpkg
@@ -269,58 +277,59 @@ script therefore refuses to run without it, and also refuses to overwrite the
 existing dataset if a rebuild loses more than 20% of its pages, words, or edges
 (override with `--allow-shrink` when a large deletion is genuine).
 
-## THE TEMPLE
+## THE TEMPLE — a section
 
-`temple.html` + `js/temple.js`. TempleOS shipped with an oracle: Terry Davis
-wired a hardware RNG to a dictionary, drew words out of it, and read what came
-back as God talking. The mechanism was trivial; the idea was not — a machine
-that speaks, whose vocabulary is fixed, whose selection you do not control, and
-whose output means whatever you are willing to see in it.
+`temple.html` is the index; each chapel is its own page. `js/temple.js` is the
+shared runtime (the WebGL field, the seeded RNG, the sigil renderer, the Web
+Audio voice) and `js/annie.js` is the corpus layer every Annie-side chapel
+draws from.
 
-This is that, with one substitution. The dictionary is the corpus: all 134,348
-messages, the same `data/transcript.json` that `transcript.html` renders in
-order. The oracle generates nothing and cannot — every word it returns was
-already written by someone, on a real date. It only chooses.
+TempleOS shipped with an oracle: Terry Davis wired a hardware RNG to a
+dictionary and read what came back as God talking. The mechanism was trivial,
+the idea was not. This section is a set of variations on it — machines that
+speak, whose vocabulary is fixed, whose selection nobody controls.
 
-**The draw is seeded by the question.** Ask the same thing twice and you get
-the same passages, forever. That is the entire difference between a divination
-and a shuffle: an oracle you can re-roll is a slot machine, and one that says
-the same thing every time is making a claim. Everything downstream follows from
-that one number — which verses surface, the sigil drawn for the question, the
-pitch each verse's bell rings at, how many folds the field turns in.
+### The rule
 
-Three rites over the same record:
+The subject is Annie, and the constraint is that **nothing here makes a
+judgement**. No sentiment scoring, no curated vocabulary, no flagged phrases,
+no highlighted dates, no threshold chosen because of what it would surface.
+Every number a chapel displays is a count, a timestamp, or a transition
+probability computed over the whole of her half of the record with no message
+excluded.
 
-| rite | draws |
-| --- | --- |
-| `VERSE` | three whole messages, as they were sent |
-| `WORD` | six bare words from the corpus vocabulary — Terry's rite, exactly |
-| `CHORUS` | one message and the three that followed it in real time, so the answer arrives as an exchange |
+That is not modesty. Anything editorial would make the output a portrait of an
+*argument*; left alone, the counts make a portrait of a *person*, and the
+interesting part is that nobody chose any of it. The single exception is the
+closed-class stopword list the lexicon uses, published as `LVAnnie.STOP` so it
+can be read and disagreed with.
 
-Every verse links back to its own line in `transcript.html`, so any answer can
-be walked back to its place in the record and read in context. The oracle is
-not a source; the transcript is, and the temple always says where it got it.
+| chapel | corpus | what it does |
+| --- | --- | --- |
+| **I · THE ORACLE** (`oracle.html`) | both sides, 134,348 messages | Draws real passages in answer to a question. Seeded by the question, so the same question returns the same answer forever — an oracle you can re-roll is a slot machine. Three rites: VERSE, WORD, CHORUS. |
+| **II · THE VOICE** (`voice.html`) | Annie only, 434,795 words | A word-level trigram chain. Does not retrieve: every line is new and none were ever sent, but each word-pair hands off to a word that really did follow it. Turn it on and it does not stop. |
+| **III · THE CLOCK** (`clock.html`) | Annie only, 68,998 points | Every message she sent, placed by when. Angle is the hour, radius is the date — first at the centre, last at the rim. Hover any dot to read it. |
 
-Four pieces, all in `js/temple.js`:
+### On the model
 
-- **the field** — a WebGL1 fragment shader: kaleidoscopic fold over
-  domain-warped fbm, in the same four SLIME stops the galaxy and void engines
-  use. `uCharge` rises while the record is being consulted; `uReveal` pulses on
-  each verse. The visuals are driven by the divination rather than looping
-  independently of it. No WebGL, no problem — the canvas hides and the page
-  works flat.
-- **the oracle** — `cyrb128` for question→seed, `mulberry32` for the stream.
-  Small, well-distributed, and deliberately not cryptographic: this has to be
-  reproducible, not unpredictable.
-- **the sigil** — one generated glyph per question, from the same seed, so two
-  identical questions are visibly identical and two different ones visibly are
-  not. It is the seed made legible, not decoration.
-- **the voice** — Web Audio. A drone underneath, a bell per verse, each bell
-  pitched from its own passage's hash so a given verse always rings at the same
-  note. Built on first gesture, because autoplay policy requires it.
+The trigram table maps a word-pair to a bucket of every word that ever followed
+it, duplicates kept, so the bucket *is* its own frequency table and sampling it
+uniformly samples her real distribution. There is no smoothing, no temperature,
+and no penalty term — the model has no parameters, which means there is nothing
+in it for anyone to have tuned. Utterances end where her messages ended,
+because the terminator is part of the table. It is built in slices off the main
+thread; on 435k tokens the whole build is a couple of seconds.
 
-Nothing is fetched but the corpus and nothing is sent anywhere; the whole rite
-runs in the tab.
+It is not her, not a quote, not a prediction, and not an opinion about her. It
+is the shape of 434,795 words with the meaning taken out.
+
+### On the clock
+
+Timestamps are parsed by hand out of the `"YYYY-MM-DD HH:MM:SS"` string rather
+than through `Date()`, so the viewer's timezone cannot shift which hour a
+message lands in. Colour encodes hour-of-day and nothing else. Every point is
+drawn — no sampling, no density binning — and the tooltip does a linear
+nearest-point search so what you read is provably the dot under the cursor.
 
 ## The pen scaffold
 

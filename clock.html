@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./js/gate.js"></script>
+<title>THE CLOCK — CHAPEL III — THE TEMPLE</title>
+<meta name="robots" content="noindex, nofollow">
+<meta name="referrer" content="no-referrer">
+<meta name="theme-color" content="#041206">
+<link rel="icon" href="data:,">
+
+<!-- CHAPEL III · THE CLOCK
+     Every message Annie ever sent, placed by when she sent it. Angle is the
+     hour of the day, radius is the date — 2015 at the centre, 2026 at the rim.
+     68,998 points, none excluded, nothing weighted. The spiral is a decade of
+     one person's sleep. -->
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous">
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@700;900&amp;family=Space+Grotesk:wght@400;500;700&amp;family=IBM+Plex+Mono:wght@400;600;700&amp;display=swap" rel="stylesheet">
+<link rel="stylesheet" href="./css/slime.css">
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; min-height: 100%; background: #041206; color: #e9ffe6;
+    font-family: 'IBM Plex Mono', ui-monospace, monospace; overflow-x: hidden; }
+  .wrap { position: relative; z-index: 2; max-width: 1180px; margin: 0 auto; padding: 34px 22px 60px; }
+  .chap { font-size: 10px; letter-spacing: .42em; color: #00b7ff; text-shadow: 0 0 14px rgba(0,183,255,.8); }
+  h1 { font-family: 'Unbounded', sans-serif; font-weight: 900; font-size: clamp(38px, 9vw, 106px);
+    line-height: .9; letter-spacing: -.02em; margin: 12px 0 0; color: #fff;
+    text-shadow: 0 0 30px rgba(0,183,255,.75), 0 0 100px rgba(57,255,20,.4); }
+  .creed { margin-top: 16px; font-family: 'Space Grotesk', sans-serif; font-size: 15px; line-height: 1.85;
+    color: #cfe6c4; max-width: 64ch; text-wrap: pretty; }
+  .scale { margin-top: 12px; font-size: 9.5px; letter-spacing: .2em; color: #b6ff8f; line-height: 2; }
+
+  .stage { position: relative; margin: 26px 0 0; border: 1px solid rgba(0,183,255,.35);
+    background: rgba(3,13,7,.6); }
+  #dial { display: block; width: 100%; height: auto; cursor: crosshair; }
+  #tip { position: absolute; pointer-events: none; z-index: 5; max-width: 340px;
+    background: rgba(2,10,5,.97); border: 1px solid rgba(0,183,255,.7); padding: 11px 13px;
+    font-size: 11px; line-height: 1.65; color: #e9ffe6; display: none;
+    box-shadow: 0 0 40px rgba(0,183,255,.35); }
+  #tip .when { font-size: 8.5px; letter-spacing: .18em; color: #00b7ff; display: block; margin-bottom: 6px; }
+  #tip .said { font-family: 'Space Grotesk', sans-serif; font-size: 13.5px; color: #ffe1f2; }
+
+  .bars { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; margin-top: 22px; }
+  .panel { border: 1px solid rgba(57,255,20,.3); background: rgba(3,13,7,.8); padding: 16px 18px; }
+  .panel h2 { margin: 0 0 12px; font-size: 9.5px; letter-spacing: .24em; color: #39ff14; font-weight: 600; }
+  .hb { display: flex; align-items: flex-end; gap: 2px; height: 90px; }
+  .hb i { flex: 1; background: linear-gradient(180deg, #39ff14, #00b7ff); min-height: 1px;
+    position: relative; }
+  .hb i:hover { background: #ff2f9d; }
+  .hlab { display: flex; justify-content: space-between; margin-top: 6px; font-size: 8px;
+    letter-spacing: .1em; color: #4f8a63; }
+  .stat { font-size: 10px; letter-spacing: .14em; color: #6f8a5e; line-height: 2; margin-top: 10px; }
+  .stat b { color: #b6ff8f; }
+
+  .coda { margin-top: 24px; padding: 18px 20px; border: 1px solid rgba(57,255,20,.25);
+    background: rgba(3,13,7,.86); font-size: 10px; letter-spacing: .14em; color: #6f8a5e; line-height: 2.05; }
+  .coda b { color: #b6ff8f; font-weight: 600; }
+  .nav { text-align: center; padding: 0 22px 60px; display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+  .nav a { font-size: 10px; letter-spacing: .22em; color: #00b7ff; text-decoration: none;
+    border: 1px solid rgba(0,183,255,.5); padding: 10px 16px; }
+  .nav a:hover { color: #041206; background: #00b7ff; }
+</style>
+</head>
+<body>
+<div class="sl-drips l" aria-hidden="true">
+  <i class="cer" style="left:2px;--h:210px;--dur:15s;--del:0s"></i>
+  <i style="left:10px;--h:128px;--dur:19s;--del:3.5s"></i>
+</div>
+<div class="sl-drips r" aria-hidden="true">
+  <i class="cer" style="right:3px;--h:250px;--dur:17s;--del:1.4s"></i>
+  <i class="pink" style="right:11px;--h:110px;--dur:21s;--del:5s"></i>
+</div>
+
+<div class="wrap">
+  <div class="chap">CHAPEL III</div>
+  <h1>THE CLOCK</h1>
+  <p class="creed">Every message she ever sent, placed by the moment she sent it. The angle is
+    the hour of the day. The radius is the date — the first message at the centre, the last
+    at the rim. Nothing is excluded, weighted, or smoothed. What the spiral draws is when
+    she was awake, for eleven years.</p>
+  <div class="scale" id="scale">READING THE RECORD…</div>
+
+  <div class="stage">
+    <canvas id="dial" width="1600" height="1600" role="img"
+            aria-label="Polar plot of every message Annie sent, by hour of day and date"></canvas>
+    <div id="tip"></div>
+  </div>
+
+  <div class="bars">
+    <div class="panel">
+      <h2>BY HOUR OF DAY · ALL 68,998</h2>
+      <div class="hb" id="hourbars"></div>
+      <div class="hlab"><span>00</span><span>06</span><span>12</span><span>18</span><span>23</span></div>
+      <div class="stat" id="hourstat"></div>
+    </div>
+    <div class="panel">
+      <h2>BY DAY OF WEEK</h2>
+      <div class="hb" id="wdaybars"></div>
+      <div class="hlab"><span>SUN</span><span>WED</span><span>SAT</span></div>
+      <div class="stat" id="wdaystat"></div>
+    </div>
+  </div>
+
+  <div class="coda">
+    <b>HOW IT IS DRAWN.</b> One dot per message, no sampling. Timestamps are parsed as written
+    rather than through the browser's clock, so nobody's timezone can move an hour. Colour is
+    hour-of-day only — it carries no other meaning.<br>
+    <b>WHAT IS NOT HERE.</b> No content filter, no sentiment, no highlighted dates, no events
+    marked. If a band looks like something happened, that is the count saying so and not a
+    label anyone attached. <b>Hover any dot to read the message underneath it.</b>
+  </div>
+</div>
+
+<div class="nav">
+  <a href="./temple.html">◂ THE TEMPLE</a>
+  <a href="./voice.html">◂ CHAPEL II · THE VOICE</a>
+  <a href="./oracle.html">CHAPEL I · THE ORACLE</a>
+</div>
+
+<script src="./js/annie.js"></script>
+<script>
+(function () {
+  var A = window.LVAnnie;
+  var cv = document.getElementById('dial');
+  var ctx = cv.getContext('2d');
+  var tip = document.getElementById('tip');
+  var scaleEl = document.getElementById('scale');
+  var pts = null, S = null, geom = null;
+
+  // Hour → colour. Cyan through the small hours, slime by midday, hot pink at
+  // night. It encodes the hour and nothing else.
+  function hourColour(frac, a) {
+    var h = frac * 24;
+    var c;
+    if (h < 6)       c = [0, 183, 255];
+    else if (h < 12) c = [57, 255, 20];
+    else if (h < 18) c = [204, 255, 0];
+    else             c = [255, 47, 157];
+    return 'rgba(' + c[0] + ',' + c[1] + ',' + c[2] + ',' + a + ')';
+  }
+
+  function drawDial() {
+    var W = cv.width, H = cv.height, cx = W / 2, cy = H / 2;
+    var R = Math.min(W, H) * 0.46, R0 = R * 0.13;
+    geom = { cx: cx, cy: cy, R: R, R0: R0 };
+    ctx.fillStyle = '#041206';
+    ctx.fillRect(0, 0, W, H);
+
+    // hour spokes
+    ctx.strokeStyle = 'rgba(57,255,20,0.13)';
+    ctx.lineWidth = 1.5;
+    ctx.font = '20px "IBM Plex Mono", monospace';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    for (var h = 0; h < 24; h++) {
+      var a = (h / 24) * Math.PI * 2 - Math.PI / 2;
+      ctx.beginPath();
+      ctx.moveTo(cx + Math.cos(a) * R0, cy + Math.sin(a) * R0);
+      ctx.lineTo(cx + Math.cos(a) * R, cy + Math.sin(a) * R);
+      ctx.stroke();
+      if (h % 3 === 0) {
+        ctx.fillStyle = 'rgba(111,138,94,0.9)';
+        ctx.fillText(('0' + h).slice(-2), cx + Math.cos(a) * (R + 34), cy + Math.sin(a) * (R + 34));
+      }
+    }
+    // year rings
+    var span = S.maxDay - S.minDay;
+    ctx.strokeStyle = 'rgba(176,38,255,0.22)';
+    for (var y = 2016; y <= 2026; y++) {
+      var d = Date.UTC(y, 0, 1) / 86400000;
+      if (d < S.minDay || d > S.maxDay) continue;
+      var rr = R0 + ((d - S.minDay) / span) * (R - R0);
+      ctx.beginPath(); ctx.arc(cx, cy, rr, 0, Math.PI * 2); ctx.stroke();
+      ctx.fillStyle = 'rgba(176,38,255,0.75)';
+      ctx.fillText(String(y), cx, cy - rr);
+    }
+
+    // the messages
+    ctx.globalCompositeOperation = 'lighter';
+    for (var i = 0; i < pts.length; i++) {
+      var p = pts[i];
+      var ang = p.frac * Math.PI * 2 - Math.PI / 2;
+      var rad = R0 + ((p.day - S.minDay) / span) * (R - R0);
+      var x = cx + Math.cos(ang) * rad, yy = cy + Math.sin(ang) * rad;
+      ctx.fillStyle = hourColour(p.frac, 0.30);
+      ctx.fillRect(x, yy, 2.1, 2.1);
+    }
+    ctx.globalCompositeOperation = 'source-over';
+  }
+
+  // Nearest-point lookup for the tooltip. A grid would be faster, but 69k
+  // linear distance checks per mousemove is already imperceptible and this
+  // stays honest about which dot is actually being read.
+  function nearest(mx, my) {
+    var span = S.maxDay - S.minDay, best = -1, bd = 1e9;
+    for (var i = 0; i < pts.length; i++) {
+      var p = pts[i];
+      var ang = p.frac * Math.PI * 2 - Math.PI / 2;
+      var rad = geom.R0 + ((p.day - S.minDay) / span) * (geom.R - geom.R0);
+      var dx = geom.cx + Math.cos(ang) * rad - mx;
+      var dy = geom.cy + Math.sin(ang) * rad - my;
+      var d = dx * dx + dy * dy;
+      if (d < bd) { bd = d; best = i; }
+    }
+    return bd < 400 ? best : -1;
+  }
+
+  cv.addEventListener('mousemove', function (e) {
+    if (!pts) return;
+    var r = cv.getBoundingClientRect();
+    var sx = cv.width / r.width;
+    var i = nearest((e.clientX - r.left) * sx, (e.clientY - r.top) * sx);
+    if (i < 0) { tip.style.display = 'none'; return; }
+    var msg = A.messages()[pts[i].i];
+    tip.innerHTML = '<span class="when">' + String(msg[0]).slice(0, 16) + '</span>'
+      + '<span class="said"></span>';
+    tip.querySelector('.said').textContent = String(msg[2]).slice(0, 260);
+    tip.style.display = 'block';
+    var lx = e.clientX - r.left + 16, ly = e.clientY - r.top + 16;
+    tip.style.left = Math.min(lx, r.width - 360) + 'px';
+    tip.style.top = ly + 'px';
+  });
+  cv.addEventListener('mouseleave', function () { tip.style.display = 'none'; });
+
+  function bars(host, arr, labels) {
+    var max = Math.max.apply(null, arr);
+    host.innerHTML = '';
+    arr.forEach(function (v, i) {
+      var b = document.createElement('i');
+      b.style.height = Math.max(1, (v / max) * 100) + '%';
+      b.title = (labels ? labels[i] : i) + ' — ' + v.toLocaleString();
+      host.appendChild(b);
+    });
+    return max;
+  }
+
+  A.load(function (m) { scaleEl.textContent = m; }).then(function () {
+    S = A.tally();
+    pts = S.points;
+    var meta = A.meta();
+    scaleEl.innerHTML = S.total.toLocaleString() + ' MESSAGES &middot; '
+      + String(meta.first).slice(0, 10) + ' → ' + String(meta.last).slice(0, 10)
+      + ' &middot; ' + Math.round(S.maxDay - S.minDay).toLocaleString() + ' DAYS';
+    drawDial();
+
+    bars(document.getElementById('hourbars'), S.hour);
+    var peak = S.hour.indexOf(Math.max.apply(null, S.hour));
+    var quiet = S.hour.indexOf(Math.min.apply(null, S.hour));
+    var night = S.hour.slice(0, 5).reduce(function (a, b) { return a + b; }, 0);
+    document.getElementById('hourstat').innerHTML =
+      'BUSIEST HOUR <b>' + ('0' + peak).slice(-2) + ':00</b> · QUIETEST <b>'
+      + ('0' + quiet).slice(-2) + ':00</b><br>BETWEEN MIDNIGHT AND 05:00 SHE SENT <b>'
+      + night.toLocaleString() + '</b> (' + (night / S.total * 100).toFixed(1) + '%)';
+
+    var WD = ['SUN','MON','TUE','WED','THU','FRI','SAT'];
+    bars(document.getElementById('wdaybars'), S.wday, WD);
+    var wpeak = S.wday.indexOf(Math.max.apply(null, S.wday));
+    document.getElementById('wdaystat').innerHTML =
+      'HEAVIEST DAY <b>' + WD[wpeak] + '</b> · SPREAD ACROSS <b>'
+      + Object.keys(S.months).length + '</b> MONTHS';
+  }).catch(function (e) {
+    scaleEl.textContent = '✕ ' + String(e.message).toUpperCase();
+  });
+})();
+</script>
+</body>
+</html>

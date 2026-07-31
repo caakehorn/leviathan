@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./js/gate.js"></script>
+<title>THE VOICE — CHAPEL II — THE TEMPLE</title>
+<meta name="robots" content="noindex, nofollow">
+<meta name="referrer" content="no-referrer">
+<meta name="theme-color" content="#041206">
+<link rel="icon" href="data:,">
+
+<!-- CHAPEL II · THE VOICE
+     A trigram chain over Annie's 68,998 messages and nothing else. It does not
+     retrieve — every line it produces is new, assembled from transitions that
+     each occurred at least once in the real record. No sentiment model, no
+     curation, no temperature knob: the bucket for a given word-pair IS the
+     frequency table, and sampling it uniformly samples her actual
+     distribution. See the rule at the top of js/annie.js. -->
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous">
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@700;900&amp;family=Space+Grotesk:wght@400;500;700&amp;family=IBM+Plex+Mono:wght@400;600;700&amp;display=swap" rel="stylesheet">
+<link rel="stylesheet" href="./css/slime.css">
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; min-height: 100%; background: #041206; color: #e9ffe6;
+    font-family: 'IBM Plex Mono', ui-monospace, monospace; overflow-x: hidden; }
+  #field { position: fixed; inset: 0; z-index: 0; display: block; width: 100%; height: 100%; }
+  #scrim { position: fixed; inset: 0; z-index: 1; pointer-events: none;
+    background: linear-gradient(180deg, rgba(4,18,6,.52), rgba(4,18,6,.34) 30%, rgba(4,18,6,.66)),
+      radial-gradient(ellipse 60% 80% at 50% 50%, rgba(4,18,6,.82), rgba(4,18,6,.22) 70%, transparent); }
+  #grain { position: fixed; inset: 0; z-index: 1; pointer-events: none;
+    background: repeating-linear-gradient(0deg, rgba(0,0,0,.32) 0 1px, transparent 1px 3px); }
+
+  .wrap { position: relative; z-index: 2; max-width: 940px; margin: 0 auto; padding: 34px 22px 140px; }
+  .chap { font-size: 10px; letter-spacing: .42em; color: #ff2f9d; text-shadow: 0 0 14px rgba(255,47,157,.8); }
+  h1 { font-family: 'Unbounded', sans-serif; font-weight: 900; font-size: clamp(40px, 10vw, 116px);
+    line-height: .9; letter-spacing: -.02em; margin: 12px 0 0; color: #fff;
+    text-shadow: 0 0 30px rgba(255,47,157,.8), 0 0 90px rgba(255,47,157,.4), 0 0 170px rgba(176,38,255,.5); }
+  .creed { margin-top: 18px; font-family: 'Space Grotesk', sans-serif; font-size: 15px; line-height: 1.85;
+    color: #cfe6c4; max-width: 62ch; text-wrap: pretty; text-shadow: 0 1px 10px #041206; }
+  .scale { margin-top: 14px; font-size: 9.5px; letter-spacing: .2em; color: #b6ff8f; line-height: 2;
+    text-shadow: 0 0 10px #041206; }
+
+  .altar { margin: 30px 0 0; border: 1px solid rgba(255,47,157,.5); background: rgba(3,13,7,.86);
+    backdrop-filter: blur(9px); -webkit-backdrop-filter: blur(9px); padding: 22px;
+    box-shadow: 0 0 80px rgba(255,47,157,.18); }
+  .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+  button.act { cursor: pointer; font-family: inherit; font-weight: 700; font-size: 11px;
+    letter-spacing: .2em; padding: 14px 22px; border: 1px solid #ff2f9d; background: #ff2f9d; color: #041206; }
+  button.act:hover { background: #ff86c9; }
+  button.act[disabled] { opacity: .45; cursor: default; }
+  button.ghost { background: none; color: #ff86c9; }
+  button.ghost:hover { background: rgba(255,47,157,.16); color: #fff; }
+  #seed { flex: 1 1 260px; background: rgba(0,0,0,.55); border: 1px solid rgba(255,47,157,.4);
+    color: #ff86c9; font-family: inherit; font-size: 13px; padding: 14px; outline: none; }
+  #seed:focus { border-color: #00b7ff; box-shadow: 0 0 0 1px rgba(0,183,255,.35); }
+  #seed::placeholder { color: #7a4560; }
+  .status { margin-top: 12px; font-size: 9.5px; letter-spacing: .2em; color: #00b7ff; min-height: 15px; }
+
+  #stream { margin-top: 28px; }
+  .utt { border-left: 3px solid #ff2f9d; background: rgba(3,13,7,.82); backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px); padding: 16px 20px; margin-bottom: 12px;
+    font-family: 'Space Grotesk', sans-serif; font-size: clamp(17px, 2.4vw, 23px); line-height: 1.55;
+    color: #ffe1f2; overflow-wrap: anywhere; opacity: 0; animation: rise .7s cubic-bezier(.2,.8,.3,1) forwards; }
+  @keyframes rise { to { opacity: 1; } }
+  .utt .cursor { display: inline-block; width: .58ch; background: #ff2f9d; animation: blink 1s steps(1) infinite; }
+  @keyframes blink { 0%,49% { opacity: 1 } 50%,100% { opacity: 0 } }
+  .utt .meta { display: block; margin-top: 9px; font-family: 'IBM Plex Mono', monospace;
+    font-size: 8.5px; letter-spacing: .18em; color: #6f8a5e; }
+
+  .coda { margin-top: 32px; padding: 18px 20px; border: 1px solid rgba(57,255,20,.25);
+    background: rgba(3,13,7,.86); font-size: 10px; letter-spacing: .14em; color: #6f8a5e; line-height: 2.05; }
+  .coda b { color: #b6ff8f; font-weight: 600; }
+  .nav { position: relative; z-index: 2; text-align: center; padding: 0 22px 60px; display: flex;
+    gap: 10px; justify-content: center; flex-wrap: wrap; }
+  .nav a { font-size: 10px; letter-spacing: .22em; color: #00b7ff; text-decoration: none;
+    border: 1px solid rgba(0,183,255,.5); padding: 10px 16px; }
+  .nav a:hover { color: #041206; background: #00b7ff; }
+  @media (prefers-reduced-motion: reduce) { .utt { animation: none; opacity: 1 } }
+</style>
+</head>
+<body>
+<canvas id="field" aria-hidden="true"></canvas>
+<div id="scrim" aria-hidden="true"></div>
+<div id="grain" aria-hidden="true"></div>
+<div class="sl-drips l" aria-hidden="true">
+  <i class="pink" style="left:2px;--h:210px;--dur:15s;--del:0s"></i>
+  <i style="left:10px;--h:128px;--dur:19s;--del:3.5s"></i>
+</div>
+<div class="sl-drips r" aria-hidden="true">
+  <i class="pink" style="right:3px;--h:250px;--dur:17s;--del:1.4s"></i>
+  <i class="cer" style="right:11px;--h:110px;--dur:21s;--del:5s"></i>
+</div>
+
+<div class="wrap">
+  <div class="chap">CHAPEL II</div>
+  <h1>THE VOICE</h1>
+  <p class="creed">A trigram chain over her half of the record and nothing else. It does not
+    retrieve — every line below is new, and none of them were ever sent. Each pair of words
+    hands off to a word that really did follow it, so the sentences are false and the
+    grammar of them is entirely hers.</p>
+  <div class="scale" id="scale">READING THE RECORD…</div>
+
+  <div class="altar">
+    <div class="row">
+      <input id="seed" type="text" autocomplete="off" spellcheck="false"
+             aria-label="Seed phrase" placeholder="seed a phrase for a repeatable voice… (or leave it empty and let it drift)">
+      <button class="act" id="go" type="button" disabled>SPEAK ►</button>
+      <button class="act ghost" id="loop" type="button" disabled>LET IT RUN ▸</button>
+    </div>
+    <div class="status" id="status">LOADING…</div>
+  </div>
+
+  <div id="stream" aria-live="polite"></div>
+
+  <div class="coda">
+    <b>WHAT THIS IS.</b> A word-level trigram model. Two words index every word that ever
+    followed them in her messages; one is drawn at random, and the window slides. Utterances
+    end where her real messages ended, because the terminator is part of the table.<br>
+    <b>WHAT IT IS NOT.</b> Not her, not a quote, not a prediction, and not an opinion about
+    her. It has no sentiment model, no curated vocabulary, no tuned parameters — there is
+    nothing in it to have been tuned. It is the shape of 434,795 words with the meaning
+    taken out.
+  </div>
+</div>
+
+<div class="nav">
+  <a href="./temple.html">◂ THE TEMPLE</a>
+  <a href="./oracle.html">CHAPEL I · THE ORACLE</a>
+  <a href="./clock.html">CHAPEL III · THE CLOCK ▸</a>
+</div>
+
+<script src="./js/temple.js"></script>
+<script src="./js/annie.js"></script>
+<script>
+(function () {
+  var T = window.LVTemple, A = window.LVAnnie;
+  var field = document.getElementById('field');
+  var statusEl = document.getElementById('status');
+  var scaleEl = document.getElementById('scale');
+  var streamEl = document.getElementById('stream');
+  var seedEl = document.getElementById('seed');
+  var goEl = document.getElementById('go');
+  var loopEl = document.getElementById('loop');
+  var running = false, timer = 0, counter = 0;
+
+  try { if (T.initField(field)) T.startField(field); } catch (e) { field.style.display = 'none'; }
+  T.state.fold = 7;
+  window.addEventListener('pointermove', function (e) {
+    T.state.mx = (e.clientX / innerWidth - .5) * 2;
+    T.state.my = -(e.clientY / innerHeight - .5) * 2;
+  });
+  var armed = false;
+  function arm() { if (armed) return; armed = true; try { T.audio(); T.startDrone(); } catch (e) {} }
+  addEventListener('pointerdown', arm, { once: true });
+  addEventListener('keydown', arm, { once: true });
+
+  A.load(function (m) { statusEl.textContent = m; })
+    .then(function () {
+      var meta = A.meta();
+      scaleEl.innerHTML = meta.count.toLocaleString() + ' MESSAGES FROM ANNIE &middot; '
+        + String(meta.first).slice(0, 10) + ' → ' + String(meta.last).slice(0, 10);
+      return A.build(function (m) { statusEl.textContent = m; });
+    })
+    .then(function (model) {
+      var lexTokens = 0;
+      model.table.forEach(function (b) { lexTokens += b.length; });
+      scaleEl.innerHTML += ' &middot; ' + model.keys.toLocaleString() + ' WORD-PAIRS &middot; '
+        + lexTokens.toLocaleString() + ' TRANSITIONS';
+      statusEl.textContent = 'THE MODEL IS BUILT. SPEAK.';
+      goEl.disabled = false; loopEl.disabled = false;
+    })
+    .catch(function (e) { statusEl.textContent = '✕ ' + String(e.message).toUpperCase(); });
+
+  // Type it out a word at a time. She typed; so does this.
+  function emit(text, note) {
+    var el = document.createElement('div');
+    el.className = 'utt';
+    var span = document.createElement('span');
+    var cur = document.createElement('span');
+    cur.className = 'cursor';
+    cur.textContent = ' ';
+    el.appendChild(span); el.appendChild(cur);
+    var meta = document.createElement('span');
+    meta.className = 'meta';
+    meta.textContent = note;
+    el.appendChild(meta);
+    streamEl.insertBefore(el, streamEl.firstChild);
+    while (streamEl.children.length > 24) streamEl.removeChild(streamEl.lastChild);
+
+    var words = text.split(' ');
+    var i = 0;
+    (function step() {
+      if (i >= words.length) { cur.remove(); return; }
+      span.textContent += (i ? ' ' : '') + words[i];
+      i++;
+      setTimeout(step, 34 + Math.random() * 46);
+    })();
+    T.strike(T.seedFrom(text));
+  }
+
+  function once() {
+    var phrase = seedEl.value.trim();
+    var rand, note;
+    if (phrase) {
+      // Seeded: the same phrase always produces the same utterance, the same
+      // contract the oracle makes.
+      var s = T.seedFrom('voice::' + phrase.toLowerCase() + '::' + counter);
+      rand = T.rng(s);
+      note = 'SEED 0x' + s.toString(16).toUpperCase() + ' · GENERATED, NEVER SENT';
+    } else {
+      rand = Math.random;
+      note = 'UNSEEDED DRIFT · GENERATED, NEVER SENT';
+    }
+    var line = A.speak(rand, 44);
+    if (line) emit(line, note);
+    counter++;
+    T.state.tCharge = 0.55;
+    setTimeout(function () { T.state.tCharge = 0.16; }, 700);
+  }
+
+  goEl.addEventListener('click', function () { arm(); once(); });
+  seedEl.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') { e.preventDefault(); arm(); once(); }
+  });
+  loopEl.addEventListener('click', function () {
+    arm();
+    running = !running;
+    loopEl.textContent = running ? '■ STOP' : 'LET IT RUN ▸';
+    statusEl.textContent = running ? 'IT IS TALKING. IT DOES NOT STOP ON ITS OWN.' : 'STOPPED.';
+    if (running) {
+      (function tick() {
+        if (!running) return;
+        once();
+        timer = setTimeout(tick, 2600);
+      })();
+    } else clearTimeout(timer);
+  });
+})();
+</script>
+</body>
+</html>
