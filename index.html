@@ -234,6 +234,7 @@
       <div style="font-size: 12px; font-weight: 700; letter-spacing: 0.3em; color: #ffffff; text-shadow: 0 0 16px rgba(57,255,20,0.85);">@danfrank<span style="color: #b026ff; animation: blink 1.1s steps(1) infinite;">_</span></div>
       <div style="display: flex; gap: 22px; align-items: center; font-size: 10px; letter-spacing: 0.25em; text-transform: uppercase;">
         <a href="#gate" style="color: #39ff14; text-decoration: none;" style-hover="color: #ffffff; text-shadow: 0 0 12px #39ff14;">the archive</a>
+        <a href="./temple.html" style="color: #ff2f9d; text-decoration: none;" style-hover="color: #ffffff; text-shadow: 0 0 12px #ff2f9d;">the temple</a>
         <a href="#transmit" style="color: #00b7ff; text-decoration: none;" style-hover="color: #ffffff; text-shadow: 0 0 12px #00b7ff;">transmit</a>
         <button onClick="{{ enterArchive }}" style="cursor: pointer; background: rgba(57,255,20,0.12); border: 1px solid rgba(57,255,20,0.8); color: #39ff14; font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.25em; text-transform: uppercase; padding: 7px 14px;" style-hover="background: rgba(57,255,20,0.28); color: #041206; box-shadow: 0 0 30px rgba(57,255,20,0.55);">⬢ enter</button>
       </div>
@@ -300,9 +301,34 @@
         </div>
       </section>
 
+      <!-- ════════ THE TEMPLE ════════
+           The archive read in order is the record. The temple is the same
+           corpus read by lot: ask it something and it answers with passages
+           already in it, chosen by a seed derived from the question. -->
+      <section id="temple" data-screen-label="The Temple" style="position: relative; padding: 40px 24px 110px; display: flex; justify-content: center;">
+        <div style="max-width: 880px; width: 100%; display: flex; flex-direction: column; gap: 26px;">
+          <div style="font-size: 11px; letter-spacing: 0.45em; color: #ff2f9d; text-shadow: 0 0 12px rgba(255,47,157,0.85);">/// 02 — THE TEMPLE</div>
+          <h2 style="margin: 0; font-family: 'Unbounded', sans-serif; font-weight: 900; font-size: clamp(28px, 4.4vw, 50px); line-height: 1.14; color: #ffffff; text-wrap: balance; animation: glitch1 7.1s steps(1) infinite;">ASK THE RECORD SOMETHING</h2>
+          <p style="margin: 0; font-family: 'Space Grotesk', sans-serif; font-size: 14px; line-height: 2.05; color: #a8d9b8; text-wrap: pretty; max-width: 68ch;">An oracle over all 134,348 messages. It generates nothing — every word it returns was already written by someone, on a real date. It only chooses, and the choice is seeded by your question, so the same question always returns the same answer. Ask it twice and find out.</p>
+          <div style="border: 1px solid rgba(255,47,157,0.55); background: rgba(4,18,8,0.75); backdrop-filter: blur(6px); padding: 24px; display: flex; flex-direction: column; gap: 16px; box-shadow: 0 0 70px rgba(255,47,157,0.16);" style-hover="border-color: #ff2f9d; box-shadow: 0 0 90px rgba(255,47,157,0.4);">
+            <div style="font-size: 10px; letter-spacing: 0.3em; color: #ff2f9d;">THREE RITES · VERSE · WORD · CHORUS</div>
+            <div style="display: flex; flex-wrap: wrap; gap: 12px; align-items: center; font-family: 'Unbounded', sans-serif; font-weight: 700; font-size: clamp(13px, 2vw, 19px);">
+              <span style="color: #39ff14; text-shadow: 0 0 22px rgba(57,255,20,1);">ASK</span>
+              <span style="color: #4f8a63;">→</span>
+              <span style="color: #b026ff; text-shadow: 0 0 22px rgba(176,38,255,1);">SEED</span>
+              <span style="color: #4f8a63;">→</span>
+              <span style="color: #ff2f9d; text-shadow: 0 0 22px rgba(255,47,157,1);">DRAW</span>
+              <span style="color: #4f8a63;">→</span>
+              <span style="color: #00b7ff; text-shadow: 0 0 22px rgba(0,183,255,1);">ANSWER</span>
+            </div>
+            <a href="./temple.html" style="align-self: flex-start; text-decoration: none; cursor: pointer; font-family: 'IBM Plex Mono', monospace; font-size: 12px; font-weight: 700; letter-spacing: 0.22em; padding: 14px 24px; color: #041206; background: #ff2f9d; border: 1px solid #ff2f9d;" style-hover="background: #ff86c9;">ENTER THE TEMPLE ►</a>
+          </div>
+        </div>
+      </section>
+
       <section id="transmit" data-screen-label="Transmit" style="position: relative; padding: 110px 24px 90px; display: flex; justify-content: center;">
         <div style="max-width: 760px; width: 100%; display: flex; flex-direction: column; gap: 28px;">
-          <div style="font-size: 11px; letter-spacing: 0.45em; color: #39ff14; text-shadow: 0 0 12px rgba(57,255,20,0.85);">/// 02 — OPEN A CHANNEL</div>
+          <div style="font-size: 11px; letter-spacing: 0.45em; color: #39ff14; text-shadow: 0 0 12px rgba(57,255,20,0.85);">/// 03 — OPEN A CHANNEL</div>
           <h2 style="margin: 0; font-family: 'Unbounded', sans-serif; font-weight: 900; font-size: clamp(28px, 4.4vw, 50px); color: #ffffff; animation: glitch1 6.4s steps(1) infinite;">TRANSMIT</h2>
           <p style="margin: 0; font-family: 'Space Grotesk', sans-serif; font-size: 13px; line-height: 2.1; color: #a8d9b8; text-wrap: pretty;">Fires from <em style="font-style: normal; color: #39ff14;">your</em> account on X, into my mentions.</p>
 
