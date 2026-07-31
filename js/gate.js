@@ -158,6 +158,28 @@
     var ov = document.getElementById('lv-gate');
     if (ov) ov.remove();
     window.dispatchEvent(new CustomEvent('lv-unlocked'));
+    score();
+  }
+
+  // THE SCORE loads here rather than from a <script> tag on each page, so it
+  // reaches every page the gate reaches and never plays to someone who has not
+  // got through the gate. Failing to load costs nothing but silence.
+  function score() {
+    if (window.LVScore || document.getElementById('lv-score-js')) return;
+    var s = document.createElement('script');
+    s.id = 'lv-score-js';
+    s.src = base() + 'js/score.js';
+    s.async = true;
+    document.head.appendChild(s);
+  }
+
+  // Pages sit at the repo root, but the root itself is served as a directory,
+  // so a relative src has to be resolved against the depth of the current path.
+  function base() {
+    var seg = location.pathname.replace(/\/[^\/]*$/, '/').split('/').length;
+    var root = document.querySelector('script[src*="js/gate.js"]');
+    if (root) return root.getAttribute('src').replace(/js\/gate\.js.*$/, '');
+    return seg > 2 ? '../' : './';
   }
 
   // ── the gate itself ─────────────────────────────────────────────────────
