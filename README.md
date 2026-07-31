@@ -11,6 +11,7 @@ ask.html              # standalone view of instrument VI · THE ASK
 ledger.html           # THE DRUG LEDGER — day by day, both directions
 money.html            # THE FAMILY LEDGER — where the money came from
 transcript.html       # THE TRANSCRIPT — the complete message record, searchable
+temple.html           # THE TEMPLE — an oracle over that record (see below)
 terms.html            # the Terms of Service, rendered from js/tos.js — the one
                        # page not behind the gate
 archive.html          # decoy: a fake "archive index" the quiz trap can lead to
@@ -23,6 +24,7 @@ css/
 js/
   gate.js             # THE GATE: terms → quiz → curtain → passphrase, in front
                        # of every page; loads tos.js, quiz.js and GoatCounter
+  temple.js           # THE TEMPLE's engine: field, oracle, sigil, voice
   tos.js              # the Terms of Service dialog gate.js loads on demand
   quiz.js             # the quiz + decoy maze gate.js loads on demand
   support.js          # runtime: custom <x-dc> template engine, resource loading
@@ -266,6 +268,59 @@ silently gutting the CLAIMS / HEALTH / EVIDENCE / GENESIS / SCHEMA views. The
 script therefore refuses to run without it, and also refuses to overwrite the
 existing dataset if a rebuild loses more than 20% of its pages, words, or edges
 (override with `--allow-shrink` when a large deletion is genuine).
+
+## THE TEMPLE
+
+`temple.html` + `js/temple.js`. TempleOS shipped with an oracle: Terry Davis
+wired a hardware RNG to a dictionary, drew words out of it, and read what came
+back as God talking. The mechanism was trivial; the idea was not — a machine
+that speaks, whose vocabulary is fixed, whose selection you do not control, and
+whose output means whatever you are willing to see in it.
+
+This is that, with one substitution. The dictionary is the corpus: all 134,348
+messages, the same `data/transcript.json` that `transcript.html` renders in
+order. The oracle generates nothing and cannot — every word it returns was
+already written by someone, on a real date. It only chooses.
+
+**The draw is seeded by the question.** Ask the same thing twice and you get
+the same passages, forever. That is the entire difference between a divination
+and a shuffle: an oracle you can re-roll is a slot machine, and one that says
+the same thing every time is making a claim. Everything downstream follows from
+that one number — which verses surface, the sigil drawn for the question, the
+pitch each verse's bell rings at, how many folds the field turns in.
+
+Three rites over the same record:
+
+| rite | draws |
+| --- | --- |
+| `VERSE` | three whole messages, as they were sent |
+| `WORD` | six bare words from the corpus vocabulary — Terry's rite, exactly |
+| `CHORUS` | one message and the three that followed it in real time, so the answer arrives as an exchange |
+
+Every verse links back to its own line in `transcript.html`, so any answer can
+be walked back to its place in the record and read in context. The oracle is
+not a source; the transcript is, and the temple always says where it got it.
+
+Four pieces, all in `js/temple.js`:
+
+- **the field** — a WebGL1 fragment shader: kaleidoscopic fold over
+  domain-warped fbm, in the same four SLIME stops the galaxy and void engines
+  use. `uCharge` rises while the record is being consulted; `uReveal` pulses on
+  each verse. The visuals are driven by the divination rather than looping
+  independently of it. No WebGL, no problem — the canvas hides and the page
+  works flat.
+- **the oracle** — `cyrb128` for question→seed, `mulberry32` for the stream.
+  Small, well-distributed, and deliberately not cryptographic: this has to be
+  reproducible, not unpredictable.
+- **the sigil** — one generated glyph per question, from the same seed, so two
+  identical questions are visibly identical and two different ones visibly are
+  not. It is the seed made legible, not decoration.
+- **the voice** — Web Audio. A drone underneath, a bell per verse, each bell
+  pitched from its own passage's hash so a given verse always rings at the same
+  note. Built on first gesture, because autoplay policy requires it.
+
+Nothing is fetched but the corpus and nothing is sent anywhere; the whole rite
+runs in the tab.
 
 ## The pen scaffold
 
