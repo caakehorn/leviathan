@@ -50,6 +50,9 @@
     line-height: 1.72; color: #b3aac8; flex: 1; text-wrap: pretty; }
   a.door .meta { margin-top: 14px; font-size: 9px; letter-spacing: .2em; color: #7a6f96; }
   a.door .go { margin-top: 14px; font-size: 10.5px; letter-spacing: .26em; color: #cf9dff; }
+  a.feed { border-color: rgba(255,196,60,.36); }
+  a.feed:hover { border-color: #ffc43c; box-shadow: 0 0 80px rgba(255,196,60,.24); }
+  a.feed .no, a.feed .go { color: #ffc43c; }
   a.wiki { border-color: rgba(0,183,255,.34); }
   a.wiki:hover { border-color: #00b7ff; box-shadow: 0 0 80px rgba(0,183,255,.26); }
   a.wiki .no, a.wiki .go { color: #7fe3ff; }
@@ -94,6 +97,17 @@
         it down.</p>
       <div class="meta">311 NODES · 2,719 ARGUMENTS · SELF-DERIVED</div>
       <div class="go">FALL IN ►</div>
+    </a>
+
+    <a class="door feed" href="./factstory.html" style="grid-column:1/-1;min-height:0">
+      <div class="no">III · THE WAY IN</div>
+      <h2>FACT TIME / STORY TIME</h2>
+      <p>The manual ingestion queue. The corpus only knows what was already written
+        down somewhere — every formative thing that was only ever said out loud is
+        invisible to it. Type it here and it gets analysed, linked and written into
+        the wiki as readable pages.</p>
+      <div class="meta">FACT OR STORY · APPENDED TO AN ONGOING ARTICLE · PENDING UNTIL INGESTED</div>
+      <div class="go">ADD SOMETHING ►</div>
     </a>
   </div>
 </div>

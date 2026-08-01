@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./js/singate.js"></script>
+<title>FACT TIME / STORY TIME — the manual ingestion queue</title>
+<!-- FACT TIME / STORY TIME — the manual ingestion queue.
+     The point of this page: the automated corpus only contains what was
+     already written down somewhere. Formative facts and stories that were
+     never texted, posted or exported are invisible to it. This is where those
+     get in.
+
+     Entries are held in localStorage (so nothing is lost between sessions) and
+     rendered as one ongoing article. Export emits wiki-brain inbox format —
+     YYYY-MM-DD_HHMMSS_slug.md — so it drops straight into bin/ingest-pack ->
+     ingest-apply with no translation step. Optionally it can commit straight
+     into wiki-brain/inbox/ over the GitHub API using a token the owner pastes
+     in; that token lives in localStorage on this device only and is never in
+     this repo. -->
+<meta name="robots" content="noindex, nofollow">
+<meta name="referrer" content="no-referrer">
+<meta name="theme-color" content="#03040a">
+<link rel="icon" href="data:,">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous">
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@700;900&amp;family=Space+Grotesk:wght@400;500;700&amp;family=IBM+Plex+Mono:wght@400;600;700&amp;family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&amp;display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; min-height: 100%; background: #03040a; color: #ded6ee;
+    font-family: 'IBM Plex Mono', ui-monospace, monospace; }
+  #grain { position: fixed; inset: 0; z-index: 0; pointer-events: none; opacity: .4;
+    background: repeating-linear-gradient(0deg, rgba(0,0,0,.28) 0 1px, transparent 1px 3px); }
+
+  header.bar { position: sticky; top: 0; z-index: 6; display: flex; align-items: center; gap: 14px;
+    padding: 12px 18px; border-bottom: 1px solid rgba(176,38,255,.26); background: rgba(6,8,16,.96);
+    backdrop-filter: blur(10px); flex-wrap: wrap; }
+  header.bar .brand { font-family: 'Unbounded', sans-serif; font-weight: 900; font-size: 15px; color: #fff; }
+  header.bar .brand span { color: #ffc43c; }
+  header.bar .n { font-size: 9.5px; letter-spacing: .18em; color: #6b7690; }
+  header.bar .n b { color: #9fe0ff; }
+  header.bar .sp { flex: 1; }
+  header.bar a.out { font-size: 9px; letter-spacing: .2em; color: #5a6b60; text-decoration: none;
+    border: 1px solid rgba(120,140,120,.3); padding: 8px 11px; }
+  header.bar a.out:hover { color: #b6ff8f; border-color: #b6ff8f; }
+
+  .wrap { position: relative; z-index: 2; max-width: 860px; margin: 0 auto; padding: 30px 20px 16vh; }
+  .lede { font-family: 'Space Grotesk', sans-serif; font-size: 14.5px; line-height: 1.8; color: #9aa6b8;
+    text-wrap: pretty; }
+  .lede b { color: #ffc43c; }
+
+  /* ── the composer ── */
+  .composer { margin-top: 24px; border: 1px solid rgba(255,196,60,.34); background: rgba(8,8,14,.8);
+    padding: 20px clamp(14px,3vw,24px) 22px; }
+  .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+  .row > * { min-width: 0; }
+  label.lb { font-size: 9px; letter-spacing: .26em; color: #ffc43c; display: block; margin-bottom: 6px; }
+  select, input[type=text], textarea {
+    background: rgba(0,0,0,.55); border: 1px solid rgba(176,38,255,.4); color: #fff;
+    font: inherit; font-size: 13px; padding: 10px 12px; letter-spacing: .02em; width: 100%; }
+  select:focus, input:focus, textarea:focus { outline: none; border-color: #00b7ff; }
+  textarea { min-height: 190px; resize: vertical; line-height: 1.65; font-family: 'Newsreader', Georgia, serif; font-size: 16.5px; }
+  .kind { flex: 0 0 148px; }
+  .ttl { flex: 1 1 260px; }
+  .half { flex: 1 1 240px; }
+  .mt { margin-top: 14px; }
+  button.go { margin-top: 14px; width: 100%; cursor: pointer; background: #ffc43c; border: none;
+    color: #03040a; padding: 15px; font: inherit; font-size: 11.5px; letter-spacing: .26em; font-weight: 700; }
+  button.go:hover { background: #fff; }
+  button.go[disabled] { opacity: .5; cursor: default; }
+  .hintline { margin-top: 10px; font-size: 9px; letter-spacing: .12em; color: #55607a; line-height: 1.8; }
+
+  /* ── toolbar ── */
+  .tools { margin-top: 22px; display: flex; gap: 8px; flex-wrap: wrap; }
+  .tools button { cursor: pointer; background: none; border: 1px solid rgba(176,38,255,.4); color: #cf9dff;
+    font: inherit; font-size: 9.5px; letter-spacing: .18em; padding: 10px 13px; }
+  .tools button:hover { background: #cf9dff; color: #03040a; }
+  .tools button.danger { border-color: rgba(255,90,90,.4); color: #ff9a9a; }
+  .tools button.danger:hover { background: #ff5a5a; color: #fff; }
+  .tools .msg { flex: 1 1 100%; font-size: 9px; letter-spacing: .14em; color: #6fdc8c; min-height: 14px; padding-top: 4px; }
+  .tools .msg.err { color: #ff9a9a; }
+
+  /* ── the ongoing article ── */
+  h2.sec { margin: 40px 0 0; font-family: 'Unbounded', sans-serif; font-weight: 900; font-size: 22px;
+    color: #fff; letter-spacing: -.01em; }
+  .secnote { margin-top: 8px; font-size: 9.5px; letter-spacing: .14em; color: #55607a; line-height: 1.8; }
+  .entry { margin-top: 18px; border-left: 2px solid rgba(255,196,60,.5); background: rgba(8,8,14,.55);
+    padding: 16px 18px; }
+  .entry.story { border-left-color: rgba(0,183,255,.6); }
+  .entry .meta { display: flex; gap: 10px; align-items: center; flex-wrap: wrap;
+    font-size: 8.5px; letter-spacing: .2em; color: #6b7690; }
+  .entry .tag { border: 1px solid rgba(255,196,60,.45); color: #ffc43c; padding: 2px 7px; }
+  .entry.story .tag { border-color: rgba(0,183,255,.5); color: #7fe3ff; }
+  .entry h3 { margin: 10px 0 0; font-family: 'Unbounded', sans-serif; font-weight: 700; font-size: 18px;
+    color: #fff; line-height: 1.25; }
+  .entry .body { margin-top: 9px; font-family: 'Newsreader', Georgia, serif; font-size: 17px;
+    line-height: 1.7; color: #ded6ee; white-space: pre-wrap; text-wrap: pretty; }
+  .entry .target { margin-top: 9px; font-size: 9px; letter-spacing: .14em; color: #9fe0ff; }
+  .entry .del { margin-top: 10px; background: none; border: none; color: #6b7690; cursor: pointer;
+    font: inherit; font-size: 8.5px; letter-spacing: .18em; padding: 0; }
+  .entry .del:hover { color: #ff5a5a; }
+  .empty { margin-top: 20px; padding: 26px; border: 1px dashed rgba(120,140,160,.3); text-align: center;
+    font-size: 11px; letter-spacing: .12em; color: #55607a; line-height: 1.9; }
+
+  /* ── push panel ── */
+  details.push { margin-top: 30px; border: 1px solid rgba(120,140,160,.24); padding: 14px 16px; }
+  details.push summary { cursor: pointer; font-size: 9.5px; letter-spacing: .22em; color: #9aa6b8; }
+  details.push summary:hover { color: #fff; }
+  details.push .warn { margin-top: 12px; font-size: 9.5px; letter-spacing: .06em; line-height: 1.9; color: #8f96b2; }
+  details.push .warn b { color: #ff9a9a; }
+  @media (max-width: 620px) { .kind { flex: 1 1 100%; } }
+</style>
+</head>
+<body>
+<div id="grain" aria-hidden="true"></div>
+
+<header class="bar">
+  <div class="brand">FACT TIME <span>/</span> STORY TIME</div>
+  <div class="n"><b id="count">0</b> IN QUEUE</div>
+  <div class="sp"></div>
+  <a class="out" href="./wiki.html">◂ THE WIKI</a>
+  <a class="out" href="./singularity.html">SINGULARITY</a>
+</header>
+
+<div class="wrap">
+  <p class="lede">The corpus only knows what was already written down somewhere — texts, posts,
+    exports. <b>The formative things that were only ever said out loud are invisible to it.</b>
+    This is where those get in. Type a fact or a story, it joins the ongoing article below, and
+    when you signal the system the whole queue gets analysed, linked, speculated on, and written
+    into the wiki as readable pages.</p>
+
+  <div class="composer">
+    <div class="row">
+      <div class="kind">
+        <label class="lb" for="kind">TYPE</label>
+        <select id="kind">
+          <option value="fact">FACT — a discrete true thing</option>
+          <option value="story">STORY — an episode, told</option>
+        </select>
+      </div>
+      <div class="ttl">
+        <label class="lb" for="title">TITLE</label>
+        <input id="title" type="text" placeholder="short handle for this one" autocomplete="off">
+      </div>
+    </div>
+
+    <div class="mt">
+      <label class="lb" for="body">THE THING ITSELF</label>
+      <textarea id="body" placeholder="Say it however it comes out. Length is not a virtue and not a problem — detail is. Dates, names, places, what was said, what it felt like, what changed after."></textarea>
+    </div>
+
+    <div class="row mt">
+      <div class="half">
+        <label class="lb" for="target">TARGET PAGE (optional)</label>
+        <input id="target" type="text" placeholder="wiki/people/someone" autocomplete="off">
+      </div>
+      <div class="half">
+        <label class="lb" for="tags">TAGS (optional, comma-separated)</label>
+        <input id="tags" type="text" placeholder="uniontown-era, family" autocomplete="off">
+      </div>
+    </div>
+
+    <button class="go" id="add">＋ ADD TO THE QUEUE</button>
+    <div class="hintline">SAVED IN THIS BROWSER THE MOMENT YOU ADD IT · CTRL/⌘+ENTER SUBMITS ·
+      NOTHING IS SENT ANYWHERE UNTIL YOU EXPORT OR PUSH</div>
+  </div>
+
+  <div class="tools">
+    <button id="copy">⧉ COPY QUEUE AS MARKDOWN</button>
+    <button id="dl">⤓ DOWNLOAD INBOX FILE</button>
+    <button id="dlall">⤓ DOWNLOAD ONE FILE PER ENTRY</button>
+    <button id="clear" class="danger">✕ CLEAR QUEUE</button>
+    <div class="msg" id="msg"></div>
+  </div>
+
+  <h2 class="sec">THE ONGOING ARTICLE</h2>
+  <div class="secnote">NEWEST FIRST · THIS IS THE MANUAL INGESTION QUEUE ·
+    EVERYTHING HERE IS PENDING UNTIL IT HAS BEEN INGESTED INTO THE WIKI</div>
+  <div id="log"></div>
+
+  <details class="push">
+    <summary>▸ PUSH STRAIGHT INTO wiki-brain/inbox/ (optional, needs a token)</summary>
+    <div class="warn">
+      This page is static — it has no server. To write into the repo it has to call the GitHub API
+      from your browser with your own token.
+      <b>The token is stored only in this browser's localStorage and is never committed to this
+      repo.</b> Anyone with access to this device can read it. Use a fine-grained personal access
+      token scoped to <code>caakehorn/wiki-brain</code> with <b>Contents: read and write</b> and
+      nothing else, and revoke it if the device is ever out of your control. If you would rather not,
+      use DOWNLOAD above and drop the file into <code>inbox/</code> by hand — same result.
+    </div>
+    <div class="row mt">
+      <div class="half">
+        <label class="lb" for="repo">REPO</label>
+        <input id="repo" type="text" value="caakehorn/wiki-brain" autocomplete="off">
+      </div>
+      <div class="half">
+        <label class="lb" for="tok">TOKEN</label>
+        <input id="tok" type="text" placeholder="github_pat_… (stored on this device only)" autocomplete="off">
+      </div>
+    </div>
+    <div class="tools">
+      <button id="savetok">SAVE TOKEN LOCALLY</button>
+      <button id="forgettok" class="danger">FORGET TOKEN</button>
+      <button id="push">▲ PUSH QUEUE TO INBOX</button>
+      <div class="msg" id="pmsg"></div>
+    </div>
+  </details>
+</div>
+
+<script defer src="./js/score.js"></script>
+<script>
+(function () {
+  var KEY = 'lv.factstory.queue';
+  var TKEY = 'lv.factstory.token';
+  var RKEY = 'lv.factstory.repo';
+  var $ = function (id) { return document.getElementById(id); };
+
+  function load() {
+    try { return JSON.parse(localStorage.getItem(KEY) || '[]'); } catch (e) { return []; }
+  }
+  function save(q) {
+    try { localStorage.setItem(KEY, JSON.stringify(q)); }
+    catch (e) { flash('msg', 'could not save — browser storage is full or blocked', true); }
+  }
+  var queue = load();
+
+  function flash(id, text, bad) {
+    var el = $(id);
+    el.textContent = text;
+    el.className = 'msg' + (bad ? ' err' : '');
+    if (!bad) setTimeout(function () { if (el.textContent === text) el.textContent = ''; }, 4000);
+  }
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c];
+    });
+  }
+  function slug(s) {
+    return (s || 'untitled').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 46) || 'untitled';
+  }
+  function stamp(iso) {
+    var d = new Date(iso), p = function (n) { return String(n).padStart(2, '0'); };
+    return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()) + '_' +
+      p(d.getHours()) + p(d.getMinutes()) + p(d.getSeconds());
+  }
+
+  // ── render the ongoing article ──
+  function render() {
+    $('count').textContent = queue.length;
+    var log = $('log');
+    if (!queue.length) {
+      log.innerHTML = '<div class="empty">THE QUEUE IS EMPTY.<br>' +
+        'EVERY FORMATIVE THING THAT WAS ONLY EVER SAID OUT LOUD IS STILL MISSING FROM THE WIKI.</div>';
+      return;
+    }
+    log.innerHTML = '';
+    queue.slice().reverse().forEach(function (e) {
+      var d = document.createElement('div');
+      d.className = 'entry ' + e.kind;
+      var when = new Date(e.at).toLocaleString();
+      d.innerHTML =
+        '<div class="meta"><span class="tag">' + esc(e.kind.toUpperCase()) + '</span>' +
+        '<span>' + esc(when) + '</span>' +
+        (e.tags && e.tags.length ? '<span>' + esc(e.tags.join(' · ')) + '</span>' : '') + '</div>' +
+        '<h3>' + esc(e.title || '(untitled)') + '</h3>' +
+        '<div class="body">' + esc(e.body) + '</div>' +
+        (e.target ? '<div class="target">▸ TARGET: ' + esc(e.target) + '</div>' : '');
+      var del = document.createElement('button');
+      del.className = 'del'; del.type = 'button'; del.textContent = '✕ REMOVE THIS ENTRY';
+      del.addEventListener('click', function () {
+        queue = queue.filter(function (x) { return x.id !== e.id; });
+        save(queue); render();
+      });
+      d.appendChild(del);
+      log.appendChild(d);
+    });
+  }
+
+  // ── add ──
+  function add() {
+    var body = $('body').value.trim();
+    if (!body) { flash('msg', 'nothing to add — the body is empty', true); $('body').focus(); return; }
+    queue.push({
+      id: Date.now() + '-' + Math.random().toString(36).slice(2, 8),
+      at: new Date().toISOString(),
+      kind: $('kind').value,
+      title: $('title').value.trim(),
+      body: body,
+      target: $('target').value.trim(),
+      tags: $('tags').value.split(',').map(function (t) { return t.trim(); }).filter(Boolean)
+    });
+    save(queue);
+    // Clear tags too. Sticky tags are convenient for a run of related entries
+    // but they silently mislabel the next unrelated one, and a wrong tag is
+    // worse than a missing one once this reaches ingestion.
+    $('title').value = ''; $('body').value = ''; $('target').value = ''; $('tags').value = '';
+    render();
+    flash('msg', 'added — ' + queue.length + ' in the queue');
+    $('title').focus();
+  }
+  $('add').addEventListener('click', add);
+  $('body').addEventListener('keydown', function (e) {
+    if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') { e.preventDefault(); add(); }
+  });
+
+  // ── export: wiki-brain inbox format ──
+  // One entry renders exactly as an inbox item would be written by hand, so
+  // bin/ingest-pack can take it with no translation step.
+  function entryMd(e) {
+    var L = [];
+    L.push('FACT TIME / STORY TIME — manual capture');
+    L.push('kind: ' + e.kind);
+    L.push('captured: ' + e.at);
+    if (e.target) L.push('target: ' + e.target);
+    if (e.tags && e.tags.length) L.push('tags: ' + e.tags.join(', '));
+    L.push('');
+    L.push('# ' + (e.title || 'Untitled ' + e.kind));
+    L.push('');
+    L.push(e.body);
+    L.push('');
+    return L.join('\n');
+  }
+  function queueMd() {
+    var head = [
+      'FACT TIME / STORY TIME — manual ingestion queue',
+      'exported: ' + new Date().toISOString(),
+      'entries: ' + queue.length,
+      '',
+      'Each block below is one manually captured fact or story. These are things',
+      'that exist in no export and no message log because they were only ever',
+      'said out loud. Ingest per INGEST_PROTOCOL.md: analyse, link into the',
+      'existing graph with typed edges and argued claims, synthesise where a',
+      'cluster earns it, and name the gaps that remain.',
+      '', '---', ''
+    ].join('\n');
+    return head + queue.map(entryMd).join('\n---\n\n');
+  }
+  function fileName() {
+    return stamp(new Date().toISOString()) + '_factstory-queue-' + queue.length + '.md';
+  }
+  function download(name, text) {
+    var b = new Blob([text], { type: 'text/markdown' });
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(b); a.download = name;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function () { URL.revokeObjectURL(a.href); }, 4000);
+  }
+  function needQueue() {
+    if (queue.length) return true;
+    flash('msg', 'the queue is empty', true);
+    return false;
+  }
+  $('copy').addEventListener('click', function () {
+    if (!needQueue()) return;
+    var t = queueMd();
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(t).then(
+        function () { flash('msg', 'copied ' + queue.length + ' entries — paste to the agent'); },
+        function () { flash('msg', 'clipboard blocked — use download instead', true); });
+    } else flash('msg', 'clipboard unavailable — use download instead', true);
+  });
+  $('dl').addEventListener('click', function () {
+    if (!needQueue()) return;
+    download(fileName(), queueMd());
+    flash('msg', 'downloaded — drop it in wiki-brain/inbox/');
+  });
+  $('dlall').addEventListener('click', function () {
+    if (!needQueue()) return;
+    queue.forEach(function (e, i) {
+      setTimeout(function () {
+        download(stamp(e.at) + '_' + slug(e.title || e.kind) + '.md', entryMd(e));
+      }, i * 220);   // browsers throttle simultaneous downloads
+    });
+    flash('msg', 'downloading ' + queue.length + ' inbox files…');
+  });
+  $('clear').addEventListener('click', function () {
+    if (!queue.length) return;
+    if (!confirm('Clear all ' + queue.length + ' entries? Export first — this cannot be undone.')) return;
+    queue = []; save(queue); render();
+    flash('msg', 'queue cleared');
+  });
+
+  // ── optional: push into wiki-brain/inbox/ over the GitHub API ──
+  try {
+    var t = localStorage.getItem(TKEY); if (t) $('tok').value = t;
+    var r = localStorage.getItem(RKEY); if (r) $('repo').value = r;
+  } catch (e) { }
+  $('savetok').addEventListener('click', function () {
+    try {
+      localStorage.setItem(TKEY, $('tok').value.trim());
+      localStorage.setItem(RKEY, $('repo').value.trim());
+      flash('pmsg', 'saved on this device only');
+    } catch (e) { flash('pmsg', 'could not save', true); }
+  });
+  $('forgettok').addEventListener('click', function () {
+    try { localStorage.removeItem(TKEY); } catch (e) { }
+    $('tok').value = '';
+    flash('pmsg', 'token forgotten');
+  });
+  $('push').addEventListener('click', async function () {
+    if (!queue.length) { flash('pmsg', 'the queue is empty', true); return; }
+    var tok = $('tok').value.trim(), repo = $('repo').value.trim();
+    if (!tok) { flash('pmsg', 'no token — save one first, or use download', true); return; }
+    if (!/^[\w.-]+\/[\w.-]+$/.test(repo)) { flash('pmsg', 'repo must look like owner/name', true); return; }
+    this.disabled = true;
+    var ok = 0, failed = 0;
+    for (var i = 0; i < queue.length; i++) {
+      var e = queue[i];
+      var path = 'inbox/' + stamp(e.at) + '_' + slug(e.title || e.kind) + '.md';
+      flash('pmsg', 'pushing ' + (i + 1) + ' of ' + queue.length + '…');
+      try {
+        var res = await fetch('https://api.github.com/repos/' + repo + '/contents/' + path, {
+          method: 'PUT',
+          headers: {
+            'Authorization': 'Bearer ' + tok,
+            'Accept': 'application/vnd.github+json',
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            message: 'capture: ' + e.kind + ' — ' + (e.title || 'untitled'),
+            content: btoa(unescape(encodeURIComponent(entryMd(e))))
+          })
+        });
+        if (res.ok) ok++; else failed++;
+      } catch (err) { failed++; }
+    }
+    this.disabled = false;
+    if (failed) flash('pmsg', 'pushed ' + ok + ', failed ' + failed + ' — check the token scope', true);
+    else {
+      flash('pmsg', 'pushed all ' + ok + ' into ' + repo + '/inbox/ — safe to clear the queue');
+    }
+  });
+
+  render();
+})();
+</script>
+</body>
+</html>
