@@ -12,7 +12,20 @@
      get in.
 
      Entries are held in localStorage (so nothing is lost between sessions) and
-     rendered as one ongoing article. Export emits wiki-brain inbox format —
+     rendered as one ongoing article.
+
+     The PRIMARY export is THE INGEST BRIEF: one self-contained markdown file
+     carrying every entry plus the complete instructions any capable LLM needs
+     to synthesize them into wiki-brain and open a PR — the rules, the
+     frontmatter spec, the typed-edge vocabulary with inverses, the output
+     format bin/ingest-apply expects, three routes to a PR (terminal,
+     browser-only, API) and a manual pre-flight checklist standing in for the
+     three validators. It exists for durability: when Claude Code is out of
+     reach, this file is pasted into whatever model is reachable and the wiki
+     still grows. It deliberately duplicates the governing rules, because a
+     model reading it has no checkout and cannot be assumed to fetch CLAUDE.md.
+
+     The secondary exports emit wiki-brain inbox format —
      YYYY-MM-DD_HHMMSS_slug.md — so it drops straight into bin/ingest-pack ->
      ingest-apply with no translation step. Optionally it can commit straight
      into wiki-brain/inbox/ over the GitHub API using a token the owner pastes
@@ -77,6 +90,11 @@
   .tools button:hover { background: #cf9dff; color: #03040a; }
   .tools button.danger { border-color: rgba(255,90,90,.4); color: #ff9a9a; }
   .tools button.danger:hover { background: #ff5a5a; color: #fff; }
+  .tools button.prime { background: #ffc43c; border-color: #ffc43c; color: #03040a; font-weight: 700;
+    letter-spacing: .2em; padding: 12px 15px; }
+  .tools button.prime:hover { background: #fff; border-color: #fff; color: #03040a; }
+  .tools .brk { flex: 1 1 100%; height: 0; }
+  .tools .lbl { flex: 1 1 100%; font-size: 8.5px; letter-spacing: .22em; color: #55607a; padding-top: 6px; }
   .tools .msg { flex: 1 1 100%; font-size: 9px; letter-spacing: .14em; color: #6fdc8c; min-height: 14px; padding-top: 4px; }
   .tools .msg.err { color: #ff9a9a; }
 
@@ -128,6 +146,12 @@
     This is where those get in. Type a fact or a story, it joins the ongoing article below, and
     when you signal the system the whole queue gets analysed, linked, speculated on, and written
     into the wiki as readable pages.</p>
+  <p class="lede" style="margin-top:14px"><b>THE INGEST BRIEF</b> is the primary export: one markdown
+    file carrying every entry <em>and</em> the complete instructions any capable LLM needs to parse
+    them, write them into <code>wiki-brain</code> correctly, and open a pull request — including the
+    rules, the frontmatter spec, the typed-edge vocabulary, and three routes to a PR (terminal,
+    browser-only, or API). <b>It exists so the wiki keeps growing when Claude is unavailable.</b>
+    Paste it into whatever model you can reach.</p>
 
   <div class="composer">
     <div class="row">
@@ -166,6 +190,12 @@
   </div>
 
   <div class="tools">
+    <button id="brief" class="prime">⧉ COPY THE INGEST BRIEF</button>
+    <button id="briefdl" class="prime">⤓ DOWNLOAD THE INGEST BRIEF</button>
+    <div class="lbl">▲ THE WHOLE JOB IN ONE FILE — YOUR ENTRIES PLUS COMPLETE INSTRUCTIONS FOR ANY LLM
+      TO SYNTHESISE THEM INTO wiki-brain AND OPEN A PR. NO CLAUDE REQUIRED.</div>
+    <div class="brk"></div>
+    <div class="lbl">▾ RAW EXPORTS — FOR bin/ingest-pack, OR TO DROP INTO inbox/ BY HAND</div>
     <button id="copy">⧉ COPY QUEUE AS MARKDOWN</button>
     <button id="dl">⤓ DOWNLOAD INBOX FILE</button>
     <button id="dlall">⤓ DOWNLOAD ONE FILE PER ENTRY</button>
@@ -336,6 +366,410 @@
     ].join('\n');
     return head + queue.map(entryMd).join('\n---\n\n');
   }
+  // ── THE INGEST BRIEF — the primary export ─────────────────────────────────
+  // One self-contained markdown file: every captured entry, plus complete
+  // instructions for any capable LLM to synthesise them into wiki-brain and
+  // open a PR. The point is durability — when Claude Code is unavailable this
+  // file is pasted into whatever model is reachable and the wiki still grows.
+  // It duplicates the governing rules on purpose: a model reading this has no
+  // repo checkout and cannot be assumed to fetch CLAUDE.md or STYLE_GUIDE.md.
+  function briefEntry(e, i) {
+    var L = [];
+    L.push('### ENTRY ' + (i + 1) + ' — ' + (e.title || 'Untitled ' + e.kind));
+    L.push('');
+    L.push('| field | value |');
+    L.push('|---|---|');
+    L.push('| kind | `' + e.kind + '` |');
+    L.push('| captured | `' + e.at + '` |');
+    L.push('| suggested raw filename | `' + stamp(e.at) + '_' + slug(e.title || e.kind) + '.md` |');
+    L.push('| operator-declared target | ' + (e.target ? '`' + e.target + '`' : '_none — you decide_') + ' |');
+    L.push('| operator-declared tags | ' + (e.tags && e.tags.length ? '`' + e.tags.join('`, `') + '`' : '_none_') + ' |');
+    L.push('');
+    L.push('**Verbatim text — do not paraphrase this into `raw/`, it is the source of record:**');
+    L.push('');
+    L.push('```text');
+    L.push(e.body);
+    L.push('```');
+    L.push('');
+    return L.join('\n');
+  }
+
+  function briefMd() {
+    var now = new Date().toISOString();
+    var n = queue.length;
+    var L = [];
+
+    L.push('# WIKI-BRAIN INGEST BRIEF — ' + n + ' manual capture' + (n === 1 ? '' : 's'));
+    L.push('');
+    L.push('- **Generated:** `' + now + '`');
+    L.push('- **By:** FACT TIME / STORY TIME (`leviathan/factstory.html`)');
+    L.push('- **Target repository:** `https://github.com/caakehorn/wiki-brain`');
+    L.push('- **Base branch:** `main`');
+    L.push('');
+    L.push('---');
+    L.push('');
+
+    L.push('## 0. What this file is, and what you are being asked to do');
+    L.push('');
+    L.push('You are being handed ' + n + ' fact' + (n === 1 ? '' : 's') + '/stor' + (n === 1 ? 'y' : 'ies') +
+      ' that a person typed by hand. **They exist in no export, no message log and no');
+    L.push('archive anywhere**, because they were only ever said out loud. Everything below');
+    L.push('§10 is the payload; everything above it is your instructions.');
+    L.push('');
+    L.push('Your job, end to end:');
+    L.push('');
+    L.push('1. Read the existing wiki (§1) so you write *into* a graph rather than beside it.');
+    L.push('2. File each capture verbatim into `raw/` so every claim has provenance (§5).');
+    L.push('3. Write or revise the `wiki/` pages the captures touch — as prose, not notes (§5).');
+    L.push('4. Wire them in with typed edges carrying argued claims, **both directions** (§4).');
+    L.push('5. Append to `log.md`, update indexes.');
+    L.push('6. Open a pull request against `main` (§8).');
+    L.push('');
+    L.push('**This is a second brain, not a note pile.** A fact filed is worth little; a');
+    L.push('connection argued is the product. If you finish and have only added text without');
+    L.push('adding a single typed edge, you have not done the job.');
+    L.push('');
+    L.push('> **The one thing that would make this worse than doing nothing:** inventing');
+    L.push('> detail. Everything you write must trace to one of these captures or to a page');
+    L.push('> already in the wiki. Where you are inferring rather than recording, say so in');
+    L.push('> the text. Where you do not know, write a Gaps line. An honest gap is an asset;');
+    L.push('> a confident fabrication corrupts every conclusion built on it later.');
+    L.push('');
+
+    L.push('## 1. Orient — read the existing wiki first (it is publicly readable)');
+    L.push('');
+    L.push('You do **not** need repo access to read the current wiki. It is published as plain');
+    L.push('text. If you have web access, fetch these before writing anything:');
+    L.push('');
+    L.push('| What | URL |');
+    L.push('|---|---|');
+    L.push('| Discovery | `https://caakehorn.github.io/wiki-brain/llms.txt` |');
+    L.push('| Machine index (every page + metadata) | `https://caakehorn.github.io/wiki-brain/agent/manifest.json` |');
+    L.push('| Critical spine (start here if context is tight) | `https://caakehorn.github.io/wiki-brain/agent/critical.md` |');
+    L.push('| One domain at a time | `https://caakehorn.github.io/wiki-brain/agent/domains/<domain>.md` |');
+    L.push('| Whole corpus (~300k+ tokens) | `https://caakehorn.github.io/wiki-brain/agent/corpus.md` |');
+    L.push('| A single page | `https://caakehorn.github.io/wiki-brain/wiki/<path>.md` |');
+    L.push('| Plain-text mirror | `https://caakehorn.github.io/wiki-brain/llm/index.txt` |');
+    L.push('');
+    L.push('Domains: `self` · `timeline` · `people` · `mind` · `work` · `interests` · `health` · `places` · `legal`');
+    L.push('');
+    L.push('The single most authoritative page is `wiki/self/context-core.md`. Where it and');
+    L.push('anything else disagree, it wins unless the other carries a specific dated correction.');
+    L.push('');
+    L.push('**If you have no web access:** say so plainly at the top of your output, then write');
+    L.push('only *new* pages and do not claim to revise existing ones — you cannot revise a page');
+    L.push('you have not read, and guessing at its current contents will destroy earned work.');
+    L.push('');
+
+    L.push('## 2. The rules you must not break');
+    L.push('');
+    L.push('These are the repository\'s own standing rules, reproduced so you need nothing else.');
+    L.push('');
+    L.push('1. **Never write an untyped link.** Every connection gets a `type` from the §4');
+    L.push('   vocabulary and a `claim` sentence. If you cannot write the claim, do not make');
+    L.push('   the connection.');
+    L.push('2. **Never state a fact without a source that exists on disk.** For this batch the');
+    L.push('   source is the `raw/` file you create in step 5.1. Do not cite a `raw/` path you');
+    L.push('   did not create and cannot verify — a dangling `sources:` entry is a lint error.');
+    L.push('3. **One page per entity.** Before creating a `people/` page, search the manifest for');
+    L.push('   the person under every name, nickname and handle in the capture. Merge, never fork.');
+    L.push('4. **Contradictions are flagged, not overwritten.** If a capture contradicts what a');
+    L.push('   page says, keep both and mark it:');
+    L.push('   `> **CONTRADICTION:** <what the page says> vs <what the capture says>.`');
+    L.push('   Revisions get `> **REVISED [YYYY-MM-DD]:** …`. **Never delete an existing');
+    L.push('   conclusion because new material disagrees with it** — the disagreement is the');
+    L.push('   valuable part.');
+    L.push('5. **Revise, never regenerate.** Pages marked `knowledge: earned` are the product of');
+    L.push('   reasoning done once and are not reproducible from source material. Edit them');
+    L.push('   surgically. Never rewrite one from scratch.');
+    L.push('6. **Complete sentences.** Every page must read as prose to a stranger opening it');
+    L.push('   cold. No fragment chains, no dossier shorthand, no bullet soup.');
+    L.push('7. **Tables hold numbers, prose holds meaning.** Never restate a table in prose.');
+    L.push('8. **Dates are absolute.** Convert "last summer" to a year at ingest time and flag');
+    L.push('   uncertainty as `(~2019?)`. Never leave a relative date in a page.');
+    L.push('9. **Paraphrase into `wiki/`, keep verbatim in `raw/`.** Quote a sentence or less');
+    L.push('   only where the exact wording is itself the evidence.');
+    L.push('10. **No session chatter in `wiki/`.** No "I have added…", no notes to the operator,');
+    L.push('    no meta-commentary. That belongs in `log.md`. Pages are written for a stranger');
+    L.push('    five years from now.');
+    L.push('');
+
+    L.push('## 3. Frontmatter — every page carries exactly this shape');
+    L.push('');
+    L.push('```yaml');
+    L.push('---');
+    L.push('domain: self | timeline | people | mind | work | interests | health | places | legal');
+    L.push('page_type: entity | event | concept | period | summary | synthesis | profile | report | chat | note | index');
+    L.push('status: active | stable | stub | closed | archived');
+    L.push('date_created: YYYY-MM-DD');
+    L.push('date_modified: YYYY-MM-DD');
+    L.push('sources:              # paths under raw/ ONLY, and they must exist');
+    L.push('  - raw/self/captures/<the file you created>.md');
+    L.push('tags: [topic, topic]');
+    L.push('connections:          # see section 4 — this is the important one');
+    L.push('  - page: wiki/people/someone');
+    L.push('    type: causes');
+    L.push('    claim: "One complete sentence a stranger could evaluate and try to falsify."');
+    L.push('---');
+    L.push('```');
+    L.push('');
+    L.push('Optional, use where they earn their place: `title:`, `aliases: []`,');
+    L.push('`importance: critical|high|normal`, `knowledge: earned|derived|mixed`.');
+    L.push('');
+    L.push('**`status` means what it says.** `closed` means a thing has formally *ended*, not');
+    L.push('that the page feels finished. Default for a finished page is `stable`.');
+    L.push('');
+    L.push('**Every `domain: people` page must also carry an `infobox:` block.** If you create');
+    L.push('one, copy the field shape from an existing people page you fetched in §1 rather than');
+    L.push('inventing keys.');
+    L.push('');
+    L.push('**`sources:` is for `raw/` paths. `synthesizes:` is for `wiki/` paths.** Putting a');
+    L.push('`wiki/` path in `sources:`, or a `raw/` path in `synthesizes:`, is an error.');
+    L.push('');
+
+    L.push('## 4. Typed edges — the vocabulary, and the inverse rule');
+    L.push('');
+    L.push('A connection records **how** two pages relate, not that they do. `related: [tom]`');
+    L.push('is an index entry; it is not knowledge. The claim sentence is the knowledge.');
+    L.push('');
+    L.push('**Directional — you must write the inverse edge on the target page:**');
+    L.push('');
+    L.push('| type | inverse | meaning |');
+    L.push('|---|---|---|');
+    L.push('| `causes` | `caused-by` | A is a documented cause or driver of B |');
+    L.push('| `evidences` | `evidenced-by` | A is primary evidence for the claim B makes |');
+    L.push('| `instantiates` | `instance-of` | A is a concrete case of pattern/concept B |');
+    L.push('| `precedes` | `follows` | temporal or causal sequence |');
+    L.push('| `supplies` | `supplied-by` | material or logistical dependency |');
+    L.push('| `component-of` | `contains` | part / whole |');
+    L.push('');
+    L.push('**Symmetric — same type on both pages:**');
+    L.push('');
+    L.push('| type | meaning |');
+    L.push('|---|---|');
+    L.push('| `contradicts` | the pages make incompatible claims — **must** also carry a `> **CONTRADICTION:**` block |');
+    L.push('| `parallels` | same structure in different domains or eras — **the highest-value type** |');
+    L.push('| `mirrors` | inverted or complementary structure |');
+    L.push('| `co-occurs` | documented joint presence, no causation asserted — the weakest legal type |');
+    L.push('');
+    L.push('**Directional, no inverse required:** `escalates`, `resolves`, `contextualizes`.');
+    L.push('');
+    L.push('Rules that matter:');
+    L.push('');
+    L.push('- **Invent no types.** Anything outside this table fails validation.');
+    L.push('- **The type is the analytical commitment.** Choosing `co-occurs` when the evidence');
+    L.push('  supports `causes` is a substance failure; choosing `causes` when it only supports');
+    L.push('  `co-occurs` is a provenance failure.');
+    L.push('- **3–10 connections per page.** Needing more usually means a synthesis page is missing.');
+    L.push('- **Any `causes`, `contradicts`, `instantiates` or `parallels` edge must also be');
+    L.push('  argued in the body prose** of at least one of the two pages — a sentence where the');
+    L.push('  `[[wikilink]]` sits inside the argument, not in a list.');
+    L.push('- **A new page with no inbound `[[wikilink]]` from existing prose is an orphan** and');
+    L.push('  will be flagged. Always add at least one prose mention on a page that already exists.');
+    L.push('');
+
+    L.push('## 5. Procedure — do this in order');
+    L.push('');
+    L.push('### 5.1 File every capture into `raw/` first');
+    L.push('');
+    L.push('For each entry in §10, create **one file**, verbatim, at:');
+    L.push('');
+    L.push('```');
+    L.push('raw/<domain>/captures/<suggested raw filename from the entry table>');
+    L.push('```');
+    L.push('');
+    L.push('Pick `<domain>` from the nine, matching what the capture is mostly about. The file');
+    L.push('content is the entry\'s metadata header followed by its verbatim text — do not clean');
+    L.push('it up, do not paraphrase it, do not correct its grammar. `raw/` is immutable source');
+    L.push('and its whole value is being untouched. Every page you then write cites this path in');
+    L.push('`sources:`.');
+    L.push('');
+    L.push('### 5.2 Decide the target pages');
+    L.push('');
+    L.push('- If the entry declares a **target**, that page is authoritative — apply the capture');
+    L.push('  there first, then propagate.');
+    L.push('- Otherwise: search the manifest (§1) for every person, place, event, employer and');
+    L.push('  concept the capture names. Prefer **revising an existing page** over creating a new');
+    L.push('  one. Create a new page only when a genuinely new entity appears.');
+    L.push('- A single capture usually touches **three or more** pages: the entity it is about,');
+    L.push('  the period it happened in, and the people in it. Ingesting it into one page and');
+    L.push('  stopping is the most common failure.');
+    L.push('');
+    L.push('### 5.3 Write');
+    L.push('');
+    L.push('The first paragraph of any page must answer the stranger\'s question — for a person:');
+    L.push('who is this to Dan, what is the current state, what is the defining thing; for an');
+    L.push('event: what happened and what changed. **Order by consequence, not chronology.**');
+    L.push('State load-bearing conclusions plainly rather than hedging them into mush. Put dates');
+    L.push('and counts in tables. End with a **Gaps** paragraph naming what is still unknown.');
+    L.push('');
+    L.push('When you add to an existing page, integrate the material into the prose where it');
+    L.push('belongs. Do not append a dated "New information" section at the bottom — that is how');
+    L.push('pages rot into changelogs.');
+    L.push('');
+    L.push('### 5.4 Wire it');
+    L.push('');
+    L.push('Add the typed edges per §4, **including the inverse edge on every target page**, and');
+    L.push('at least one prose `[[wikilink]]` for each load-bearing edge. Bump `date_modified`');
+    L.push('on every page you touched.');
+    L.push('');
+    L.push('### 5.5 Log it');
+    L.push('');
+    L.push('Append to `log.md` — newest at the bottom, never edit existing entries:');
+    L.push('');
+    L.push('```markdown');
+    L.push('## [YYYY-MM-DD] ingest | <domain> | factstory capture — <short description>');
+    L.push('<A short paragraph: what came in, which pages it changed, what it settled, what it');
+    L.push('opened. Write what a reader six months from now would need. Name anything you were');
+    L.push('unsure about — this log is where uncertainty is allowed to live.>');
+    L.push('```');
+    L.push('');
+    L.push('### 5.6 Update the indexes');
+    L.push('');
+    L.push('If you created any page, add it to its domain index (`wiki/<domain>/index.md`) as a');
+    L.push('link plus a one-line summary. Indexes are navigation only — no prose, no history.');
+    L.push('');
+
+    L.push('## 6. Optional, and the highest-value thing you can do: climb');
+    L.push('');
+    L.push('If — and only if — these captures make you notice **the same shape across three or');
+    L.push('more pages spanning two or more domains**, and nothing in the wiki already states it,');
+    L.push('write a synthesis page.');
+    L.push('');
+    L.push('The test, and it is strict: *can you write one sentence that is true of every member,');
+    L.push('is **not** true of the corpus generally, and that a stranger could try to falsify?*');
+    L.push('If not, do not write the page — note the near-miss in your summary instead. A page');
+    L.push('whose thesis is "these things are related" is worse than no page.');
+    L.push('');
+    L.push('If you can, it carries: `page_type: synthesis`, `knowledge: earned`, a');
+    L.push('`synthesizes:` list naming every member page, the thesis in the first two sentences,');
+    L.push('a table of members against the rule, the counterexample or control that makes it a');
+    L.push('claim rather than a mood, **at least one falsifiable prediction**, and a Gaps section.');
+    L.push('Each member page gets an `instantiates` edge pointing back at it.');
+    L.push('');
+    L.push('Do not climb to raise a number. Three thin pages stacked make one thin page.');
+    L.push('');
+
+    L.push('## 7. Output format');
+    L.push('');
+    L.push('Think out loud first if it helps — everything outside these blocks is ignored. Then');
+    L.push('emit **complete files, never diffs**, so applying your answer stays dumb and safe:');
+    L.push('');
+    L.push('```');
+    L.push('===FILE: wiki/people/example.md===');
+    L.push('<the entire new content of the file, frontmatter included>');
+    L.push('===END===');
+    L.push('');
+    L.push('===FILE: raw/self/captures/2026-01-01_120000_example.md===');
+    L.push('<the verbatim capture>');
+    L.push('===END===');
+    L.push('');
+    L.push('===LOG: ingest | <domain> | factstory capture — <one line>===');
+    L.push('');
+    L.push('===COMMIT: ingest: <short description>===');
+    L.push('```');
+    L.push('');
+    L.push('Any number of `FILE` blocks; exactly one `LOG` and one `COMMIT`. For a page you are');
+    L.push('*revising*, the `FILE` block must contain the **whole page** — original content plus');
+    L.push('your changes — not just the new part. If you cannot reproduce a page in full because');
+    L.push('you could not read it, do not emit a `FILE` block for it; describe the change you');
+    L.push('wanted instead and let a human apply it.');
+    L.push('');
+    L.push('If the repository is checked out locally, `bin/ingest-apply <your-response>.md` will');
+    L.push('validate and apply this format directly.');
+    L.push('');
+
+    L.push('## 8. Getting it into a pull request');
+    L.push('');
+    L.push('Three routes. Use the first one available to you.');
+    L.push('');
+    L.push('### Route A — a terminal with the repo cloned');
+    L.push('');
+    L.push('```bash');
+    L.push('git clone https://github.com/caakehorn/wiki-brain && cd wiki-brain');
+    L.push('git checkout -b factstory/' + stamp(now).slice(0, 10) + '-manual-captures');
+    L.push('# save the model response to response.md, then:');
+    L.push('bin/ingest-apply response.md');
+    L.push('bin/wiki-lint && bin/wiki-connect check && bin/wiki-climb check   # all must be 0 errors');
+    L.push('git add -A && git commit -m "ingest: factstory manual captures"');
+    L.push('git push -u origin HEAD');
+    L.push('# then open the PR from the link git prints');
+    L.push('```');
+    L.push('');
+    L.push('### Route B — browser only, no terminal *(the route this file exists for)*');
+    L.push('');
+    L.push('1. Go to `https://github.com/caakehorn/wiki-brain`.');
+    L.push('2. Press `.` (period) to open the repo in the browser editor, **or** use');
+    L.push('   **Add file → Create new file** for each file in turn.');
+    L.push('3. For each `===FILE:===` block, enter its path as the filename and paste its');
+    L.push('   contents. Creating a file at `wiki/people/new-person.md` creates the folders too.');
+    L.push('4. On the **first** file only: choose **"Create a new branch for this commit and');
+    L.push('   start a pull request"**, name the branch');
+    L.push('   `factstory/' + stamp(now).slice(0, 10) + '-manual-captures`, and commit.');
+    L.push('5. For every subsequent file, commit **to that same branch** (the branch selector');
+    L.push('   at the top left) — not to `main`.');
+    L.push('6. Edit `log.md` the same way and append your `LOG` entry at the bottom.');
+    L.push('7. Open the PR. Title it with the `COMMIT` line; paste your summary as the body.');
+    L.push('');
+    L.push('**Do not commit to `main` directly.** The whole point of the branch is that a human');
+    L.push('reads the diff before it becomes truth.');
+    L.push('');
+    L.push('### Route C — the GitHub API with a token');
+    L.push('');
+    L.push('With a fine-grained token scoped to `caakehorn/wiki-brain` with **Contents:');
+    L.push('read+write** and **Pull requests: read+write**:');
+    L.push('');
+    L.push('```bash');
+    L.push('BR=factstory/' + stamp(now).slice(0, 10) + '-manual-captures');
+    L.push('SHA=$(gh api repos/caakehorn/wiki-brain/git/ref/heads/main --jq .object.sha)');
+    L.push('gh api repos/caakehorn/wiki-brain/git/refs -f ref="refs/heads/$BR" -f sha="$SHA"');
+    L.push('# PUT each file to /contents/<path> with branch=$BR, then:');
+    L.push('gh pr create --base main --head "$BR" --title "ingest: factstory manual captures" --draft');
+    L.push('```');
+    L.push('');
+
+    L.push('## 9. Pre-flight checklist — run this before you open the PR');
+    L.push('');
+    L.push('The repository has three validators (`bin/wiki-lint`, `bin/wiki-connect check`,');
+    L.push('`bin/wiki-climb check`) that must report **0 errors**. If you cannot run them, check');
+    L.push('these by hand — they are what the validators actually test:');
+    L.push('');
+    L.push('- [ ] Every `sources:` path exists — i.e. you emitted a `FILE` block creating it.');
+    L.push('- [ ] No `wiki/` path in `sources:`; no `raw/` path in `synthesizes:`.');
+    L.push('- [ ] Every `connections:` entry has a `page`, a `type` from §4, and a `claim` that');
+    L.push('      is a complete sentence of at least 25 characters.');
+    L.push('- [ ] Every directional edge has its inverse written on the target page.');
+    L.push('- [ ] Every `[[wikilink]]` points at a page that exists (or that you are creating).');
+    L.push('- [ ] Every new page has at least one inbound `[[wikilink]]` from existing prose.');
+    L.push('- [ ] Every page you touched has `date_modified` bumped to today.');
+    L.push('- [ ] `page_type`, `status` and `domain` are all values from §3, spelled exactly.');
+    L.push('- [ ] Every `domain: people` page carries an `infobox:` block.');
+    L.push('- [ ] No relative dates anywhere ("last year", "a few months ago").');
+    L.push('- [ ] No agent chatter in any `wiki/` page.');
+    L.push('- [ ] `log.md` appended, not edited.');
+    L.push('');
+    L.push('Then, in the PR body, state plainly: what you added, what you inferred rather than');
+    L.push('recorded, what you could not verify, and anything you decided **not** to do. That');
+    L.push('last one matters most — the operator needs to know where you stopped.');
+    L.push('');
+
+    L.push('---');
+    L.push('');
+    L.push('## 10. THE PAYLOAD — ' + n + ' captured entr' + (n === 1 ? 'y' : 'ies'));
+    L.push('');
+    L.push('Everything below this line is source material. Everything above it is instruction.');
+    L.push('');
+    for (var i = 0; i < queue.length; i++) L.push(briefEntry(queue[i], i));
+    L.push('---');
+    L.push('');
+    L.push('_End of brief. ' + n + ' entr' + (n === 1 ? 'y' : 'ies') + ', generated ' + now + '._');
+    L.push('');
+    return L.join('\n');
+  }
+  function briefName() {
+    return stamp(new Date().toISOString()) + '_wiki-brain-ingest-brief-' + queue.length + '.md';
+  }
+
   function fileName() {
     return stamp(new Date().toISOString()) + '_factstory-queue-' + queue.length + '.md';
   }
@@ -351,6 +785,21 @@
     flash('msg', 'the queue is empty', true);
     return false;
   }
+  $('brief').addEventListener('click', function () {
+    if (!needQueue()) return;
+    var t = briefMd();
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(t).then(
+        function () { flash('msg', 'ingest brief copied (' + queue.length + ' entries, ' +
+          Math.round(t.length / 1024) + ' KB) — paste it into any capable LLM'); },
+        function () { flash('msg', 'clipboard blocked — use DOWNLOAD THE INGEST BRIEF instead', true); });
+    } else flash('msg', 'clipboard unavailable — use DOWNLOAD THE INGEST BRIEF instead', true);
+  });
+  $('briefdl').addEventListener('click', function () {
+    if (!needQueue()) return;
+    download(briefName(), briefMd());
+    flash('msg', 'ingest brief downloaded — it carries its own instructions, hand it to any model');
+  });
   $('copy').addEventListener('click', function () {
     if (!needQueue()) return;
     var t = queueMd();

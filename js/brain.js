@@ -14,10 +14,12 @@
 //                          and its arguments light up, the rest dim.
 //   · FRONTIERS PULL.      the thinnest districts are marked as the holes to fill.
 //
-// Nothing here is readable content — there is none in brain.json. The one
-// readable surface is the curated self-portrait at the core, passed in by the
-// page. Determinism holds: every position is seeded by the node's own id, so the
-// same brain always renders the same mind.
+// Nodes are IDENTIFIED (schema brain/identified-1): each one carries the wiki
+// entry it represents — title, summary, tags — plus an infobox of synthetics the
+// builder derived from the topology (rank, reach, role, kin). Hovering a node
+// names it; selecting it opens what it is and what it does. Determinism holds:
+// every position is seeded by the node's own id, so the same brain always
+// renders the same mind.
 // ─────────────────────────────────────────────────────────────────────────────
 (function () {
   'use strict';
@@ -93,6 +95,9 @@
       var sinLat = Math.sin(lat);
       return {
         id: n.id, domain: n.domain, altitude: n.altitude, mass: n.mass,
+        title: n.title || n.id, page_type: n.page_type, status: n.status,
+        summary: n.summary || '', tags: n.tags || [], created: n.created,
+        box: n.box || null,
         col: arc.col, deg: 0,
         x: rad * sinLat * Math.cos(lon),
         y: rad * Math.cos(lat),
@@ -101,7 +106,8 @@
       };
     });
 
-    var idx = {}; N.forEach(function (n, i) { idx[n.id] = i; });
+    var idx = {}; byId = {};
+    N.forEach(function (n, i) { idx[n.id] = i; byId[n.id] = n; });
     E = [];
     (data.edges || []).forEach(function (e) {
       var a = idx[e.from], b = idx[e.to];
@@ -190,6 +196,23 @@
       }
     }
     g.globalCompositeOperation = 'source-over';
+
+    // Name the node under the cursor. The single largest legibility win: you can
+    // read the mind by sweeping it, instead of clicking blind.
+    var lab = hover >= 0 ? hover : sel;
+    if (lab >= 0 && N[lab].sz > 0) {
+      var ln = N[lab];
+      g.font = '600 12px "Space Grotesk", system-ui, sans-serif';
+      var text = ln.title, tw = g.measureText(text).width;
+      var lx = ln.sx + 12, ly = ln.sy - 10;
+      if (lx + tw + 10 > W) lx = ln.sx - tw - 12;
+      g.fillStyle = 'rgba(3,4,10,.82)';
+      g.fillRect(lx - 5, ly - 12, tw + 10, 18);
+      g.strokeStyle = 'rgba(' + ln.col.join(',') + ',.55)'; g.lineWidth = 1;
+      g.strokeRect(lx - 5, ly - 12, tw + 10, 18);
+      g.fillStyle = 'rgba(240,248,244,.96)';
+      g.fillText(text, lx, ly + 1);
+    }
   }
   function adj(s, i) {
     for (var e = 0; e < E.length; e++) {
@@ -250,20 +273,35 @@
   }
   function info(i) {
     var n = N[i];
-    var types = {};
-    for (var e = 0; e < E.length; e++) {
-      var s = E[e][0] === i, t = E[e][1] === i;
-      if (!s && !t) continue;
-      // edge type isn't stored per-pair here; recover from data.edges by index order
-    }
-    // recover typed neighbours from the source edge list (kept aligned with E)
-    var byType = {}, nb = [];
+    // Typed neighbours, with the argued claim attached. The claim IS the
+    // knowledge — a chain of typed edges is an argument the graph composes —
+    // so the inspector gets the sentence, not just the count.
+    var byType = {}, args = [];
     (data.edges || []).forEach(function (ed) {
-      if (ed.from === n.id) { byType[ed.type] = (byType[ed.type] || 0) + 1; }
-      else if (ed.to === n.id) { byType[ed.type] = (byType[ed.type] || 0) + 1; }
+      var out = ed.from === n.id, inn = ed.to === n.id;
+      if (!out && !inn) return;
+      byType[ed.type] = (byType[ed.type] || 0) + 1;
+      if (ed.claim) {
+        var other = byId[out ? ed.to : ed.from];
+        args.push({
+          dir: out ? 'out' : 'in', type: ed.type, claim: ed.claim,
+          id: out ? ed.to : ed.from,
+          title: other ? other.title : (out ? ed.to : ed.from),
+          domain: other ? other.domain : ''
+        });
+      }
     });
-    return { domain: n.domain, altitude: n.altitude, mass: n.mass, degree: n.deg, types: byType };
+    args.sort(function (a, b) { return a.type < b.type ? -1 : 1; });
+    return {
+      id: n.id, title: n.title, domain: n.domain, page_type: n.page_type,
+      status: n.status, altitude: n.altitude, mass: n.mass, degree: n.deg,
+      summary: n.summary, tags: n.tags, created: n.created,
+      box: n.box, types: byType, args: args
+    };
   }
+
+  // Index by id so an edge endpoint can be resolved to a titled node.
+  var byId = {};
 
   var api = {
     build: build,

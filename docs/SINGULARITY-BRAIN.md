@@ -150,6 +150,11 @@ domains := { <domain>: count }                           // the district sizes
 frontier := { domain, gap, weight }                      // named holes the graph knows it has
 ```
 
+> **SUPERSEDED 2026-08-01 (§9.1).** The shape above is the retired
+> `brain/opaque-1`. The live schema is `brain/identified-1`: nodes carry the real
+> wiki path, title, summary, tags and a derived infobox; edges carry their argued
+> claim. The gate in front of the page is the privacy boundary and is unchanged.
+
 - `id` is a stable hash of the real page path, so edges resolve consistently
   while the path itself (which can name a person or a condition) never ships.
 - `altitude` ∈ {ground, junction, doctrine} — derived from page type, drives depth.
@@ -208,6 +213,11 @@ sexual and financial specifics, real people named with real handles. **None of
 that can be rendered publicly and ungated.** This is not a small caveat; it is
 the first architectural decision, and I will not ship a build that resolves it
 by accident.
+
+> **SUPERSEDED 2026-08-01 — see §9.1. The gate stayed; the second boundary
+> behind it did not.** The reasoning below is kept intact because it is the
+> record of why the projection was built opaque, and the argument that retired
+> it only makes sense against it.
 
 **Dan's decision (2026-07-31): a new consent layer + only the self-overview
 readable + live sync.** The most conservative posture on the board, and the
@@ -279,6 +289,53 @@ Each phase is independently shippable. We stop and look after each.
    existing `wiki-brain` sync so the mind updates when the brain moves, with the
    fail-closed redaction enforced on every sync.
 
+### 9.1 REVERSED 2026-08-01 — the projection is identified, not opaque
+
+Decision 2 above ("only the self-overview is readable") rested on a privacy
+argument that does not survive looking at how the site is actually assembled:
+
+**`brain.html` and `wiki.html` are sealed by the same gate.** Both load
+`js/singate.js` — consent + IP + name + passphrase — and `wiki.html` serves the
+**full text of all 325 pages** behind it. The anonymized projection therefore
+never protected anything. Every visitor who could open the mind could already
+open the reader and read every page in full.
+
+What the opacity did accomplish was making the one surface that should be most
+legible the only one deliberately unreadable: a graph you cannot learn anything
+from, sitting next to a reader that tells you everything. The rendered "mind" was
+a topology of unnamed dots — the opposite of a model of a person.
+
+**The gate is unchanged and remains the privacy boundary.** What changed is that
+the builder now assumes it instead of re-implementing a second, weaker boundary
+behind it. `data/brain.json` (schema `brain/identified-1`) now carries:
+
+```
+node := { id: the real wiki path, title, domain, page_type, status, altitude,
+          mass, summary, tags, created,
+          box: { tier, words, sources, arguments, inbound, outbound,
+                 districts, reach, rank, contested, role, types, kin[] } }
+edge := { from, to, type, claim }        // the argued claim, which IS the knowledge
+```
+
+`box` is the **infobox: derived synthetics that exist in no wiki page.** They are
+what the graph knows about itself once read as a graph — PageRank percentile
+(`rank`), cross-district edge share (`reach`), how many districts a node touches,
+a plain-language `role` (hub / bridge / cited / leaf / load-bearing / contested /
+orphan), and `kin`: the nearest pages by neighbour-set and tag overlap, each
+flagged `linked: true|false`. **An unlinked kin pair is a connection the graph
+can see and nobody has made** — the signal `wiki-brain`'s connection queue mines,
+surfaced per node. The current build sees 663 of them.
+
+The fail-closed guard was rewritten rather than removed. It no longer checks for
+opacity; it checks **integrity** — every node resolves to a real wiki entry, every
+edge lands on a real node, no kin points off-graph — and still refuses to write on
+failure. A mind that renders nodes it cannot explain is the failure this reversal
+exists to fix.
+
+`js/brain.js` names the node under the cursor on the canvas, and the inspector
+opens identity → infobox → the argued claims the node actually makes → nearest
+kin → a deep link into `wiki.html` for the full text.
+
 ## 10. Build status
 
 - **Phase 1 — the opaque projection: SHIPPED.** `tools/build-brain.js` compiles
@@ -302,4 +359,11 @@ Each phase is independently shippable. We stop and look after each.
   resting on no ground of its own.*
 
   That is the Phase 5 rebalance brief, written by the graph about itself.
+- **Phase 3.5 — the mind became readable (2026-08-01).** The opaque projection
+  was retired (§9.1). Nodes are now tied to the entries they represent and carry
+  a derived infobox; edges carry their argued claim. `brain.html` went from a
+  topology of unnamed dots to something you can actually read a life out of —
+  hover names a node, selecting one gives you what it is, what it does in the
+  structure, the arguments it makes in its own words, and the pages it most
+  resembles but has never been linked to.
 - **Phase 4 — the loop, visible:** next.

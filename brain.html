@@ -52,17 +52,45 @@
   .legend .hint { margin-top: 8px; color: #55607a; font-size: 8.5px; letter-spacing: .14em; max-width: 210px; line-height: 1.7; }
 
   /* inspector, bottom-right */
-  .inspect { position: fixed; right: 22px; bottom: 16px; z-index: 3; width: 258px; pointer-events: auto;
-    border: 1px solid rgba(176,38,255,.28); background: rgba(6,8,16,.82); backdrop-filter: blur(10px);
+  .inspect { position: fixed; right: 22px; bottom: 16px; z-index: 3; width: 330px; max-height: 78vh; overflow-y: auto; pointer-events: auto;
+    border: 1px solid rgba(176,38,255,.28); background: rgba(6,8,16,.88); backdrop-filter: blur(10px);
     padding: 16px 16px 14px; transform: translateY(140%); transition: transform .28s cubic-bezier(.2,.7,.2,1); }
   .inspect.on { transform: translateY(0); }
+  .inspect::-webkit-scrollbar { width: 4px; }
+  .inspect::-webkit-scrollbar-thumb { background: rgba(176,38,255,.4); }
   .inspect .h { font-size: 9px; letter-spacing: .28em; color: #cf9dff; }
-  .inspect .dom { margin-top: 8px; font-family: 'Unbounded', sans-serif; font-weight: 900; font-size: 22px; color: #fff; text-transform: capitalize; }
-  .inspect .meta { margin-top: 6px; font-size: 10px; letter-spacing: .1em; color: #8f9ab2; line-height: 1.9; }
-  .inspect .meta b { color: #9fe0ff; }
-  .inspect .types { margin-top: 10px; display: flex; flex-wrap: wrap; gap: 5px; }
+  .inspect .ttl { margin-top: 7px; font-family: 'Unbounded', sans-serif; font-weight: 900;
+    font-size: 19px; line-height: 1.18; color: #fff; }
+  .inspect .dom { margin-top: 7px; font-size: 9px; letter-spacing: .2em; text-transform: uppercase; color: #8f9ab2; }
+  .inspect .dom b { color: #cf9dff; font-weight: 600; }
+  .inspect .sum { margin-top: 10px; font-family: 'Space Grotesk', sans-serif; font-size: 12px;
+    line-height: 1.62; color: #b9c6dc; }
+  /* the infobox — the derived layer, in no source */
+  .inspect .box { margin-top: 13px; border: 1px solid rgba(120,140,160,.22); }
+  .inspect .box .bh { font-size: 8px; letter-spacing: .26em; color: #7fe3ff;
+    padding: 6px 9px; border-bottom: 1px solid rgba(120,140,160,.18); }
+  .inspect .box dl { margin: 0; display: grid; grid-template-columns: 1fr auto; gap: 0; }
+  .inspect .box dt, .inspect .box dd { margin: 0; padding: 4px 9px; font-size: 10px; letter-spacing: .06em; }
+  .inspect .box dt { color: #6f7a90; }
+  .inspect .box dd { color: #d7e6f5; text-align: right; font-variant-numeric: tabular-nums; }
+  .inspect .box dd b { color: #9fe0ff; font-weight: 600; }
+  .inspect .box .role { color: #b6ff8f; text-transform: uppercase; letter-spacing: .14em; font-size: 9px; }
+  .inspect .sec { margin-top: 13px; font-size: 8px; letter-spacing: .26em; color: #cf9dff; }
+  .inspect .types { margin-top: 7px; display: flex; flex-wrap: wrap; gap: 5px; }
   .inspect .types span { font-size: 8.5px; letter-spacing: .08em; color: #cbd8ee; border: 1px solid rgba(120,140,160,.3); padding: 3px 6px; }
+  .inspect .args { margin-top: 7px; }
+  .inspect .args .a { border-left: 2px solid rgba(176,38,255,.45); padding: 4px 0 5px 8px; margin-bottom: 7px; }
+  .inspect .args .a .t { font-size: 8.5px; letter-spacing: .14em; text-transform: uppercase; color: #7fe3ff; }
+  .inspect .args .a .t i { font-style: normal; color: #6f7a90; }
+  .inspect .args .a .c { margin-top: 3px; font-family: 'Space Grotesk', sans-serif; font-size: 11.5px;
+    line-height: 1.55; color: #c3d2e6; }
+  .inspect .kin { margin-top: 7px; }
+  .inspect .kin .k { display: flex; justify-content: space-between; gap: 8px; font-size: 10px;
+    color: #b9c6dc; padding: 3px 0; border-bottom: 1px dashed rgba(120,140,160,.16); }
+  .inspect .kin .k .s { color: #6f7a90; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .inspect .kin .k.un .s { color: #ffc43c; }
   .inspect .note { margin-top: 11px; font-size: 8.5px; letter-spacing: .1em; color: #55607a; line-height: 1.6; }
+  .inspect .note a { color: #b6ff8f; }
 
   /* the core button + reader */
   .corebtn { position: fixed; left: 50%; bottom: 20px; transform: translateX(-50%); z-index: 3; pointer-events: auto;
@@ -156,13 +184,26 @@
 <div class="legend" id="legend" aria-hidden="true"></div>
 
 <div class="inspect" id="inspect" aria-live="polite">
-  <div class="h">NODE</div>
-  <div class="dom" id="i-dom">—</div>
-  <div class="meta" id="i-meta"></div>
+  <div class="h">ENTRY</div>
+  <div class="ttl" id="i-title">—</div>
+  <div class="dom" id="i-dom"></div>
+  <div class="sum" id="i-sum"></div>
+
+  <div class="box">
+    <div class="bh">DERIVED — IN NO SOURCE</div>
+    <dl id="i-box"></dl>
+  </div>
+
+  <div class="sec" id="i-argh" hidden>ARGUMENTS IT MAKES</div>
+  <div class="args" id="i-args"></div>
+
+  <div class="sec" id="i-typh" hidden>EDGE TYPES</div>
   <div class="types" id="i-types"></div>
-  <div class="note">This node has no readable content — by design. What you can
-    know about it is its place, its weight, and how it argues. The words live
-    only at the core.</div>
+
+  <div class="sec" id="i-kinh" hidden>NEAREST KIN</div>
+  <div class="kin" id="i-kin"></div>
+
+  <div class="note" id="i-note"></div>
 </div>
 
 <button class="corebtn" id="corebtn">◇ OPEN THE CORE</button>
@@ -210,6 +251,7 @@
     document.getElementById('count').innerHTML =
       '<b>' + (c.nodes || 0) + '</b> NODES · <b>' + (c.edges || 0) + '</b> ARGUMENTS · <b>' +
       (c.domains || 0) + '</b> DISTRICTS';
+    window.__brainDomains = (c.domains || 9);
     buildLegend(brain, api);
     buildCore(brain);
   }
@@ -270,18 +312,72 @@
     L.appendChild(hint);
   }
 
+  // The node IS the entry. Identity first (what is this), then the derived
+  // infobox (what does it do in the structure), then the arguments it actually
+  // makes, then the kin the graph can see but nobody has linked yet.
   function inspect(node) {
     var box = document.getElementById('inspect');
     if (!node) { box.classList.remove('on'); return; }
-    document.getElementById('i-dom').textContent = node.domain;
-    document.getElementById('i-meta').innerHTML =
-      'altitude <b>' + node.altitude + '</b><br>mass <b>' + node.mass.toFixed(3) + '</b>' +
-      '<br>arguments <b>' + node.degree + '</b>';
-    var t = document.getElementById('i-types'); t.innerHTML = '';
-    Object.keys(node.types).sort(function (a, b) { return node.types[b] - node.types[a]; }).slice(0, 8).forEach(function (k) {
-      var s = document.createElement('span'); s.textContent = k + ' ×' + node.types[k]; t.appendChild(s);
-    });
+    var $ = function (id) { return document.getElementById(id); };
+    var pct = function (x) { return Math.round(x * 100) + '%'; };
+
+    $('i-title').textContent = node.title;
+    $('i-dom').innerHTML = '<b>' + node.domain + '</b> · ' + node.page_type +
+      ' · ' + node.altitude + (node.status ? ' · ' + node.status : '');
+    $('i-sum').textContent = node.summary || '';
+
+    var b = node.box || {};
+    var rows = [
+      ['tier', b.tier || '—'],
+      ['role', '<span class="role">' + (b.role || '—') + '</span>'],
+      ['arguments', '<b>' + (b.arguments || 0) + '</b> (' + (b.inbound || 0) + ' in / ' + (b.outbound || 0) + ' out)'],
+      ['load-bearing rank', '<b>' + pct(b.rank || 0) + '</b>'],
+      ['cross-district reach', pct(b.reach || 0)],
+      ['districts touched', (b.districts || 0) + ' of ' + (window.__brainDomains || 9)],
+      ['words', (b.words || 0).toLocaleString()],
+      ['raw sources', b.sources || 0],
+      ['first written', node.created || '—']
+    ];
+    if (b.contested) rows.push(['open contradictions', '<b>' + b.contested + '</b>']);
+    $('i-box').innerHTML = rows.map(function (r) {
+      return '<dt>' + r[0] + '</dt><dd>' + r[1] + '</dd>';
+    }).join('');
+
+    var A = $('i-args'), args = (node.args || []).slice(0, 6);
+    $('i-argh').hidden = !args.length;
+    A.innerHTML = args.map(function (a) {
+      return '<div class="a"><div class="t">' + a.type +
+        ' <i>' + (a.dir === 'out' ? '→' : '←') + ' ' + esc(a.title) + '</i></div>' +
+        '<div class="c">' + esc(a.claim) + '</div></div>';
+    }).join('');
+
+    var T = $('i-types'), keys = Object.keys(node.types || {})
+      .sort(function (x, y) { return node.types[y] - node.types[x]; }).slice(0, 8);
+    $('i-typh').hidden = !keys.length;
+    T.innerHTML = keys.map(function (k) { return '<span>' + k + ' \u00d7' + node.types[k] + '</span>'; }).join('');
+
+    var K = $('i-kin'), kin = (b.kin || []).slice(0, 4);
+    $('i-kinh').hidden = !kin.length;
+    K.innerHTML = kin.map(function (k) {
+      return '<div class="k' + (k.linked ? '' : ' un') + '">' +
+        '<span>' + esc(k.title) + '</span>' +
+        '<span class="s">' + Math.round(k.score * 100) + '%' + (k.linked ? '' : ' · unlinked') + '</span></div>';
+    }).join('');
+
+    var unl = kin.filter(function (k) { return !k.linked; }).length;
+    $('i-note').innerHTML = 'Kin is neighbour-set and tag overlap, not a written link — ' +
+      (unl ? '<b>' + unl + (unl === 1 ? ' of these has' : ' of these have') +
+        ' never been connected to this page.</b> That is work the graph can see ' +
+        'and nobody has done yet.'
+           : 'every one of these is already linked.') +
+      '<br>Full text: <a href="./wiki.html#' + encodeURIComponent(node.id) + '">open in the reader ▸</a>';
+
     box.classList.add('on');
+  }
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c];
+    });
   }
 
   var reader = document.getElementById('reader');
