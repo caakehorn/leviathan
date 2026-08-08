@@ -900,7 +900,7 @@ class Component extends DCLogic {
     // archive, the wiki is still being written. Take the page count from the
     // data that just loaded, then the meta file, and only then a literal.
     const wp = (this.WK && this.WK.pages.length) ||
-      (this.state.wmeta && this.state.wmeta.pages) || 421;
+      (this.state.wmeta && this.state.wmeta.pages) || 438;
     const target = { m: 181650, t: 568, p: 548, k: 41971, w: 1121, wp };
     const step = () => {
       if (!this.alive) return;
@@ -4601,11 +4601,14 @@ class Component extends DCLogic {
       canvasRef: this.canvasRef,
       cMsgs: this.fmt(s.cnt.m), cThreads: this.fmt(s.cnt.t), cPlaces: this.fmt(s.cnt.p), cKm: this.fmt(s.cnt.k), cWorks: this.fmt(s.cnt.w), cPages: this.fmt(s.cnt.wp),
       // Landing-section wiki figures. These render before anything is decrypted,
-      // so they come from data/wiki-meta.json rather than the archive; the
-      // fallbacks are only what shows if that 175-byte fetch fails.
-      wPages: this.fmt((s.wmeta && s.wmeta.pages) || 421),
-      wEdges: this.fmt((s.wmeta && s.wmeta.typed_edges) || 1019),
-      wWords: this.fmt((s.wmeta && s.wmeta.words) || 273229),
+      // so they come from data/wiki-meta.json rather than the archive. The
+      // literals are only reached if that 175-byte fetch fails outright — the
+      // sections do not mount until the splash is dismissed, by which time it
+      // has long since resolved — so treat them as a floor, not a value worth
+      // maintaining. The wiki only ever grows.
+      wPages: this.fmt((s.wmeta && s.wmeta.pages) || 438),
+      wEdges: this.fmt((s.wmeta && s.wmeta.typed_edges) || 1273),
+      wWords: this.fmt((s.wmeta && s.wmeta.words) || 310058),
       wDomains: this.fmt((s.wmeta && s.wmeta.domains) || 9)
     };
   }
