@@ -347,9 +347,31 @@ def main() -> int:
     tmp.write_text(json.dumps(out, ensure_ascii=False, separators=(",", ":")),
                    encoding="utf-8")
     tmp.replace(args.out)
+
+    # The same headline counts, alone, in a file small enough to fetch from a
+    # page that has no business pulling 2.5 MB. void.html's landing sections
+    # quote the size of the wiki before the archive is unlocked; without this
+    # they can only quote a number typed by hand, which is how they came to
+    # claim 343 pages long after the corpus passed 400.
+    meta = {
+        "source": out["source"],
+        "source_commit": sha,
+        "pages": len(pages),
+        "typed_edges": typed,
+        "words": words,
+        "domains": len({p["domain"] for p in pages}),
+        "log_ops": len(ops),
+    }
+    meta_path = args.out.with_name("wiki-meta.json")
+    meta_tmp = meta_path.with_suffix(meta_path.suffix + ".tmp")
+    meta_tmp.write_text(json.dumps(meta, ensure_ascii=False, separators=(",", ":")),
+                        encoding="utf-8")
+    meta_tmp.replace(meta_path)
+
     print(f"{args.out}: {len(pages)} pages, {typed} typed edges, "
           f"{words:,} words, {len(ops)} log ops "
           f"({args.out.stat().st_size / 1e6:.1f} MB)")
+    print(f"{meta_path}: {meta_path.stat().st_size} B")
     return 0
 
 

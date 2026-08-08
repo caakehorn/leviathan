@@ -50,9 +50,10 @@ js/
 data/
   leviathan.enc       # AES-256-GCM encrypted content bundle (decrypted in-browser)
   wiki-data.json      # WIKI section dataset, built from github.com/caakehorn/wiki-brain
+  wiki-meta.json      # the same headline counts alone, ~175 B, for pages that cannot afford 2.5 MB
   transcript.json     # the message record behind transcript.html, built from a CSV export
 tools/
-  build-wiki-data.py  # regenerates data/wiki-data.json from a wiki-brain checkout
+  build-wiki-data.py  # regenerates data/wiki-data.json + data/wiki-meta.json from a wiki-brain checkout
   encrypt.py          # writes blobs in the site's AES-256-GCM format
   build-transcript.py # regenerates data/transcript.json from an iMessage CSV export
   build-transcript-index.js # regenerates js/transcript-index.js from the two above
@@ -106,6 +107,16 @@ TEMPLE`, and `05 — OPEN A CHANNEL`. **PHASE 02** is the LEVIATHAN console
 itself, 37 instruments over two sections; the corpus and wiki halves have
 separate entry points from the void (`enterCorpus` / `enterWiki`) that stage
 the section before the passphrase gate is asked for.
+
+Both halves of that console are on this side of the site, and both are on the
+same canvas and the same tab bar — `◈ CORPUS` and `◈ WIKI` at its left end swap
+which set of instruments the nineteen/eighteen numbered tabs address, and every
+module draws through `draw_<tab>` regardless of which section it belongs to.
+`wiki.html`, over on the Singularity side, is the wiki's *prose reader* and only
+that; it has never carried the instruments. Routing `enterWiki` / `toWiki` there
+is therefore not a shortcut but a deletion — it retires all eighteen wiki
+instruments while leaving their code loaded and unreachable, which is exactly
+what happened between the move to the Singularity and this note.
 
 The page renders through a small client-side template engine (the `<x-dc>` element
 and `{{ ... }}` bindings). React and ReactDOM are loaded at runtime from the unpkg
@@ -383,6 +394,23 @@ wiki-brain automatically. It runs hourly, compares wiki-brain's current commit
 against the `source_commit` recorded in the dataset, and exits in a few seconds
 when nothing has moved. When wiki-brain *has* moved it rebuilds, commits the
 result with the upstream SHA in the message, and then deploys the site.
+
+Keeping the file current is only half of it — the pages that read it have to
+stop trusting their caches. Both consumers (`void.html`'s wiki instruments and
+`wiki.html`'s reader) fetch with `cache: 'no-cache'`, which revalidates rather
+than re-downloads: an unchanged dataset costs one 304 and a changed one is
+picked up on the next load instead of whenever the Pages `max-age` happens to
+lapse. `wiki.html` used `force-cache` until this note and would happily serve a
+copy from before the last sync.
+
+Nothing about the wiki's size is typed by hand anywhere. `build-wiki-data.py`
+also writes `data/wiki-meta.json` — page count, typed edges, words, domains,
+log ops, `source_commit`, about 175 bytes — because `void.html` quotes those
+figures on its landing sections, where no visitor has decrypted anything and a
+2.5 MB fetch would be absurd. `validate.yml` recomputes every field from the
+dataset and fails if the two disagree, so the small file can never drift away
+from the large one. (Before it existed, the landing page claimed 343 pages long
+after the corpus passed 400.)
 
 It deploys by calling `pages.yml` directly rather than relying on that
 workflow's own push trigger: a push made with `GITHUB_TOKEN` deliberately does
