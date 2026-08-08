@@ -118,7 +118,8 @@
 <header class="bar">
   <button id="burger" type="button" aria-label="Toggle index">☰</button>
   <div class="brand">THE <span>WIKI</span></div>
-  <input id="q" type="search" placeholder="search 320 pages…" autocomplete="off" aria-label="Search the wiki">
+  <!-- the placeholder is replaced with the live page count once the data lands -->
+  <input id="q" type="search" placeholder="search the wiki…" autocomplete="off" aria-label="Search the wiki">
   <div class="stat" id="stat">—</div>
   <a class="out" href="./singularity.html">◂ SINGULARITY</a>
 </header>
@@ -135,7 +136,10 @@
   var PAGES = [], TEXT = {}, BY = {}, cur = null;
   var side = document.getElementById('side'), inner = document.getElementById('inner');
 
-  fetch('./data/wiki-data.json', { cache: 'force-cache' })
+  // 'no-cache' revalidates rather than re-downloads — a 304 on an unchanged
+  // dataset costs a round trip. 'force-cache', which this used to be, would
+  // happily serve a copy from before the last wiki-brain sync and never notice.
+  fetch('./data/wiki-data.json', { cache: 'no-cache' })
     .then(function (r) { return r.json(); })
     .then(function (d) {
       PAGES = (d.wikiPages && d.wikiPages.pages) || [];
@@ -143,6 +147,7 @@
       PAGES.forEach(function (p) { BY[p.id] = p; });
       document.getElementById('stat').textContent =
         PAGES.length + ' PAGES · ' + Object.keys(TEXT).length + ' TEXTS';
+      document.getElementById('q').placeholder = 'search ' + PAGES.length + ' pages…';
       buildIndex('');
       route();
     })

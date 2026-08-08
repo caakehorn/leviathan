@@ -104,6 +104,27 @@ jobs:
           print(f'{len(pages)} pages, {typed} typed edges, '
                 f'{sum(p["words"] for p in pages):,} words, '
                 f'{len(d["wikiLog"]["ops"])} log ops')
+
+          # data/wiki-meta.json is the same headline counts in a file small
+          # enough for void.html to fetch before anything is decrypted. It is
+          # only worth having if it agrees with the dataset it summarises, so
+          # recompute every field rather than trusting that the two were built
+          # together.
+          m = json.load(open('data/wiki-meta.json', encoding='utf-8'))
+          want = {
+              'source': d['source'],
+              'source_commit': d['source_commit'],
+              'pages': len(pages),
+              'typed_edges': typed,
+              'words': sum(p['words'] for p in pages),
+              'domains': len({p['domain'] for p in pages}),
+              'log_ops': len(d['wikiLog']['ops']),
+          }
+          drift = {k: (v, m.get(k)) for k, v in want.items() if m.get(k) != v}
+          if drift:
+              sys.exit('error: wiki-meta.json disagrees with wiki-data.json '
+                       f'(field: expected, found) {drift}')
+          print(f'wiki-meta.json agrees with the dataset ({len(pages)} pages)')
           PY
 
       - name: Check the transcript dataset
