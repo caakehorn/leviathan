@@ -11,6 +11,7 @@ ask.html              # standalone view of instrument VI · THE ASK
 ledger.html           # THE DRUG LEDGER — day by day, both directions
 money.html            # THE FAMILY LEDGER — where the money came from
 transcript.html       # THE TRANSCRIPT — the complete message record, searchable
+tree.html             # THE LINE — the family tree, drawn and walkable (see below)
 temple.html           # THE TEMPLE — the section index (see below)
 oracle.html           #   CHAPEL I · the seeded oracle over the whole record
 voice.html            #   CHAPEL II · a trigram chain over Annie's messages
@@ -35,6 +36,7 @@ js/
   pen-core.js         # the pen scaffold: lanes, volume, playhead, verbatim feed
   galaxy-cluster.js   # particle background simulation
   void-engine.js      # VOID visual layer
+  tree.js             # THE LINE: GEDCOM-derived tree layout, panel, index
   wiki-reader.js      # WIKI reader: markdown rendering, search, page navigation
   wiki-modules.js     # first-wave wiki visualizers (WEB, CLAIMS, MASS, …)
   wiki-analytics.js   # second-wave wiki instruments computed from page prose
@@ -52,7 +54,11 @@ data/
   wiki-data.json      # WIKI section dataset, built from github.com/caakehorn/wiki-brain
   wiki-meta.json      # the same headline counts alone, ~175 B, for pages that cannot afford 2.5 MB
   transcript.json     # the message record behind transcript.html, built from a CSV export
+  tree.json           # THE LINE's dataset, built from a GEDCOM export
+  tree-meta.json      # its headline counts alone, ~150 B, for singularity.html's door
+  tree-additions.json # hand-maintained people and corrections, merged over the GEDCOM
 tools/
+  build-tree.py       # regenerates data/tree.json + data/tree-meta.json from a .ged export
   build-wiki-data.py  # regenerates data/wiki-data.json + data/wiki-meta.json from a wiki-brain checkout
   encrypt.py          # writes blobs in the site's AES-256-GCM format
   build-transcript.py # regenerates data/transcript.json from an iMessage CSV export
@@ -386,6 +392,81 @@ than by keyword, and every hit was then read by hand with the false positives
 struck; the surviving per-category precision ships in `meta.precision` and is
 displayed on the instrument. Regenerating it means re-running that merge — the
 file is a build artifact of the raw exports, not hand-authored like `R`.
+
+## THE LINE — the family tree
+
+`tree.html` is the Singularity's third door. It draws one dataset,
+`data/tree.json`, as an hourglass around a single focus person: ancestors
+climbing away above, descendants spreading below, spouses beside, and every card
+clickable to make that person the new focus. `js/tree.js` does the whole thing —
+layout, drawing, pan/zoom, the person panel and the searchable index — with no
+dependencies and no runtime from the Temple app.
+
+Three views, one keystroke apart: the diagram, the **INDEX** (every person,
+searchable by name, alias or place, filterable to the living / the undated / the
+unsourced / the hand-added), and the person panel. `/` opens search, `F` fits,
+`H` returns to the home person, `Backspace` walks back through the focus
+history, and `#<id>` in the URL deep-links to anybody.
+
+### Growing it
+
+The dataset is **generated, never hand-edited**. `data/tree.json` is overwritten
+on every build, so anything typed into it is destroyed. New people get in one of
+two ways:
+
+```sh
+tools/build-tree.py path/to/export.ged        # re-export from Ancestry, rebuild
+tools/build-tree.py --help-additions          # the other way, explained
+```
+
+The second way is `data/tree-additions.json`, which the build merges over the
+GEDCOM every time it runs. That is where people the Ancestry tree does not have
+yet belong, along with corrections to people it does — an entry whose `id`
+already exists patches that record field by field, an entry with a new id
+creates one. Everything it touches is tagged `added: true` and draws in cyan, so
+research-in-progress never reads as a sourced fact. Because it is merged rather
+than baked in, re-exporting from Ancestry never loses it.
+
+Nothing in `js/tree.js` knows how many people there are, how deep the tree goes,
+or which surnames exist; it reads all of that out of the data on load. The
+headline counts on `singularity.html`'s door come from `data/tree-meta.json`, a
+~150-byte file the same build writes, so the door stays honest without pulling
+343 KB down onto the index page.
+
+### What it does and does not claim
+
+The builder distinguishes recorded facts from its own inferences, and the page
+keeps that distinction visible:
+
+- Dates keep their GEDCOM qualifiers. `about 1812` renders as `about 1812`, not
+  as `1812`.
+- People the file never dated get an **estimated** birth year, resolved off the
+  dated people around them (a marriage, a dated child, a dated parent). It is
+  always shown bracketed — `[c. 1798]` — and the panel says in words that it is
+  an estimate rather than a record.
+- Source citations are counted, not reproduced. Each person carries how many
+  distinct sources cite them and what those sources are called, which is what
+  `71% SOURCED` in the header and the `NO SOURCES` tag are reading.
+- Ancestry exports routinely carry the same couple as two `FAM` records, so
+  relation lookups dedupe by person. Where the *source* holds two records for
+  what looks like one person, the panel shows both rather than picking one —
+  those are merge candidates for the research, not display bugs.
+
+### Living people
+
+An individual with no death record whose estimated birth year is inside 100
+years is flagged `living` and tagged as such in the panel. **Nothing is withheld
+on that basis by default**, and `data/tree.json` is committed as plaintext, so
+the birth dates and birthplaces of the ~36 living people in the current export
+are readable by anyone who can read this repository — the gate on `tree.html`
+gates rendering, not access, exactly as ["What the gate does not
+do"](#what-the-gate-does-not-do) describes for every other payload here.
+
+If that is not wanted, `tools/build-tree.py --redact-living` rebuilds with
+everything but a name stripped from those records, and the same three steps in
+that section apply: encrypt the payload, purge the history, make the repository
+private. The raw `.ged` export is deliberately not committed; keep it outside
+the working tree.
 
 ## Keeping the WIKI section in sync
 
