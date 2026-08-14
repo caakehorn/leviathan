@@ -631,7 +631,7 @@
       var self = this;
       this._buildWordmark();
       if (document.fonts && document.fonts.load) {
-        document.fonts.load('900 100px Unbounded').then(function () { self._buildWordmark(); }).catch(function () {});
+        document.fonts.load('400 100px Anton').then(function () { self._buildWordmark(); }).catch(function () {});
       }
     }
 
@@ -645,10 +645,10 @@
       x.textAlign = 'center';
       x.textBaseline = 'middle';
       var fs = w * 0.15;
-      x.font = '900 ' + fs + 'px Unbounded, sans-serif';
+      x.font = '400 ' + fs + 'px Anton, sans-serif';
       var tw = x.measureText('@danfrank').width;
       if (tw > w * 0.92) fs *= (w * 0.92) / tw;
-      x.font = '900 ' + fs + 'px Unbounded, sans-serif';
+      x.font = '400 ' + fs + 'px Anton, sans-serif';
       x.fillStyle = '#fff';
       x.fillText('@danfrank', w / 2, h / 2 - fs * 0.16);
       x.font = '700 ' + (fs * 0.19) + 'px "IBM Plex Mono", monospace';
