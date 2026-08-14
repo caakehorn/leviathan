@@ -141,51 +141,25 @@ footer::before {
 }
 
 /* ══════════════════════════════════════════════════════════════════════
-   THE LOCKUPS — the approved display system, shared so a page never has to
-   redraw one by hand.
+   TYPE — one family, Zen Kaku Gothic New: a Japanese foundry's modern
+   gothic, the face Tokyo signage is set in. 900 shouts, 700 labels, 400
+   reads. IBM Plex Mono stays on the data readouts.
 
-     .lock   Luckiest Guy. The big rounded comic lockup: titles, mastheads.
-     .plate  Fredoka. The rounded workhorse: buttons, tabs, section heads,
-             anything short that has to hold at 10-14px.
-
-   Both ship a single weight, so both pin font-weight — a browser asked for
-   700 on a 400-only face synthesises it and the glyphs smear.
-
-   A fill goes on top as a second class. The gradient fills clip to the text,
-   which rules out text-shadow for the extrude (the shadow would be cast by
-   the transparent glyph), so they extrude with stacked drop-shadow filters
-   and take their hard-offset colour from --edge.
+   Deliberately undecorated: no outline, no extrude, no gradient fill. The
+   page is already loud — the type does not need to be drawn on.
    ══════════════════════════════════════════════════════════════════════ */
 
-.lock { font-family: 'Luckiest Guy', cursive; font-weight: 400; text-transform: uppercase;
-  letter-spacing: .006em; }
-.plate { font-family: 'Fredoka', sans-serif; font-weight: 600; text-transform: uppercase;
-  letter-spacing: .01em; }
-.lean { transform: skewX(-8deg); }
-
-/* Every display heading on the site, whether it uses .lock or sets the family
-   in an inline style — an attribute selector is the only hook the inline-styled
-   pages give us. The stroke is never set inline anywhere, so it always lands;
-   a page that already has its own text-shadow keeps it and just gains the
-   outline. */
-.lock, [style*="Luckiest Guy"] {
-  -webkit-text-stroke: .05em #0b0219;
-  paint-order: stroke fill;
-}
+.lock { font-family: 'Zen Kaku Gothic New', sans-serif; font-weight: 900;
+  text-transform: uppercase; letter-spacing: -.02em; }
+.plate { font-family: 'Zen Kaku Gothic New', sans-serif; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .16em; }
+.lean { transform: none; }
 
 .fill-chrome, .fill-gold, .fill-spectrum, .fill-flat {
-  -webkit-text-stroke: .055em #0b0219;
-  paint-order: stroke fill;
-  -webkit-text-fill-color: currentColor;
+  -webkit-text-stroke: 0; -webkit-text-fill-color: currentColor;
+  background: none; color: #fff;
 }
-.fill-chrome { color: #fff;
-  text-shadow: .045em .045em 0 var(--edge, var(--cerulean)), .075em .075em 0 rgba(0,0,0,.9),
-    0 0 .5em var(--edge-glow, rgba(0,183,255,.5)); }
-.fill-gold { color: #ffd400;
-  text-shadow: .045em .045em 0 var(--pink), .075em .075em 0 rgba(0,0,0,.9),
-    0 0 .5em rgba(255,212,0,.45); }
-.fill-spectrum { color: var(--pink);
-  text-shadow: .045em .045em 0 #ffd400, .075em .075em 0 var(--cerulean),
-    .105em .105em 0 rgba(0,0,0,.9), 0 0 .6em rgba(255,47,157,.5); }
-.fill-flat { color: #fff;
-  text-shadow: .04em .04em 0 var(--edge, var(--purple)), .07em .07em 0 rgba(0,0,0,.85); }
+.fill-chrome { text-shadow: 0 0 .7em var(--edge-glow, rgba(0,183,255,.5)); }
+.fill-gold { color: #ffd400; text-shadow: 0 0 .7em rgba(255,212,0,.45); }
+.fill-spectrum { text-shadow: 0 0 .5em rgba(255,47,157,.55), 0 0 1.4em rgba(0,183,255,.4); }
+.fill-flat { text-shadow: 0 0 .5em var(--edge-glow, rgba(176,38,255,.45)); }

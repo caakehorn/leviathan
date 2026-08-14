@@ -191,12 +191,12 @@
       if (!el.wordmark || el.wordmark.firstChild) return;
       var pt = document.createElement('particle-type');
       pt.setAttribute('text', '@danfrank');
-      pt.setAttribute('font', '400 Luckiest Guy');   // the approved display face
+      pt.setAttribute('font', '900 Zen Kaku Gothic New');   // the approved display face
       el.wordmark.appendChild(pt);
     };
     if (document.fonts && document.fonts.load) {
       Promise.race([
-        document.fonts.load('400 100px Luckiest Guy').then(function () { return document.fonts.ready; }),
+        document.fonts.load('900 100px Zen Kaku Gothic New').then(function () { return document.fonts.ready; }),
         new Promise(function (r) { setTimeout(r, 2500); })
       ]).then(mount, mount);
     } else {

@@ -228,7 +228,7 @@
 
   class ParticleType extends HTMLElement {
     /* `font` names the display face the glyphs are sampled from — a CSS font
-       shorthand minus the size, e.g. font="400 Luckiest Guy". Defaults to
+       shorthand minus the size, e.g. font="900 Zen Kaku Gothic New". Defaults to
        Unbounded 900 the console has always used, so pages that do not set it
        are unaffected. */
     static get observedAttributes() { return ['text', 'font']; }
@@ -311,7 +311,7 @@
 
     /* '<weight> <family>' + a size, as ctx.font wants it. */
     _face(px) {
-      var f = (this.getAttribute('font') || '400 Luckiest Guy').trim();
+      var f = (this.getAttribute('font') || '900 Zen Kaku Gothic New').trim();
       var sp = f.indexOf(' ');
       return f.slice(0, sp) + ' ' + px + 'px ' + f.slice(sp + 1) + ', sans-serif';
     }
