@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./js/singate.js"></script>
+<title>THE LINE — THE SINGULARITY</title>
+<!-- THE LINE — the family tree. A third wing, on the Singularity side.
+     Self-contained: it reads data/tree.json (built by tools/build-tree.py from a
+     GEDCOM export) and draws it with js/tree.js. No React, no runtime from the
+     Temple app, no dependencies at all. Sealed by js/singate.js.
+
+     The dataset is regenerated, never hand-edited — see tools/build-tree.py and
+     data/tree-additions.json for how new people get in. -->
+<meta name="robots" content="noindex, nofollow">
+<meta name="referrer" content="no-referrer">
+<meta name="theme-color" content="#03040a">
+<link rel="icon" href="data:,">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous">
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@700;900&amp;family=Space+Grotesk:wght@400;500;700&amp;family=IBM+Plex+Mono:wght@400;600;700&amp;display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; height: 100%; background: #03040a; color: #e6ded1;
+    font-family: 'IBM Plex Mono', ui-monospace, monospace; }
+  body { display: flex; flex-direction: column; overflow: hidden; }
+
+  /* THE LINE's accent is bronze — the Temple is slime, the Singularity violet,
+     and a family tree should not read as either. */
+  :root {
+    --amber: #e8b04b; --amber-dim: #8a6b2c; --amber-ghost: rgba(232,176,75,.14);
+    --ink: #e6ded1; --mute: #8a8272; --faint: #55503f;
+    --panel: rgba(8,8,12,.92); --line: rgba(232,176,75,.2);
+  }
+
+  /* ── chrome ─────────────────────────────────────────────────────────────── */
+  header.bar { flex: none; display: flex; align-items: center; gap: 14px; padding: 11px 16px;
+    border-bottom: 1px solid var(--line); background: rgba(6,6,10,.94); z-index: 6; flex-wrap: wrap; }
+  .brand { font-family: 'Unbounded', sans-serif; font-weight: 900; font-size: 15px; color: #fff;
+    letter-spacing: -.01em; white-space: nowrap; }
+  .brand span { color: var(--amber); }
+  .stats { display: flex; gap: 14px; flex-wrap: wrap; font-size: 9px; letter-spacing: .16em;
+    color: var(--faint); }
+  .stats b { color: var(--amber); font-weight: 700; }
+  .grow { flex: 1; }
+  .tabs { display: flex; gap: 0; border: 1px solid var(--line); }
+  .tab { background: none; border: 0; border-right: 1px solid var(--line); color: var(--mute);
+    font: inherit; font-size: 9.5px; letter-spacing: .2em; padding: 8px 13px; cursor: pointer; }
+  .tab:last-child { border-right: 0; }
+  .tab.on { color: #03040a; background: var(--amber); font-weight: 700; }
+  .tab:hover:not(.on) { color: var(--amber); background: var(--amber-ghost); }
+  a.out, button.act { font: inherit; font-size: 9px; letter-spacing: .18em; color: var(--mute);
+    text-decoration: none; border: 1px solid rgba(120,110,90,.34); padding: 8px 10px;
+    background: none; cursor: pointer; white-space: nowrap; }
+  a.out:hover, button.act:hover:not(:disabled) { color: var(--amber); border-color: var(--amber); }
+  button.act:disabled { opacity: .3; cursor: default; }
+
+  /* ── body ───────────────────────────────────────────────────────────────── */
+  .cols { flex: 1; display: flex; min-height: 0; position: relative; }
+
+  #stage { flex: 1; position: relative; min-width: 0; background:
+    radial-gradient(ellipse 70% 60% at 50% 40%, rgba(232,176,75,.05), transparent 70%), #04050a; }
+  body[data-view="index"] #stage { display: none; }
+
+  #canvas { width: 100%; height: 100%; display: block; cursor: grab; touch-action: none; }
+  #canvas.grabbing { cursor: grabbing; }
+
+  .e-link { stroke: rgba(232,176,75,.34); stroke-width: 1.2; }
+  .e-union { stroke: rgba(232,176,75,.55); stroke-width: 1.6; stroke-dasharray: 3 3; }
+  .rule { stroke: rgba(140,128,100,.11); stroke-width: 1; }
+  .rule-label { fill: #4c4739; font-size: 11px; letter-spacing: .18em; text-anchor: end; }
+
+  .card { cursor: pointer; }
+  .card .card-bg { fill: rgba(10,11,18,.94); stroke: rgba(140,128,100,.36); stroke-width: 1; }
+  .card:hover .card-bg { stroke: var(--amber); fill: rgba(24,20,14,.96); }
+  .card:focus { outline: none; }
+  .card:focus .card-bg { stroke: var(--amber); stroke-width: 1.6; }
+  .card.is-focus .card-bg { fill: rgba(38,28,10,.97); stroke: var(--amber); stroke-width: 2; }
+  .card.is-spouse .card-bg { stroke-dasharray: 4 3; }
+  .card.is-added .card-bg { stroke: #7fe3ff; }
+  .card-name { fill: #f4ece0; font-size: 13px; font-family: 'Space Grotesk', sans-serif; font-weight: 500; }
+  .card.is-focus .card-name { fill: #fff; font-weight: 700; }
+  .card-life { fill: var(--amber); font-size: 10.5px; letter-spacing: .06em; }
+  .card-place { fill: #6f6a5c; font-size: 8.5px; letter-spacing: .04em; }
+  .card-sex { fill: #4a4638; }
+  .card-sex.sex-M { fill: #4b7fb0; }
+  .card-sex.sex-F { fill: #b06a8c; }
+  .card.is-living .card-life { fill: #9fd68a; }
+  text { pointer-events: none; user-select: none; }
+
+  /* floating controls over the canvas — one bottom-left stack so the peek bar
+     and the HUD can never land on top of each other */
+  .stack { position: absolute; left: 14px; bottom: 14px; display: flex; flex-direction: column;
+    gap: 8px; align-items: flex-start; max-width: calc(100% - 28px); z-index: 4; }
+  .hud { display: flex; gap: 8px; align-items: center;
+    flex-wrap: wrap; background: rgba(6,6,10,.86); border: 1px solid var(--line); padding: 8px 10px;
+    backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); max-width: 100%; }
+  .hud label { font-size: 8.5px; letter-spacing: .18em; color: var(--faint); display: flex;
+    align-items: center; gap: 6px; }
+  .hud label b { color: var(--amber); min-width: 12px; text-align: center; }
+  .hud input[type=range] { width: 88px; accent-color: var(--amber); }
+  .hud .sep { width: 1px; height: 20px; background: var(--line); }
+  .hud button { font: inherit; font-size: 11px; color: var(--mute); background: none;
+    border: 1px solid rgba(120,110,90,.34); padding: 4px 9px; cursor: pointer; }
+  .hud button:hover { color: var(--amber); border-color: var(--amber); }
+  #zoomv { font-size: 9px; color: var(--faint); min-width: 34px; text-align: center; }
+
+  .legend { position: absolute; right: 14px; top: 14px; font-size: 8.5px; letter-spacing: .14em;
+    color: var(--faint); text-align: right; line-height: 2; pointer-events: none; }
+  .legend i { display: inline-block; width: 18px; height: 2px; vertical-align: middle;
+    margin-right: 6px; background: var(--amber); }
+  .legend i.d { background: none; border-top: 2px dashed rgba(232,176,75,.6); }
+
+  /* ── the panel ──────────────────────────────────────────────────────────── */
+  aside.side { flex: none; width: 372px; border-left: 1px solid var(--line); background: var(--panel);
+    overflow-y: auto; padding: 22px 20px 60px; }
+  body[data-view="index"] aside.side { display: none; }
+
+  .p-kicker { font-size: 8.5px; letter-spacing: .26em; color: var(--amber-dim); }
+  #panel h2 { margin: 8px 0 0; font-family: 'Unbounded', sans-serif; font-weight: 900;
+    font-size: 26px; line-height: 1.08; color: #fff; letter-spacing: -.02em; }
+  .p-life { margin-top: 6px; font-size: 13px; color: var(--amber); letter-spacing: .06em; }
+  .p-tags { margin-top: 12px; display: flex; flex-wrap: wrap; gap: 5px; }
+  .tag { font-size: 8px; letter-spacing: .16em; padding: 4px 7px; color: var(--mute);
+    border: 1px solid rgba(120,110,90,.36); }
+  .tag.t-living { color: #9fd68a; border-color: rgba(159,214,138,.4); }
+  .tag.t-added { color: #7fe3ff; border-color: rgba(127,227,255,.4); }
+  .tag.t-thin { color: #b0685a; border-color: rgba(176,104,90,.4); }
+
+  .p-facts { margin-top: 22px; border-top: 1px solid rgba(120,110,90,.2); }
+  .fact { display: flex; gap: 12px; padding: 9px 0; border-bottom: 1px solid rgba(120,110,90,.14); }
+  .fact .k { flex: none; width: 74px; font-size: 8.5px; letter-spacing: .18em; color: var(--faint);
+    padding-top: 3px; }
+  .fact .v { flex: 1; font-size: 12px; line-height: 1.6; color: var(--ink);
+    font-family: 'Space Grotesk', sans-serif; }
+
+  .p-block, .p-rels { margin-top: 24px; }
+  #panel h4 { margin: 0 0 10px; font-size: 8.5px; letter-spacing: .24em; color: var(--amber-dim);
+    font-weight: 400; }
+  .p-li { display: flex; gap: 10px; padding: 5px 0; font-size: 11px; line-height: 1.5; }
+  .p-li b { flex: none; width: 74px; color: var(--amber); font-weight: 400; }
+  .p-li span { color: var(--mute); font-family: 'Space Grotesk', sans-serif; }
+
+  .rel { margin-bottom: 18px; }
+  .chips { display: flex; flex-direction: column; gap: 4px; }
+  .chip { display: flex; align-items: baseline; justify-content: space-between; gap: 10px;
+    width: 100%; text-align: left; font: inherit; background: rgba(255,255,255,.02);
+    border: 1px solid rgba(120,110,90,.22); color: var(--ink); padding: 7px 10px; cursor: pointer; }
+  .chip:hover { border-color: var(--amber); background: var(--amber-ghost); }
+  .chip b { font-family: 'Space Grotesk', sans-serif; font-weight: 500; font-size: 12px; }
+  .chip i { font-style: normal; font-size: 10px; color: var(--faint); white-space: nowrap; }
+  .p-none { font-size: 11px; color: var(--faint); }
+
+  .p-src { margin-top: 24px; }
+  .p-src summary { font-size: 8.5px; letter-spacing: .24em; color: var(--amber-dim); cursor: pointer; }
+  .p-src ul { margin: 12px 0 0; padding-left: 16px; }
+  .p-src li { font-size: 10.5px; line-height: 1.7; color: var(--mute);
+    font-family: 'Space Grotesk', sans-serif; }
+  .p-id { margin-top: 26px; font-size: 8px; letter-spacing: .2em; color: #34312a; }
+
+  /* ── the index ──────────────────────────────────────────────────────────── */
+  #index { flex: 1; display: none; flex-direction: column; min-height: 0; }
+  body[data-view="index"] #index { display: flex; }
+
+  .filters { flex: none; display: flex; gap: 8px; padding: 13px 16px; flex-wrap: wrap;
+    border-bottom: 1px solid var(--line); align-items: center; }
+  .filters input, .filters select { background: rgba(0,0,0,.5); border: 1px solid rgba(120,110,90,.34);
+    color: var(--ink); padding: 8px 10px; font: inherit; font-size: 11.5px; letter-spacing: .04em; }
+  .filters input { flex: 1; min-width: 160px; max-width: 380px; }
+  .filters input:focus, .filters select:focus { outline: none; border-color: var(--amber); }
+  #count { font-size: 9px; letter-spacing: .18em; color: var(--faint); white-space: nowrap; }
+
+  #rows { flex: 1; overflow-y: auto; padding-bottom: 12vh; }
+  .row { display: flex; align-items: baseline; gap: 14px; width: 100%; text-align: left;
+    background: none; border: 0; border-bottom: 1px solid rgba(120,110,90,.12);
+    color: var(--ink); font: inherit; padding: 10px 16px; cursor: pointer; }
+  .row:hover { background: var(--amber-ghost); }
+  .row.on { background: rgba(232,176,75,.1); box-shadow: inset 2px 0 0 var(--amber); }
+  .r-name { flex: 0 1 340px; min-width: 0; font-family: 'Space Grotesk', sans-serif; font-size: 13px;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .r-life { flex: none; width: 112px; font-size: 11px; color: var(--amber); }
+  .r-place { flex: 1; min-width: 0; font-size: 10.5px; color: var(--faint);
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .r-more { padding: 20px 16px; font-size: 11px; color: var(--faint); }
+
+  .boot-err { position: absolute; inset: 0; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; text-align: center; padding: 30px; gap: 6px; }
+  .boot-err h3 { font-family: 'Unbounded', sans-serif; color: var(--amber); margin: 0 0 8px;
+    font-size: 18px; }
+  .boot-err p { margin: 0; font-size: 11.5px; color: var(--mute); max-width: 52ch; line-height: 1.8; }
+
+  body:not(.ready) .hud, body:not(.ready) .legend { opacity: 0; }
+
+  /* The peek bar and the PERSON tab exist only on narrow screens, where the
+     panel cannot sit beside the diagram and becomes a view of its own. */
+  .only-mobile { display: none; }
+  .peek { display: none; width: 100%;
+    align-items: baseline; justify-content: space-between; gap: 12px;
+    background: rgba(10,9,7,.94); border: 1px solid var(--line); color: var(--ink);
+    font: inherit; padding: 11px 13px; cursor: pointer; text-align: left; }
+  .peek span { font-family: 'Space Grotesk', sans-serif; font-size: 13px; overflow: hidden;
+    text-overflow: ellipsis; white-space: nowrap; }
+  .peek i { font-style: normal; font-size: 9px; letter-spacing: .18em; color: var(--amber);
+    white-space: nowrap; }
+
+  @media (max-width: 900px) {
+    .only-mobile { display: block; }
+    .stats { display: none; }
+    .r-place { display: none; }
+    aside.side { flex: 1; width: auto; border-left: 0; display: none; }
+    body[data-view="person"] aside.side { display: block; }
+    body[data-view="person"] #stage { display: none; }
+    body[data-view="tree"] .peek { display: flex; }
+    body[data-view="tree"] .legend { display: none; }
+  }
+  @media (max-width: 900px) {
+    .stack { left: 8px; right: 8px; bottom: 8px; max-width: none; }
+    .hud { width: 100%; justify-content: space-between; row-gap: 6px; }
+    .hud input[type=range] { width: 62px; }
+    .hud .sep { display: none; }
+  }
+  @media (max-width: 620px) {
+    .r-life { width: 92px; }
+    header.bar { gap: 10px; padding: 9px 12px; }
+  }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body data-view="tree">
+
+<header class="bar">
+  <div class="brand">THE <span>LINE</span></div>
+  <div class="stats">
+    <span><b id="stat-people">—</b> PEOPLE</span>
+    <span><b id="stat-fams">—</b> FAMILIES</span>
+    <span><b id="stat-gens">—</b> GENERATIONS</span>
+    <span><b id="stat-span">—</b></span>
+    <span><b id="stat-sourced">—</b> SOURCED</span>
+  </div>
+  <div class="grow"></div>
+  <div class="tabs">
+    <button class="tab on" data-view="tree">TREE</button>
+    <button class="tab only-mobile" data-view="person">PERSON</button>
+    <button class="tab" data-view="index">INDEX</button>
+  </div>
+  <button class="act" id="back" title="Back (Backspace)">◂ BACK</button>
+  <button class="act" id="home" title="Home person (H)">HOME</button>
+  <a class="out" href="./singularity.html">◂ EXIT</a>
+</header>
+
+<div class="cols">
+
+  <div id="stage">
+    <svg id="canvas"><g id="scene"></g></svg>
+
+    <div class="legend">
+      <div><i></i>PARENT TO CHILD</div>
+      <div><i class="d"></i>MARRIAGE</div>
+      <div>CLICK ANYONE TO RE-CENTRE · / TO SEARCH</div>
+    </div>
+
+    <div class="stack">
+    <button class="peek" id="peek"><span id="peek-name">—</span><i>DETAILS ▸</i></button>
+
+    <div class="hud">
+      <label>ANCESTORS <input type="range" id="up" min="0" max="12" value="3"><b id="upv">3</b></label>
+      <label>DESCENDANTS <input type="range" id="down" min="0" max="12" value="3"><b id="downv">3</b></label>
+      <span class="sep"></span>
+      <button id="zout" title="Zoom out">−</button>
+      <span id="zoomv">100%</span>
+      <button id="zin" title="Zoom in">+</button>
+      <button id="fit" title="Fit to screen (F)">FIT</button>
+    </div>
+    </div>
+  </div>
+
+  <div id="index">
+    <div class="filters">
+      <input id="q" type="search" placeholder="name, alias or place…" autocomplete="off" spellcheck="false">
+      <select id="surname"><option value="">ALL SURNAMES</option></select>
+      <select id="sort">
+        <option value="name">BY NAME</option>
+        <option value="birth">BY BIRTH</option>
+        <option value="sources">BY SOURCES</option>
+      </select>
+      <select id="only">
+        <option value="">EVERYONE</option>
+        <option value="living">LIVING</option>
+        <option value="undated">NO BIRTH DATE</option>
+        <option value="unsourced">NO SOURCES</option>
+        <option value="added">ADDED IN RESEARCH</option>
+      </select>
+      <span id="count">—</span>
+    </div>
+    <div id="rows"></div>
+  </div>
+
+  <aside class="side"><div id="panel"></div>
+    <div class="p-id" id="built"></div>
+  </aside>
+
+</div>
+
+<script src="./js/tree.js"></script>
+</body>
+</html>
