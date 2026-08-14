@@ -293,7 +293,11 @@
   /* ---------------- particle typography ---------------- */
 
   class ParticleType extends HTMLElement {
-    static get observedAttributes() { return ['text']; }
+    /* `font` names the display face the glyphs are sampled from — a CSS font
+       shorthand minus the size, e.g. font="400 Anton". It defaults to the
+       Unbounded 900 the console has always used, so pages that do not set it
+       are unaffected. */
+    static get observedAttributes() { return ['text', 'font']; }
 
     attributeChangedCallback() { if (this._init && this._fontReady) this._build(); }
 
@@ -337,7 +341,7 @@
       this._ro.observe(this);
 
       var fontLoad = (document.fonts && document.fonts.load)
-        ? document.fonts.load('900 100px Unbounded').catch(function () {})
+        ? document.fonts.load(this._face(100)).catch(function () {})
         : Promise.resolve();
       Promise.race([fontLoad, new Promise(function (r) { setTimeout(r, 1500); })])
         .then(function () { self._fontReady = true; self._build(); });
@@ -371,6 +375,13 @@
       }
     }
 
+    /* '<weight> <family>' + a size, as ctx.font wants it. */
+    _face(px) {
+      var f = (this.getAttribute('font') || '900 Unbounded').trim();
+      var sp = f.indexOf(' ');
+      return f.slice(0, sp) + ' ' + px + 'px ' + f.slice(sp + 1) + ', sans-serif';
+    }
+
     _build() {
       var w = this.clientWidth, h = this.clientHeight;
       if (!w || !h) return;
@@ -385,10 +396,10 @@
       o.width = w; o.height = h;
       var octx = o.getContext('2d', { willReadFrequently: true });
       var fs = h * 0.72;
-      octx.font = '900 ' + fs + 'px Unbounded, sans-serif';
+      octx.font = this._face(fs);
       var tw = octx.measureText(text).width;
       if (tw > w * 0.94) fs *= (w * 0.94) / tw;
-      octx.font = '900 ' + fs + 'px Unbounded, sans-serif';
+      octx.font = this._face(fs);
       octx.textAlign = 'center';
       octx.textBaseline = 'middle';
       octx.fillStyle = '#fff';
