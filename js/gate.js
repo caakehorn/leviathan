@@ -158,28 +158,6 @@
     var ov = document.getElementById('lv-gate');
     if (ov) ov.remove();
     window.dispatchEvent(new CustomEvent('lv-unlocked'));
-    score();
-  }
-
-  // THE SCORE loads here rather than from a <script> tag on each page, so it
-  // reaches every page the gate reaches and never plays to someone who has not
-  // got through the gate. Failing to load costs nothing but silence.
-  function score() {
-    if (window.LVScore || document.getElementById('lv-score-js')) return;
-    var s = document.createElement('script');
-    s.id = 'lv-score-js';
-    s.src = base() + 'js/score.js';
-    s.async = true;
-    document.head.appendChild(s);
-  }
-
-  // Pages sit at the repo root, but the root itself is served as a directory,
-  // so a relative src has to be resolved against the depth of the current path.
-  function base() {
-    var seg = location.pathname.replace(/\/[^\/]*$/, '/').split('/').length;
-    var root = document.querySelector('script[src*="js/gate.js"]');
-    if (root) return root.getAttribute('src').replace(/js\/gate\.js.*$/, '');
-    return seg > 2 ? '../' : './';
   }
 
   // ── the gate itself ─────────────────────────────────────────────────────
@@ -198,7 +176,7 @@
     'background:rgba(14,3,32,0.96);padding:34px 30px;box-shadow:0 0 90px rgba(0,225,255,0.22)}',
     '#lv-gate .tag{font-size:11px;letter-spacing:0.3em;color:#00e1ff;text-shadow:0 0 14px rgba(0,225,255,0.7)}',
     '#lv-gate .say{margin:16px 0 22px;font-size:15px;line-height:1.75;color:#f0e2ff;',
-    "font-family:'Chakra Petch',sans-serif;text-wrap:pretty}",
+    "font-family:'Zen Kaku Gothic New',sans-serif;text-wrap:pretty}",
     '#lv-gate input{width:100%;box-sizing:border-box;background:rgba(0,0,0,0.55);',
     'border:1px solid rgba(0,225,255,0.45);color:#7ff4ff;font-family:inherit;font-size:13px;',
     'padding:12px 13px;letter-spacing:0.05em;outline:none}',
@@ -215,9 +193,9 @@
     '#lv-taunt{position:fixed;inset:0;z-index:2147483647;display:flex;flex-direction:column;',
     'align-items:center;justify-content:center;text-align:center;padding:3vmin;gap:3vmin;',
     'background:#000;overflow:hidden;visibility:visible!important;',
-    "font-family:'Anton','Chakra Petch',system-ui,sans-serif;",
+    "font-family:'Zen Kaku Gothic New',system-ui,sans-serif;",
     'animation:lvTauntBg .34s steps(1) infinite}',
-    '#lv-taunt b{display:block;font-weight:400;line-height:0.92;letter-spacing:-0.01em;',
+    '#lv-taunt b{display:block;font-weight: 900;line-height:0.92;letter-spacing:-0.01em;',
     'font-size:clamp(42px,12.5vw,230px);color:#ff2fbf;text-transform:uppercase;',
     'overflow-wrap:anywhere;text-shadow:0 0 30px #ff2fbf,0 0 90px rgba(255,47,191,0.8);',
     'animation:lvTauntTxt .34s steps(1) infinite}',
@@ -396,7 +374,6 @@
   function paintGate() {
     styleOnce();
     tally('passphrase-shown');
-    score();   // load the score engine now, so LVScore.prewarm() exists on submit
 
     var ov = document.createElement('div');
     ov.id = 'lv-gate';
@@ -420,10 +397,6 @@
     var submit = async function () {
       var v = input.value;
       if (!v || go.disabled) return;
-      // Pre-warm audio inside this gesture, before the await below spends the
-      // user activation. On success the score starts the moment we unlock, with
-      // no second click needed. Harmless if the passphrase turns out wrong.
-      try { if (window.LVScore) window.LVScore.prewarm(); } catch (e) { }
       err.textContent = ''; go.disabled = true; go.textContent = 'CHECKING…';
       try {
         await tryPassphrase(v);

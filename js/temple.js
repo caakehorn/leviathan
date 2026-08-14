@@ -226,82 +226,6 @@
     ctx.shadowBlur = 0;
   }
 
-  // ── the voice ──────────────────────────────────────────────────────────
-  // Web Audio, built on first gesture because autoplay policy requires it.
-  // A drone underneath, a bell per verse. The bell's pitch comes from the
-  // passage's own hash, so a given verse always rings at the same note — the
-  // audio obeys the same determinism as everything else.
-  var AC = null, master = null, droneGain = null, droneOn = false;
-  var SCALE = [0, 3, 5, 7, 10, 12, 15, 19];   // minor pentatonic-ish, forgiving
-  function audio() {
-    if (AC) return AC;
-    var Ctx = window.AudioContext || window.webkitAudioContext;
-    if (!Ctx) return null;
-    AC = new Ctx();
-    master = AC.createGain();
-    master.gain.value = 0.0001;
-    master.connect(AC.destination);
-    droneGain = AC.createGain();
-    droneGain.gain.value = 0;
-    droneGain.connect(master);
-    return AC;
-  }
-  function startDrone() {
-    // THE SCORE (js/score.js) is the music bed on every page now, and its pad
-    // occupies exactly this register. Yield the drone to it and keep the bells,
-    // which are event-driven and pitched per passage — those still layer.
-    if (window.LVScore && window.LVScore.isOn()) return;
-    if (!audio() || droneOn) return;
-    droneOn = true;
-    var filt = AC.createBiquadFilter();
-    filt.type = 'lowpass';
-    filt.frequency.value = 420;
-    filt.Q.value = 6;
-    filt.connect(droneGain);
-    // Three detuned saws an octave apart. Cheap, and it sits under everything
-    // without ever occupying the register the bells use.
-    [55, 55.4, 82.5].forEach(function (f) {
-      var o = AC.createOscillator();
-      o.type = 'sawtooth';
-      o.frequency.value = f;
-      var g = AC.createGain();
-      g.gain.value = 0.16;
-      o.connect(g); g.connect(filt);
-      o.start();
-    });
-    // Slow filter sweep, so the drone breathes rather than sits.
-    var lfo = AC.createOscillator();
-    lfo.frequency.value = 0.06;
-    var lg = AC.createGain();
-    lg.gain.value = 190;
-    lfo.connect(lg); lg.connect(filt.frequency);
-    lfo.start();
-    master.gain.setTargetAtTime(0.5, AC.currentTime, 1.2);
-  }
-  function droneLevel(v) {
-    if (droneGain && AC) droneGain.gain.setTargetAtTime(v, AC.currentTime, 0.4);
-  }
-  function bell(hash, when) {
-    if (!AC) return;
-    var t = AC.currentTime + (when || 0);
-    var deg = SCALE[hash % SCALE.length];
-    var oct = 1 + ((hash >>> 5) % 3);
-    var freq = 110 * Math.pow(2, oct) * Math.pow(2, deg / 12);
-    // Two partials and a touch of inharmonicity — enough to read as a struck
-    // object rather than a sine beep, without needing a real FM stack.
-    [[1, 0.22, 3.2], [2.76, 0.09, 1.9], [5.4, 0.04, 1.1]].forEach(function (p) {
-      var o = AC.createOscillator();
-      o.type = 'sine';
-      o.frequency.value = freq * p[0];
-      var g = AC.createGain();
-      g.gain.setValueAtTime(0.0001, t);
-      g.gain.exponentialRampToValueAtTime(p[1], t + 0.008);
-      g.gain.exponentialRampToValueAtTime(0.0001, t + p[2]);
-      o.connect(g); g.connect(master);
-      o.start(t); o.stop(t + p[2] + 0.1);
-    });
-  }
-
   // ── the field ──────────────────────────────────────────────────────────
   // WebGL1 so it runs anywhere. A kaleidoscopic fold over domain-warped fbm,
   // pushed through the SLIME palette. uCharge rises while the oracle is being
@@ -446,7 +370,6 @@
     resize(canvas);
     state.charge += (state.tCharge - state.charge) * 0.045;
     state.reveal *= 0.955;
-    droneLevel(0.10 + state.charge * 0.34);
     gl.uniform2f(U.uRes, canvas.width, canvas.height);
     gl.uniform1f(U.uTime, (performance.now() - state.t0) / 1000);
     gl.uniform1f(U.uCharge, state.charge);
@@ -469,9 +392,7 @@
     startField: function (canvas) { cancelAnimationFrame(raf); frame(canvas); },
     stopField: function () { cancelAnimationFrame(raf); },
     state: state,
-    audio: audio,
-    startDrone: startDrone,
-    bell: bell,
-    strike: function (hash, when) { state.reveal = 1; bell(hash, when); }
+    // strike() used to ring a bell as well; the visual pulse is what is left.
+    strike: function () { state.reveal = 1; }
   };
 })();

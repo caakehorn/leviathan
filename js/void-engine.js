@@ -1,12 +1,11 @@
 /* ============================================================
    void-engine.js — @danfrank · unique ai solutions
    Defines two web components:
-     <void-engine>   — full-screen WebGL neon tunnel (audio-reactive,
-                       cursor-warped, scroll-driven). attr: intensity
+     <void-engine>   — full-screen WebGL neon tunnel (cursor-warped,
+                       scroll-driven). attr: intensity
      <particle-type> — text rendered as a living particle field.
-                       attrs: text
-   Sound is toggled via:  document.dispatchEvent(
-     new CustomEvent('void:sound', { detail: { on: true } }))
+                       attrs: text, font
+   Neither makes a sound. The site has no audio at all.
    ============================================================ */
 (function () {
   'use strict';
@@ -23,7 +22,7 @@
     'uniform float uTime;',
     'uniform vec2 uMouse;',
     'uniform float uIntensity;',
-    'uniform float uAudio;',
+    'uniform float uPulse;',
     'uniform float uScroll;',
     'mat2 rot(float a){ float c=cos(a), s=sin(a); return mat2(c,-s,s,c); }',
     'float hash(vec2 p){ p=fract(p*vec2(234.34,435.345)); p+=dot(p,p+34.23); return fract(p.x*p.y); }',
@@ -70,17 +69,17 @@
     '  float md=length(uv-m);',
     '  uv+=(uv-m)*0.22*smoothstep(1.0,0.0,md);',
     '  float r=length(uv);',
-    '  float ca=0.04*(1.0+uAudio*1.5);',
+    '  float ca=0.04*(1.0+uPulse*1.5);',
     '  float e0=scene(uv, 0.0);',
     '  float e1=scene(uv, ca*2.5);',
     '  float e2=scene(uv, ca*5.0);',
     '  float depth=0.33/(r+0.07)+uTime*0.5+uScroll*1.7;',
     '  vec3 hue=pal(depth*0.06+uTime*0.02);',
     '  vec3 col=vec3(e0,e1,e2)*(0.72+1.05*hue);',
-    '  col+=pal(uTime*0.04+0.5)*(0.05+0.08*uAudio)/(abs(r-0.16)+0.05);',
+    '  col+=pal(uTime*0.04+0.5)*(0.05+0.08*uPulse)/(abs(r-0.16)+0.05);',
     '  col+=pal(uTime*0.07)*0.2/(md+0.12)*uIntensity;',
     '  col*=smoothstep(0.015,0.34,r);',
-    '  col*=0.8+0.5*uAudio;',
+    '  col*=0.8+0.5*uPulse;',
     '  col*=1.0-0.32*pow(min(r*0.6,1.2),2.2);',
     '  col*=0.96+0.04*sin(gl_FragCoord.y*1.7+uTime*30.0);',
     '  col=pow(max(col,0.0), vec3(0.72));',
@@ -107,7 +106,7 @@
       this._mx = 0; this._my = 0; this._tmx = 0; this._tmy = 0;
       this._scroll = 0; this._tscroll = 0;
       this._intensity = 0.35; this._tintensity = 0.35;
-      this._audio = 0.3;
+      this._pulse = 0.3;
     }
 
     attributeChangedCallback(name, _o, v) {
@@ -159,7 +158,7 @@
         time: gl.getUniformLocation(prog, 'uTime'),
         mouse: gl.getUniformLocation(prog, 'uMouse'),
         intensity: gl.getUniformLocation(prog, 'uIntensity'),
-        audio: gl.getUniformLocation(prog, 'uAudio'),
+        pulse: gl.getUniformLocation(prog, 'uPulse'),
         scroll: gl.getUniformLocation(prog, 'uScroll')
       };
 
@@ -172,11 +171,9 @@
         self._tscroll = window.scrollY / Math.max(1, window.innerHeight);
       };
       this._onResize = function () { self._resize(); };
-      this._onSound = function (e) { self._setSound(!!(e.detail && e.detail.on)); };
       window.addEventListener('pointermove', this._onMove);
       window.addEventListener('scroll', this._onScroll, { passive: true });
       window.addEventListener('resize', this._onResize);
-      document.addEventListener('void:sound', this._onSound);
 
       this._resize();
       var loop = function (t) {
@@ -191,8 +188,6 @@
       window.removeEventListener('pointermove', this._onMove);
       window.removeEventListener('scroll', this._onScroll);
       window.removeEventListener('resize', this._onResize);
-      document.removeEventListener('void:sound', this._onSound);
-      if (this._actx) { try { this._actx.close(); } catch (e) {} this._actx = null; this._analyser = null; }
       this._init = false;
     }
 
@@ -206,61 +201,6 @@
       this._gl.viewport(0, 0, this._canvas.width, this._canvas.height);
     }
 
-    /* ----- drone audio ----- */
-    _setSound(on) {
-      var self = this;
-      if (on) {
-        if (!this._actx) {
-          try {
-            var ctx = this._actx = new (window.AudioContext || window.webkitAudioContext)();
-            var master = this._master = ctx.createGain();
-            master.gain.value = 0;
-            var analyser = this._analyser = ctx.createAnalyser();
-            analyser.fftSize = 256;
-            analyser.smoothingTimeConstant = 0.82;
-            this._fbuf = new Uint8Array(analyser.frequencyBinCount);
-            master.connect(analyser);
-            analyser.connect(ctx.destination);
-            var filt = ctx.createBiquadFilter();
-            filt.type = 'lowpass'; filt.frequency.value = 420; filt.Q.value = 5;
-            filt.connect(master);
-            var mk = function (type, freq, g) {
-              var o = ctx.createOscillator(); o.type = type; o.frequency.value = freq;
-              var og = ctx.createGain(); og.gain.value = g;
-              o.connect(og); og.connect(filt); o.start();
-              return o;
-            };
-            mk('sine', 55, 0.5);
-            mk('sine', 55.7, 0.4);     /* beat frequency shimmer */
-            mk('sawtooth', 110.3, 0.16);
-            mk('sine', 27.5, 0.55);    /* sub */
-            var lfo = ctx.createOscillator(); lfo.frequency.value = 0.07;
-            var lg = ctx.createGain(); lg.gain.value = 260;
-            lfo.connect(lg); lg.connect(filt.frequency); lfo.start();
-            var lfo2 = ctx.createOscillator(); lfo2.frequency.value = 0.5;
-            var lg2 = ctx.createGain(); lg2.gain.value = 0.05;
-            lfo2.connect(lg2); lg2.connect(master.gain); lfo2.start();
-          } catch (e) {
-            console.error('[void-engine] audio init failed', e);
-            return;
-          }
-        }
-        this._actx.resume().then(function () {
-          var t = self._actx.currentTime;
-          self._master.gain.cancelScheduledValues(t);
-          self._master.gain.setValueAtTime(self._master.gain.value, t);
-          self._master.gain.linearRampToValueAtTime(0.16, t + 1.6);
-          self._soundOn = true;
-        });
-      } else if (this._actx && this._soundOn) {
-        var t = this._actx.currentTime;
-        this._master.gain.cancelScheduledValues(t);
-        this._master.gain.setValueAtTime(this._master.gain.value, t);
-        this._master.gain.linearRampToValueAtTime(0.0, t + 0.6);
-        this._soundOn = false;
-      }
-    }
-
     _draw(tms) {
       var gl = this._gl;
       if (!gl) return;
@@ -269,21 +209,15 @@
       this._my += (this._tmy - this._my) * 0.06;
       this._scroll += (this._tscroll - this._scroll) * 0.05;
       this._intensity += (this._tintensity - this._intensity) * 0.03;
-      var lvl;
-      if (this._analyser && this._soundOn) {
-        this._analyser.getByteFrequencyData(this._fbuf);
-        var s = 0;
-        for (var i = 1; i < 24; i++) s += this._fbuf[i];
-        lvl = Math.min(1.2, (s / 23 / 255) * 2.4);
-      } else {
-        lvl = 0.38 + 0.28 * Math.sin(t * 0.6) + 0.12 * Math.sin(t * 2.3);
-      }
-      this._audio += (lvl - this._audio) * 0.1;
+      /* This used to be a live FFT of the drone. The drone is gone; the
+         breathing it drove is worth keeping, so it is two sines now. */
+      var lvl = 0.38 + 0.28 * Math.sin(t * 0.6) + 0.12 * Math.sin(t * 2.3);
+      this._pulse += (lvl - this._pulse) * 0.1;
       gl.uniform2f(this._u.res, this._canvas.width, this._canvas.height);
       gl.uniform1f(this._u.time, t);
       gl.uniform2f(this._u.mouse, this._mx, this._my);
       gl.uniform1f(this._u.intensity, this._intensity);
-      gl.uniform1f(this._u.audio, Math.max(0, this._audio));
+      gl.uniform1f(this._u.pulse, Math.max(0, this._pulse));
       gl.uniform1f(this._u.scroll, this._scroll);
       gl.drawArrays(gl.TRIANGLES, 0, 3);
     }
@@ -294,7 +228,7 @@
 
   class ParticleType extends HTMLElement {
     /* `font` names the display face the glyphs are sampled from — a CSS font
-       shorthand minus the size, e.g. font="400 Anton". It defaults to the
+       shorthand minus the size, e.g. font="900 Zen Kaku Gothic New". Defaults to
        Unbounded 900 the console has always used, so pages that do not set it
        are unaffected. */
     static get observedAttributes() { return ['text', 'font']; }
@@ -377,7 +311,7 @@
 
     /* '<weight> <family>' + a size, as ctx.font wants it. */
     _face(px) {
-      var f = (this.getAttribute('font') || '400 Anton').trim();
+      var f = (this.getAttribute('font') || '900 Zen Kaku Gothic New').trim();
       var sp = f.indexOf(' ');
       return f.slice(0, sp) + ' ' + px + 'px ' + f.slice(sp + 1) + ', sans-serif';
     }

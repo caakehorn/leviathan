@@ -141,53 +141,25 @@ footer::before {
 }
 
 /* ══════════════════════════════════════════════════════════════════════
-   THE LOCKUPS — the approved display system, shared so a page never has to
-   redraw one by hand.
+   TYPE — one family, Zen Kaku Gothic New: a Japanese foundry's modern
+   gothic, the face Tokyo signage is set in. 900 shouts, 700 labels, 400
+   reads. IBM Plex Mono stays on the data readouts.
 
-     .lock   Anton. The tall condensed lockup: stacked titles, mastheads.
-     .plate  Archivo Black. The wide one: buttons, tabs, section heads,
-             anything short that has to hold at 10-14px.
-
-   Both ship a single weight, so both pin font-weight — a browser asked for
-   700 on a 400-only face synthesises it and the glyphs smear.
-
-   A fill goes on top as a second class. The gradient fills clip to the text,
-   which rules out text-shadow for the extrude (the shadow would be cast by
-   the transparent glyph), so they extrude with stacked drop-shadow filters
-   and take their hard-offset colour from --edge.
+   Deliberately undecorated: no outline, no extrude, no gradient fill. The
+   page is already loud — the type does not need to be drawn on.
    ══════════════════════════════════════════════════════════════════════ */
 
-.lock { font-family: 'Anton', sans-serif; font-weight: 400; text-transform: uppercase;
-  letter-spacing: .006em; }
-.plate { font-family: 'Archivo Black', sans-serif; font-weight: 400; text-transform: uppercase;
-  letter-spacing: .01em; }
-.lean { transform: skewX(-8deg); }
+.lock { font-family: 'Zen Kaku Gothic New', sans-serif; font-weight: 900;
+  text-transform: uppercase; letter-spacing: -.02em; }
+.plate { font-family: 'Zen Kaku Gothic New', sans-serif; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .16em; }
+.lean { transform: none; }
 
-.fill-chrome, .fill-gold, .fill-spectrum {
-  -webkit-background-clip: text; background-clip: text;
-  color: transparent; -webkit-text-fill-color: transparent;
+.fill-chrome, .fill-gold, .fill-spectrum, .fill-flat {
+  -webkit-text-stroke: 0; -webkit-text-fill-color: currentColor;
+  background: none; color: #fff;
 }
-.fill-chrome {
-  background-image: linear-gradient(180deg, #ffffff 0%, #e4edfa 24%, #93a8c4 46%,
-    #46566e 51%, #7f93ae 56%, #d5e3f6 74%, #ffffff 92%);
-  filter: drop-shadow(2px 2px 0 var(--edge, var(--purple)))
-    drop-shadow(4px 4px 0 rgba(0,0,0,.85))
-    drop-shadow(0 0 26px var(--edge-glow, rgba(176,38,255,.55)));
-}
-.fill-gold {
-  background-image: linear-gradient(180deg, #fff6d6 0%, #ffd400 26%, #b47a08 50%,
-    #ffdf5c 62%, #fff6d6 88%);
-  filter: drop-shadow(2px 2px 0 #4a2c00) drop-shadow(4px 4px 0 rgba(0,0,0,.85))
-    drop-shadow(0 0 24px rgba(255,212,0,.5));
-}
-.fill-spectrum {
-  background-image: linear-gradient(96deg, var(--pink) 0%, var(--purple) 22%, #4d7cff 44%,
-    var(--cerulean) 62%, var(--cerulean-hi) 78%, #ffd400 100%);
-  filter: drop-shadow(2px 2px 0 rgba(0,0,0,.9)) drop-shadow(0 0 30px rgba(176,38,255,.6))
-    drop-shadow(0 0 60px rgba(0,183,255,.35));
-}
-.fill-flat {
-  color: #fff;
-  text-shadow: 2px 2px 0 var(--edge, var(--purple)), 3px 3px 0 rgba(0,0,0,.8),
-    0 0 18px var(--edge-glow, rgba(176,38,255,.5));
-}
+.fill-chrome { text-shadow: 0 0 .7em var(--edge-glow, rgba(0,183,255,.5)); }
+.fill-gold { color: #ffd400; text-shadow: 0 0 .7em rgba(255,212,0,.45); }
+.fill-spectrum { text-shadow: 0 0 .5em rgba(255,47,157,.55), 0 0 1.4em rgba(0,183,255,.4); }
+.fill-flat { text-shadow: 0 0 .5em var(--edge-glow, rgba(176,38,255,.45)); }

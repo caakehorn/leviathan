@@ -13,7 +13,7 @@
     'background:rgba(14,3,32,0.96);padding:34px 30px;box-shadow:0 0 90px rgba(0,225,255,0.22)}',
     '#lv-quiz .tag{font-size:11px;letter-spacing:0.3em;color:#00e1ff;text-shadow:0 0 14px rgba(0,225,255,0.7)}',
     '#lv-quiz .say{margin:16px 0 22px;font-size:15px;line-height:1.75;color:#f0e2ff;',
-    "font-family:'Chakra Petch',sans-serif;text-wrap:pretty}",
+    "font-family:'Zen Kaku Gothic New',sans-serif;text-wrap:pretty}",
     '#lv-quiz input{width:100%;box-sizing:border-box;background:rgba(0,0,0,0.55);',
     'border:1px solid rgba(0,225,255,0.45);color:#7ff4ff;font-family:inherit;font-size:13px;',
     'padding:12px 13px;letter-spacing:0.05em;outline:none}',
