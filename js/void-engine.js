@@ -377,7 +377,7 @@
 
     /* '<weight> <family>' + a size, as ctx.font wants it. */
     _face(px) {
-      var f = (this.getAttribute('font') || '900 Unbounded').trim();
+      var f = (this.getAttribute('font') || '400 Anton').trim();
       var sp = f.indexOf(' ');
       return f.slice(0, sp) + ' ' + px + 'px ' + f.slice(sp + 1) + ', sans-serif';
     }
