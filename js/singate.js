@@ -283,11 +283,6 @@
     document.documentElement.classList.remove('lv-sealed');
     if (ov) { ov.remove(); ov = null; }
     window.dispatchEvent(new CustomEvent('lv-sin-unlocked'));
-    if (!window.LVScore && !document.getElementById('lv-score-js')) {
-      var s = document.createElement('script');
-      s.id = 'lv-score-js'; s.src = './js/score.js'; s.async = true;
-      document.head.appendChild(s);
-    }
   }
 
   async function boot() {

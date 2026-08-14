@@ -158,19 +158,6 @@
     var ov = document.getElementById('lv-gate');
     if (ov) ov.remove();
     window.dispatchEvent(new CustomEvent('lv-unlocked'));
-    score();
-  }
-
-  // THE SCORE loads here rather than from a <script> tag on each page, so it
-  // reaches every page the gate reaches and never plays to someone who has not
-  // got through the gate. Failing to load costs nothing but silence.
-  function score() {
-    if (window.LVScore || document.getElementById('lv-score-js')) return;
-    var s = document.createElement('script');
-    s.id = 'lv-score-js';
-    s.src = base() + 'js/score.js';
-    s.async = true;
-    document.head.appendChild(s);
   }
 
   // Pages sit at the repo root, but the root itself is served as a directory,
@@ -396,7 +383,6 @@
   function paintGate() {
     styleOnce();
     tally('passphrase-shown');
-    score();   // load the score engine now, so LVScore.prewarm() exists on submit
 
     var ov = document.createElement('div');
     ov.id = 'lv-gate';
@@ -420,10 +406,6 @@
     var submit = async function () {
       var v = input.value;
       if (!v || go.disabled) return;
-      // Pre-warm audio inside this gesture, before the await below spends the
-      // user activation. On success the score starts the moment we unlock, with
-      // no second click needed. Harmless if the passphrase turns out wrong.
-      try { if (window.LVScore) window.LVScore.prewarm(); } catch (e) { }
       err.textContent = ''; go.disabled = true; go.textContent = 'CHECKING…';
       try {
         await tryPassphrase(v);

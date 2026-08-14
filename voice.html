@@ -152,11 +152,6 @@
     T.state.mx = (e.clientX / innerWidth - .5) * 2;
     T.state.my = -(e.clientY / innerHeight - .5) * 2;
   });
-  var armed = false;
-  function arm() { if (armed) return; armed = true; try { T.audio(); T.startDrone(); } catch (e) {} }
-  addEventListener('pointerdown', arm, { once: true });
-  addEventListener('keydown', arm, { once: true });
-
   A.load(function (m) { statusEl.textContent = m; })
     .then(function () {
       var meta = A.meta();

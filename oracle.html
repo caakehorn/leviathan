@@ -213,16 +213,6 @@
     T.state.my = -(e.clientY / window.innerHeight - 0.5) * 2;
   });
 
-  // Audio needs a gesture. Any gesture, once.
-  var armed = false;
-  function armAudio() {
-    if (armed) return;
-    armed = true;
-    try { T.audio(); T.startDrone(); } catch (e) { /* no audio: everything else stands */ }
-  }
-  window.addEventListener('pointerdown', armAudio, { once: true });
-  window.addEventListener('keydown', armAudio, { once: true });
-
   document.querySelectorAll('.rite').forEach(function (b) {
     b.addEventListener('click', function () {
       rite = b.getAttribute('data-rite');
