@@ -301,7 +301,6 @@
 
   function consult() {
     if (busy || speakEl.disabled) return;
-    armAudio();
     busy = true;
     speakEl.disabled = true;
     var question = askEl.value;

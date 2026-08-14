@@ -663,10 +663,18 @@ class Component extends DCLogic {
     window.addEventListener('keydown', this.onKey);
     if (this.state.phase !== 'splash') setTimeout(() => this._setPhase(this.state.phase), 30);
     else setTimeout(() => this._setPhase('splash'), 30); // unpause the statically-paused galaxy
-    // Deep links: #void skips the splash, #archive goes straight to the gate.
+    // Deep links: #void skips the splash, #archive goes straight to the gate,
+    // and #corpus / #wiki go straight to that half of the archive with its
+    // opening tab staged — the same thing enterCorpus/enterWiki do, so an
+    // index can point at either half as a destination in its own right.
+    // (Those two were in-page anchors once. The sections they named live
+    // inside the void phase, which is not in the DOM while the splash is up,
+    // so the links silently landed on the splash and nothing scrolled.)
     const h = (location.hash || '').replace('#', '');
     if (h === 'void') setTimeout(() => this._setPhase('void'), 60);
     else if (h === 'archive') setTimeout(() => { this._setPhase('void'); this.requestArchive(); }, 60);
+    else if (h === 'corpus') setTimeout(() => { this._setPhase('void'); this.setState({ section: 'corpus', tab: 'pulse' }); this.requestArchive(); }, 60);
+    else if (h === 'wiki') setTimeout(() => { this._setPhase('void'); this.setState({ section: 'wiki', tab: 'web' }); this.requestArchive(); }, 60);
     // Data is encrypted and loaded on demand — the archive prompts for a
     // passphrase (see requestArchive/_showGate) before decrypting.
     //

@@ -216,12 +216,11 @@
     setTimeout(function () { T.state.tCharge = 0.16; }, 700);
   }
 
-  goEl.addEventListener('click', function () { arm(); once(); });
+  goEl.addEventListener('click', function () { once(); });
   seedEl.addEventListener('keydown', function (e) {
-    if (e.key === 'Enter') { e.preventDefault(); arm(); once(); }
+    if (e.key === 'Enter') { e.preventDefault(); once(); }
   });
   loopEl.addEventListener('click', function () {
-    arm();
     running = !running;
     loopEl.textContent = running ? '■ STOP' : 'LET IT RUN ▸';
     statusEl.textContent = running ? 'IT IS TALKING. IT DOES NOT STOP ON ITS OWN.' : 'STOPPED.';

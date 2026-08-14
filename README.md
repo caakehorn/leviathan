@@ -28,7 +28,7 @@ css/
 js/
   gate.js             # THE GATE: terms → quiz → curtain → passphrase, in front
                        # of every page; loads tos.js, quiz.js and GoatCounter
-  temple.js           # THE TEMPLE's shared runtime: field, seeded rng, sigil, audio
+  temple.js           # THE TEMPLE's shared runtime: field, seeded rng, sigil
   annie.js            # ANNIE: her half of the corpus, reduced to structure
   tos.js              # the Terms of Service dialog gate.js loads on demand
   quiz.js             # the quiz + decoy maze gate.js loads on demand
@@ -297,9 +297,9 @@ existing dataset if a rebuild loses more than 20% of its pages, words, or edges
 ## THE TEMPLE — a section
 
 `temple.html` is the index; each chapel is its own page. `js/temple.js` is the
-shared runtime (the WebGL field, the seeded RNG, the sigil renderer, the Web
-Audio voice) and `js/annie.js` is the corpus layer every Annie-side chapel
-draws from.
+shared runtime (the WebGL field, the seeded RNG, the sigil renderer) and
+`js/annie.js` is the corpus layer every Annie-side chapel draws from. The site
+makes no sound: there is no audio anywhere in it.
 
 TempleOS shipped with an oracle: Terry Davis wired a hardware RNG to a
 dictionary and read what came back as God talking. The mechanism was trivial,

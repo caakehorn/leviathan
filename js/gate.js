@@ -160,15 +160,6 @@
     window.dispatchEvent(new CustomEvent('lv-unlocked'));
   }
 
-  // Pages sit at the repo root, but the root itself is served as a directory,
-  // so a relative src has to be resolved against the depth of the current path.
-  function base() {
-    var seg = location.pathname.replace(/\/[^\/]*$/, '/').split('/').length;
-    var root = document.querySelector('script[src*="js/gate.js"]');
-    if (root) return root.getAttribute('src').replace(/js\/gate\.js.*$/, '');
-    return seg > 2 ? '../' : './';
-  }
-
   // ── the gate itself ─────────────────────────────────────────────────────
   var CSS = [
     '#lv-gate{position:fixed;inset:0;z-index:2147483647;display:flex;align-items:center;',

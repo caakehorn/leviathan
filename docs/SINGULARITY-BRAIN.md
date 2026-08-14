@@ -270,7 +270,6 @@ Each phase is independently shippable. We stop and look after each.
 
 - **The Rule / determinism** carries over: same graph → same mind, seeded
   positions, no editorializing beyond what the typed claims already assert.
-- **The generative score** plays here too.
 - It reuses the Singularity palette and the black-hole vocabulary already
   shipped — the encyclopedia and the brain are two organs of the same wing.
 
