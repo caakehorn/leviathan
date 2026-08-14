@@ -69,7 +69,7 @@
     constructor() {
       this.COL = COL;
       this.MONO = "'IBM Plex Mono', monospace";
-      this.GROT = "'Chakra Petch', sans-serif";
+      this.GROT = "'Nunito', sans-serif";
       this.M = {};
       this.mouse = { x: -1, y: -1, down: false };
       this.state = {

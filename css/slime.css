@@ -144,8 +144,8 @@ footer::before {
    THE LOCKUPS — the approved display system, shared so a page never has to
    redraw one by hand.
 
-     .lock   Anton. The tall condensed lockup: stacked titles, mastheads.
-     .plate  Archivo Black. The wide one: buttons, tabs, section heads,
+     .lock   Luckiest Guy. The big rounded comic lockup: titles, mastheads.
+     .plate  Fredoka. The rounded workhorse: buttons, tabs, section heads,
              anything short that has to hold at 10-14px.
 
    Both ship a single weight, so both pin font-weight — a browser asked for
@@ -157,37 +157,35 @@ footer::before {
    and take their hard-offset colour from --edge.
    ══════════════════════════════════════════════════════════════════════ */
 
-.lock { font-family: 'Anton', sans-serif; font-weight: 400; text-transform: uppercase;
+.lock { font-family: 'Luckiest Guy', cursive; font-weight: 400; text-transform: uppercase;
   letter-spacing: .006em; }
-.plate { font-family: 'Archivo Black', sans-serif; font-weight: 400; text-transform: uppercase;
+.plate { font-family: 'Fredoka', sans-serif; font-weight: 600; text-transform: uppercase;
   letter-spacing: .01em; }
 .lean { transform: skewX(-8deg); }
 
-.fill-chrome, .fill-gold, .fill-spectrum {
-  -webkit-background-clip: text; background-clip: text;
-  color: transparent; -webkit-text-fill-color: transparent;
+/* Every display heading on the site, whether it uses .lock or sets the family
+   in an inline style — an attribute selector is the only hook the inline-styled
+   pages give us. The stroke is never set inline anywhere, so it always lands;
+   a page that already has its own text-shadow keeps it and just gains the
+   outline. */
+.lock, [style*="Luckiest Guy"] {
+  -webkit-text-stroke: .05em #0b0219;
+  paint-order: stroke fill;
 }
-.fill-chrome {
-  background-image: linear-gradient(180deg, #ffffff 0%, #e4edfa 24%, #93a8c4 46%,
-    #46566e 51%, #7f93ae 56%, #d5e3f6 74%, #ffffff 92%);
-  filter: drop-shadow(2px 2px 0 var(--edge, var(--purple)))
-    drop-shadow(4px 4px 0 rgba(0,0,0,.85))
-    drop-shadow(0 0 26px var(--edge-glow, rgba(176,38,255,.55)));
+
+.fill-chrome, .fill-gold, .fill-spectrum, .fill-flat {
+  -webkit-text-stroke: .055em #0b0219;
+  paint-order: stroke fill;
+  -webkit-text-fill-color: currentColor;
 }
-.fill-gold {
-  background-image: linear-gradient(180deg, #fff6d6 0%, #ffd400 26%, #b47a08 50%,
-    #ffdf5c 62%, #fff6d6 88%);
-  filter: drop-shadow(2px 2px 0 #4a2c00) drop-shadow(4px 4px 0 rgba(0,0,0,.85))
-    drop-shadow(0 0 24px rgba(255,212,0,.5));
-}
-.fill-spectrum {
-  background-image: linear-gradient(96deg, var(--pink) 0%, var(--purple) 22%, #4d7cff 44%,
-    var(--cerulean) 62%, var(--cerulean-hi) 78%, #ffd400 100%);
-  filter: drop-shadow(2px 2px 0 rgba(0,0,0,.9)) drop-shadow(0 0 30px rgba(176,38,255,.6))
-    drop-shadow(0 0 60px rgba(0,183,255,.35));
-}
-.fill-flat {
-  color: #fff;
-  text-shadow: 2px 2px 0 var(--edge, var(--purple)), 3px 3px 0 rgba(0,0,0,.8),
-    0 0 18px var(--edge-glow, rgba(176,38,255,.5));
-}
+.fill-chrome { color: #fff;
+  text-shadow: .045em .045em 0 var(--edge, var(--cerulean)), .075em .075em 0 rgba(0,0,0,.9),
+    0 0 .5em var(--edge-glow, rgba(0,183,255,.5)); }
+.fill-gold { color: #ffd400;
+  text-shadow: .045em .045em 0 var(--pink), .075em .075em 0 rgba(0,0,0,.9),
+    0 0 .5em rgba(255,212,0,.45); }
+.fill-spectrum { color: var(--pink);
+  text-shadow: .045em .045em 0 #ffd400, .075em .075em 0 var(--cerulean),
+    .105em .105em 0 rgba(0,0,0,.9), 0 0 .6em rgba(255,47,157,.5); }
+.fill-flat { color: #fff;
+  text-shadow: .04em .04em 0 var(--edge, var(--purple)), .07em .07em 0 rgba(0,0,0,.85); }

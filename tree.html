@@ -18,7 +18,7 @@
 <link rel="icon" href="data:,">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous">
-<link href="https://fonts.googleapis.com/css2?family=Anton&amp;family=Archivo+Black&amp;family=Chakra+Petch:wght@400;500;600;700&amp;family=IBM+Plex+Mono:wght@400;600;700&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Luckiest+Guy&amp;family=Fredoka:wght@500;600;700&amp;family=Nunito:wght@400;600;700;900&amp;family=IBM+Plex+Mono:wght@400;600;700&amp;display=swap" rel="stylesheet">
 <style>
   * { box-sizing: border-box; }
   html, body { margin: 0; padding: 0; height: 100%; background: #03040a; color: #e6ded1;
@@ -36,7 +36,7 @@
   /* ── chrome ─────────────────────────────────────────────────────────────── */
   header.bar { flex: none; display: flex; align-items: center; gap: 14px; padding: 11px 16px;
     border-bottom: 1px solid var(--line); background: rgba(6,6,10,.94); z-index: 6; flex-wrap: wrap; }
-  .brand { font-family: 'Anton', sans-serif; font-weight: 400; font-size: 15px; color: #fff;
+  .brand { font-family: 'Luckiest Guy', cursive; font-weight: 400; font-size: 15px; color: #fff;
     letter-spacing: -.01em; white-space: nowrap; }
   .brand span { color: var(--amber); }
   .stats { display: flex; gap: 14px; flex-wrap: wrap; font-size: 9px; letter-spacing: .16em;
@@ -78,7 +78,7 @@
   .card.is-focus .card-bg { fill: rgba(38,28,10,.97); stroke: var(--amber); stroke-width: 2; }
   .card.is-spouse .card-bg { stroke-dasharray: 4 3; }
   .card.is-added .card-bg { stroke: #7fe3ff; }
-  .card-name { fill: #f4ece0; font-size: 13px; font-family: 'Chakra Petch', sans-serif; font-weight: 500; }
+  .card-name { fill: #f4ece0; font-size: 13px; font-family: 'Nunito', sans-serif; font-weight: 500; }
   .card.is-focus .card-name { fill: #fff; font-weight: 700; }
   .card-life { fill: var(--amber); font-size: 10.5px; letter-spacing: .06em; }
   .card-place { fill: #6f6a5c; font-size: 8.5px; letter-spacing: .04em; }
@@ -117,7 +117,7 @@
   body[data-view="index"] aside.side { display: none; }
 
   .p-kicker { font-size: 8.5px; letter-spacing: .26em; color: var(--amber-dim); }
-  #panel h2 { margin: 8px 0 0; font-family: 'Anton', sans-serif; font-weight: 400;
+  #panel h2 { margin: 8px 0 0; font-family: 'Luckiest Guy', cursive; font-weight: 400;
     font-size: 26px; line-height: 1.08; color: #fff; letter-spacing: -.02em; }
   .p-life { margin-top: 6px; font-size: 13px; color: var(--amber); letter-spacing: .06em; }
   .p-tags { margin-top: 12px; display: flex; flex-wrap: wrap; gap: 5px; }
@@ -132,14 +132,14 @@
   .fact .k { flex: none; width: 74px; font-size: 8.5px; letter-spacing: .18em; color: var(--faint);
     padding-top: 3px; }
   .fact .v { flex: 1; font-size: 12px; line-height: 1.6; color: var(--ink);
-    font-family: 'Chakra Petch', sans-serif; }
+    font-family: 'Nunito', sans-serif; }
 
   .p-block, .p-rels { margin-top: 24px; }
   #panel h4 { margin: 0 0 10px; font-size: 8.5px; letter-spacing: .24em; color: var(--amber-dim);
     font-weight: 400; }
   .p-li { display: flex; gap: 10px; padding: 5px 0; font-size: 11px; line-height: 1.5; }
   .p-li b { flex: none; width: 74px; color: var(--amber); font-weight: 400; }
-  .p-li span { color: var(--mute); font-family: 'Chakra Petch', sans-serif; }
+  .p-li span { color: var(--mute); font-family: 'Nunito', sans-serif; }
 
   .rel { margin-bottom: 18px; }
   .chips { display: flex; flex-direction: column; gap: 4px; }
@@ -147,7 +147,7 @@
     width: 100%; text-align: left; font: inherit; background: rgba(255,255,255,.02);
     border: 1px solid rgba(120,110,90,.22); color: var(--ink); padding: 7px 10px; cursor: pointer; }
   .chip:hover { border-color: var(--amber); background: var(--amber-ghost); }
-  .chip b { font-family: 'Chakra Petch', sans-serif; font-weight: 500; font-size: 12px; }
+  .chip b { font-family: 'Nunito', sans-serif; font-weight: 500; font-size: 12px; }
   .chip i { font-style: normal; font-size: 10px; color: var(--faint); white-space: nowrap; }
   .p-none { font-size: 11px; color: var(--faint); }
 
@@ -155,7 +155,7 @@
   .p-src summary { font-size: 8.5px; letter-spacing: .24em; color: var(--amber-dim); cursor: pointer; }
   .p-src ul { margin: 12px 0 0; padding-left: 16px; }
   .p-src li { font-size: 10.5px; line-height: 1.7; color: var(--mute);
-    font-family: 'Chakra Petch', sans-serif; }
+    font-family: 'Nunito', sans-serif; }
   .p-id { margin-top: 26px; font-size: 8px; letter-spacing: .2em; color: #34312a; }
 
   /* ── the index ──────────────────────────────────────────────────────────── */
@@ -176,7 +176,7 @@
     color: var(--ink); font: inherit; padding: 10px 16px; cursor: pointer; }
   .row:hover { background: var(--amber-ghost); }
   .row.on { background: rgba(232,176,75,.1); box-shadow: inset 2px 0 0 var(--amber); }
-  .r-name { flex: 0 1 340px; min-width: 0; font-family: 'Chakra Petch', sans-serif; font-size: 13px;
+  .r-name { flex: 0 1 340px; min-width: 0; font-family: 'Nunito', sans-serif; font-size: 13px;
     overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .r-life { flex: none; width: 112px; font-size: 11px; color: var(--amber); }
   .r-place { flex: 1; min-width: 0; font-size: 10.5px; color: var(--faint);
@@ -185,7 +185,7 @@
 
   .boot-err { position: absolute; inset: 0; display: flex; flex-direction: column;
     align-items: center; justify-content: center; text-align: center; padding: 30px; gap: 6px; }
-  .boot-err h3 { font-family: 'Anton', sans-serif; color: var(--amber); margin: 0 0 8px;
+  .boot-err h3 { font-family: 'Luckiest Guy', cursive; color: var(--amber); margin: 0 0 8px;
     font-size: 18px; }
   .boot-err p { margin: 0; font-size: 11.5px; color: var(--mute); max-width: 52ch; line-height: 1.8; }
 
@@ -198,7 +198,7 @@
     align-items: baseline; justify-content: space-between; gap: 12px;
     background: rgba(10,9,7,.94); border: 1px solid var(--line); color: var(--ink);
     font: inherit; padding: 11px 13px; cursor: pointer; text-align: left; }
-  .peek span { font-family: 'Chakra Petch', sans-serif; font-size: 13px; overflow: hidden;
+  .peek span { font-family: 'Nunito', sans-serif; font-size: 13px; overflow: hidden;
     text-overflow: ellipsis; white-space: nowrap; }
   .peek i { font-style: normal; font-size: 9px; letter-spacing: .18em; color: var(--amber);
     white-space: nowrap; }

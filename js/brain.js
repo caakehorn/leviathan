@@ -202,7 +202,7 @@
     var lab = hover >= 0 ? hover : sel;
     if (lab >= 0 && N[lab].sz > 0) {
       var ln = N[lab];
-      g.font = '600 12px "Chakra Petch", system-ui, sans-serif';
+      g.font = '600 12px "Nunito", system-ui, sans-serif';
       var text = ln.title, tw = g.measureText(text).width;
       var lx = ln.sx + 12, ly = ln.sy - 10;
       if (lx + tw + 10 > W) lx = ln.sx - tw - 12;
