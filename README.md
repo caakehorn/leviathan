@@ -16,8 +16,10 @@ temple.html           # THE TEMPLE — the section index (see below)
 oracle.html           #   CHAPEL I · the seeded oracle over the whole record
 voice.html            #   CHAPEL II · a trigram chain over Annie's messages
 clock.html            #   CHAPEL III · eleven years of her messages as a spiral
-terms.html            # the Terms of Service, rendered from js/tos.js — the one
-                       # page not behind the gate
+terms.html            # the Terms of Service, rendered from js/tos.js — one of the
+                       # two pages not behind the gate
+standard.html         # THE RECORD STANDARD, rendered from js/standard.js — the
+                       # other one (see below)
 archive.html          # decoy: a fake "archive index" the quiz trap can lead to
 final.html            # decoy: a fake "final determination" screen
 transcript2.html      # decoy: chained from final.html
@@ -31,6 +33,8 @@ js/
   temple.js           # THE TEMPLE's shared runtime: field, seeded rng, sigil
   annie.js            # ANNIE: her half of the corpus, reduced to structure
   tos.js              # the Terms of Service dialog gate.js loads on demand
+  standard.js         # THE RECORD STANDARD: the editorial rule, mirrored verbatim
+                       # from caakehorn/home's src/content/standard.ts
   quiz.js             # the quiz + decoy maze gate.js loads on demand
   support.js          # runtime: custom <x-dc> template engine, resource loading
   pen-core.js         # the pen scaffold: lanes, volume, playhead, verbatim feed
@@ -74,6 +78,45 @@ robots.txt            # advisory: disallow-all, since the gate fronts everything
     pages.yml         # GitHub Actions workflow that deploys to Pages
     sync-wiki.yml     # hourly rebuild of wiki-data.json from wiki-brain
 ```
+
+## THE RECORD STANDARD
+
+`standard.html` is the editorial rule this material is written under, and it
+sits in front of the gate for a reason adjacent to the terms'. The terms are
+ahead of the gate because terms you cannot read before agreeing to them are
+not terms. The standard is ahead of it because the people these clauses
+protect are the *subjects*, not the visitors, and a subject should not have to
+clear a consent screen and a passphrase to find out what the record is allowed
+to do to them.
+
+Eight clauses, most written to be inconvenient to their author:
+
+| | clause | what it forbids |
+| --- | --- | --- |
+| §1 | an entry is dated, not current | maintaining a page to agree with how the operator feels today |
+| §2 | correction is not revision | editing because a subject became inconvenient, rather than because the evidence moved |
+| §3 | archive, do not degrade | reading `archived` as a verdict — the page keeps its text, citations, connections and place in the chronology |
+| §4 | one bar, every subject | letting the evidence threshold move with the operator's current feelings; rounding anyone up |
+| §5 | no unstated editorial rules | any private policy governing the wiki, including one written down somewhere non-public |
+| §6 | the operator may stop | nothing — he may suspend any line of work for any reason, provided the stop is logged so a gap reads as a decision |
+| §7 | subjects read this | pretending otherwise; the material that is hard to publish is what proves the rest |
+| §8 | amendment | amending in private, or amending in order to license an edit the current text forbids |
+
+Below the clauses, **STANDING NOTICES** is a dated, append-only log of §6
+stops. A suspension that lifts gets a second entry; the first is never
+deleted, because a log you can subtract from is not a log.
+
+The text is `js/standard.js`, rendered with `textContent` like `js/tos.js`,
+plain strings only. It is a **verbatim mirror** — `src/content/standard.ts` in
+`caakehorn/home` is canonical, and the two are generated from one source so
+the deployments cannot drift into saying different things about the same
+people. It belongs in `caakehorn/wiki-brain` as well, which is where the prose
+is authored and therefore the only place the rule binds at the point of
+writing.
+
+`CLAUDE.md` restates the clauses that break first, because the fastest way to
+violate §5 is to write the private rule into a file and call the file
+not public-facing.
 
 ## SLIME — the palette
 
