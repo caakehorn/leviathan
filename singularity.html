@@ -15,7 +15,7 @@
 <link rel="icon" href="data:,">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous">
-<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@700;900&amp;family=Space+Grotesk:wght@400;500;700&amp;family=IBM+Plex+Mono:wght@400;600;700&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700;900&amp;family=IBM+Plex+Mono:wght@400;600;700&amp;display=swap" rel="stylesheet">
 <style>
   * { box-sizing: border-box; }
   html, body { margin: 0; padding: 0; min-height: 100%; background: #03040a; color: #e7e0f2;
@@ -29,10 +29,10 @@
   .wrap { position: relative; z-index: 3; max-width: 1000px; margin: 0 auto; padding: 11vh 22px 12vh; }
   header.t { text-align: center; }
   .kick { font-size: 10px; letter-spacing: .46em; color: #cf9dff; text-transform: uppercase; }
-  h1 { margin: 14px 0 0; font-family: 'Unbounded', sans-serif; font-weight: 900;
+  h1 { margin: 14px 0 0; font-family: 'Zen Kaku Gothic New', sans-serif; font-weight: 900;
     font-size: clamp(40px, 11.5vw, 150px); line-height: .82; letter-spacing: -.035em; color: #fff;
     text-shadow: 0 0 44px rgba(176,38,255,.6), 0 0 150px rgba(0,183,255,.4); }
-  .creed { margin: 24px auto 0; max-width: 62ch; font-family: 'Space Grotesk', sans-serif;
+  .creed { margin: 24px auto 0; max-width: 62ch; font-family: 'Zen Kaku Gothic New', sans-serif;
     font-size: 15px; line-height: 1.82; color: #b9add0; text-wrap: pretty; text-shadow: 0 1px 14px #03040a; }
   .creed em { color: #7fe3ff; font-style: normal; }
 
@@ -44,15 +44,18 @@
     transition: border-color .2s ease, transform .2s ease, box-shadow .2s ease; }
   a.door:hover { transform: translateY(-4px); border-color: #cf9dff; box-shadow: 0 0 80px rgba(176,38,255,.26); }
   a.door .no { font-size: 9.5px; letter-spacing: .4em; color: #cf9dff; }
-  a.door h2 { margin: 12px 0 0; font-family: 'Unbounded', sans-serif; font-weight: 900;
+  a.door h2 { margin: 12px 0 0; font-family: 'Zen Kaku Gothic New', sans-serif; font-weight: 900;
     font-size: clamp(26px, 5vw, 44px); line-height: .98; color: #fff; letter-spacing: -.02em; }
-  a.door p { margin: 14px 0 0; font-family: 'Space Grotesk', sans-serif; font-size: 14px;
+  a.door p { margin: 14px 0 0; font-family: 'Zen Kaku Gothic New', sans-serif; font-size: 14px;
     line-height: 1.72; color: #b3aac8; flex: 1; text-wrap: pretty; }
   a.door .meta { margin-top: 14px; font-size: 9px; letter-spacing: .2em; color: #7a6f96; }
   a.door .go { margin-top: 14px; font-size: 10.5px; letter-spacing: .26em; color: #cf9dff; }
   a.feed { border-color: rgba(255,196,60,.36); }
   a.feed:hover { border-color: #ffc43c; box-shadow: 0 0 80px rgba(255,196,60,.24); }
   a.feed .no, a.feed .go { color: #ffc43c; }
+  a.line { border-color: rgba(232,176,75,.34); }
+  a.line:hover { border-color: #e8b04b; box-shadow: 0 0 80px rgba(232,176,75,.24); }
+  a.line .no, a.line .go { color: #e8b04b; }
   a.wiki { border-color: rgba(0,183,255,.34); }
   a.wiki:hover { border-color: #00b7ff; box-shadow: 0 0 80px rgba(0,183,255,.26); }
   a.wiki .no, a.wiki .go { color: #7fe3ff; }
@@ -99,8 +102,19 @@
       <div class="go">FALL IN ►</div>
     </a>
 
+    <a class="door line" href="./tree.html">
+      <div class="no">III</div>
+      <h2>THE LINE</h2>
+      <p>The family tree, drawn and walkable — every person the research has
+        found, with the dates and places that are actually on record. Click
+        anyone to stand where they stood: ancestors climb away above them,
+        descendants spread out below.</p>
+      <div class="meta" id="line-meta">A GROWING RECORD</div>
+      <div class="go">WALK IT ►</div>
+    </a>
+
     <a class="door feed" href="./factstory.html" style="grid-column:1/-1;min-height:0">
-      <div class="no">III · THE WAY IN</div>
+      <div class="no">IV · THE WAY IN</div>
       <h2>FACT TIME / STORY TIME</h2>
       <p>The manual ingestion queue. The corpus only knows what was already written
         down somewhere — every formative thing that was only ever said out loud is
@@ -168,6 +182,21 @@
     requestAnimationFrame(frame);
   }
   requestAnimationFrame(frame);
+})();
+
+// THE LINE's door carries live counts. data/tree-meta.json is a few hundred
+// bytes — the whole tree is ~340 KB and has no business loading here. If the
+// fetch fails the door keeps its written fallback rather than showing zeroes.
+(function () {
+  fetch('./data/tree-meta.json', { cache: 'no-cache' })
+    .then(function (r) { return r.ok ? r.json() : null; })
+    .then(function (m) {
+      if (!m || !m.people) return;
+      var bits = [m.people + ' PEOPLE', m.families + ' FAMILIES'];
+      if (m.span) bits.push('BACK TO ' + m.span[0]);
+      document.getElementById('line-meta').textContent = bits.join(' · ');
+    })
+    .catch(function () { });
 })();
 </script>
 </body>

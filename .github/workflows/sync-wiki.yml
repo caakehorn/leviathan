@@ -79,13 +79,24 @@ jobs:
         run: |
           upstream="$(git -C .wiki-brain rev-parse HEAD)"
           current="$(python3 -c "import json;print(json.load(open('data/wiki-data.json')).get('source_commit',''))" 2>/dev/null || echo '')"
+          # data/wiki-meta.json is derived from the dataset, so it can be stale
+          # even when the dataset is current — and if it is, validate.yml fails
+          # on every commit while this check, looking only at source_commit,
+          # keeps deciding there is nothing to rebuild. That is a deadlock no
+          # amount of waiting clears, so a disagreeing (or missing) meta file
+          # counts as stale in its own right.
+          meta="$(python3 -c "import json;print(json.load(open('data/wiki-meta.json')).get('source_commit',''))" 2>/dev/null || echo '')"
           echo "upstream=$upstream" >> "$GITHUB_OUTPUT"
           echo "wiki-brain HEAD : $upstream"
           echo "built from      : ${current:-<none>}"
-          if [ "$upstream" = "$current" ] && [ "$FORCE" != "true" ]; then
+          echo "meta built from : ${meta:-<none>}"
+          if [ "$upstream" = "$current" ] && [ "$upstream" = "$meta" ] && [ "$FORCE" != "true" ]; then
             echo "stale=false" >> "$GITHUB_OUTPUT"
             echo "already up to date — nothing to do"
           else
+            if [ "$current" = "$upstream" ] && [ "$meta" != "$upstream" ]; then
+              echo "dataset is current but wiki-meta.json is not — rebuilding to resync it"
+            fi
             echo "stale=true" >> "$GITHUB_OUTPUT"
           fi
 
@@ -125,7 +136,7 @@ jobs:
         env:
           UPSTREAM: ${{ steps.check.outputs.upstream }}
         run: |
-          if git diff --quiet -- data/wiki-data.json data/brain.json; then
+          if git diff --quiet -- data/wiki-data.json data/wiki-meta.json data/brain.json; then
             echo "changed=false" >> "$GITHUB_OUTPUT"
             echo "wiki-data.json is unchanged"
             exit 0
@@ -146,7 +157,7 @@ jobs:
           ")"
           git config user.name  'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add data/wiki-data.json data/brain.json
+          git add data/wiki-data.json data/wiki-meta.json data/brain.json
           git commit -m "Sync wiki data from wiki-brain@$UPSTREAM" -m "$stats"
           git push
           echo "changed=true" >> "$GITHUB_OUTPUT"

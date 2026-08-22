@@ -139,3 +139,27 @@ footer::before {
 @media (prefers-reduced-motion: reduce) {
   .sl-drips { display: none; }
 }
+
+/* ══════════════════════════════════════════════════════════════════════
+   TYPE — one family, Zen Kaku Gothic New: a Japanese foundry's modern
+   gothic, the face Tokyo signage is set in. 900 shouts, 700 labels, 400
+   reads. IBM Plex Mono stays on the data readouts.
+
+   Deliberately undecorated: no outline, no extrude, no gradient fill. The
+   page is already loud — the type does not need to be drawn on.
+   ══════════════════════════════════════════════════════════════════════ */
+
+.lock { font-family: 'Zen Kaku Gothic New', sans-serif; font-weight: 900;
+  text-transform: uppercase; letter-spacing: -.02em; }
+.plate { font-family: 'Zen Kaku Gothic New', sans-serif; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .16em; }
+.lean { transform: none; }
+
+.fill-chrome, .fill-gold, .fill-spectrum, .fill-flat {
+  -webkit-text-stroke: 0; -webkit-text-fill-color: currentColor;
+  background: none; color: #fff;
+}
+.fill-chrome { text-shadow: 0 0 .7em var(--edge-glow, rgba(0,183,255,.5)); }
+.fill-gold { color: #ffd400; text-shadow: 0 0 .7em rgba(255,212,0,.45); }
+.fill-spectrum { text-shadow: 0 0 .5em rgba(255,47,157,.55), 0 0 1.4em rgba(0,183,255,.4); }
+.fill-flat { text-shadow: 0 0 .5em var(--edge-glow, rgba(176,38,255,.45)); }

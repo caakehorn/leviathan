@@ -11,6 +11,7 @@ ask.html              # standalone view of instrument VI · THE ASK
 ledger.html           # THE DRUG LEDGER — day by day, both directions
 money.html            # THE FAMILY LEDGER — where the money came from
 transcript.html       # THE TRANSCRIPT — the complete message record, searchable
+tree.html             # THE LINE — the family tree, drawn and walkable (see below)
 temple.html           # THE TEMPLE — the section index (see below)
 oracle.html           #   CHAPEL I · the seeded oracle over the whole record
 voice.html            #   CHAPEL II · a trigram chain over Annie's messages
@@ -27,7 +28,7 @@ css/
 js/
   gate.js             # THE GATE: terms → quiz → curtain → passphrase, in front
                        # of every page; loads tos.js, quiz.js and GoatCounter
-  temple.js           # THE TEMPLE's shared runtime: field, seeded rng, sigil, audio
+  temple.js           # THE TEMPLE's shared runtime: field, seeded rng, sigil
   annie.js            # ANNIE: her half of the corpus, reduced to structure
   tos.js              # the Terms of Service dialog gate.js loads on demand
   quiz.js             # the quiz + decoy maze gate.js loads on demand
@@ -35,6 +36,7 @@ js/
   pen-core.js         # the pen scaffold: lanes, volume, playhead, verbatim feed
   galaxy-cluster.js   # particle background simulation
   void-engine.js      # VOID visual layer
+  tree.js             # THE LINE: GEDCOM-derived tree layout, panel, index
   wiki-reader.js      # WIKI reader: markdown rendering, search, page navigation
   wiki-modules.js     # first-wave wiki visualizers (WEB, CLAIMS, MASS, …)
   wiki-analytics.js   # second-wave wiki instruments computed from page prose
@@ -50,9 +52,14 @@ js/
 data/
   leviathan.enc       # AES-256-GCM encrypted content bundle (decrypted in-browser)
   wiki-data.json      # WIKI section dataset, built from github.com/caakehorn/wiki-brain
+  wiki-meta.json      # the same headline counts alone, ~175 B, for pages that cannot afford 2.5 MB
   transcript.json     # the message record behind transcript.html, built from a CSV export
+  tree.json           # THE LINE's dataset, built from a GEDCOM export
+  tree-meta.json      # its headline counts alone, ~150 B, for singularity.html's door
+  tree-additions.json # hand-maintained people and corrections, merged over the GEDCOM
 tools/
-  build-wiki-data.py  # regenerates data/wiki-data.json from a wiki-brain checkout
+  build-tree.py       # regenerates data/tree.json + data/tree-meta.json from a .ged export
+  build-wiki-data.py  # regenerates data/wiki-data.json + data/wiki-meta.json from a wiki-brain checkout
   encrypt.py          # writes blobs in the site's AES-256-GCM format
   build-transcript.py # regenerates data/transcript.json from an iMessage CSV export
   build-transcript-index.js # regenerates js/transcript-index.js from the two above
@@ -106,6 +113,16 @@ TEMPLE`, and `05 — OPEN A CHANNEL`. **PHASE 02** is the LEVIATHAN console
 itself, 37 instruments over two sections; the corpus and wiki halves have
 separate entry points from the void (`enterCorpus` / `enterWiki`) that stage
 the section before the passphrase gate is asked for.
+
+Both halves of that console are on this side of the site, and both are on the
+same canvas and the same tab bar — `◈ CORPUS` and `◈ WIKI` at its left end swap
+which set of instruments the nineteen/eighteen numbered tabs address, and every
+module draws through `draw_<tab>` regardless of which section it belongs to.
+`wiki.html`, over on the Singularity side, is the wiki's *prose reader* and only
+that; it has never carried the instruments. Routing `enterWiki` / `toWiki` there
+is therefore not a shortcut but a deletion — it retires all eighteen wiki
+instruments while leaving their code loaded and unreachable, which is exactly
+what happened between the move to the Singularity and this note.
 
 The page renders through a small client-side template engine (the `<x-dc>` element
 and `{{ ... }}` bindings). React and ReactDOM are loaded at runtime from the unpkg
@@ -280,9 +297,9 @@ existing dataset if a rebuild loses more than 20% of its pages, words, or edges
 ## THE TEMPLE — a section
 
 `temple.html` is the index; each chapel is its own page. `js/temple.js` is the
-shared runtime (the WebGL field, the seeded RNG, the sigil renderer, the Web
-Audio voice) and `js/annie.js` is the corpus layer every Annie-side chapel
-draws from.
+shared runtime (the WebGL field, the seeded RNG, the sigil renderer) and
+`js/annie.js` is the corpus layer every Annie-side chapel draws from. The site
+makes no sound: there is no audio anywhere in it.
 
 TempleOS shipped with an oracle: Terry Davis wired a hardware RNG to a
 dictionary and read what came back as God talking. The mechanism was trivial,
@@ -376,6 +393,81 @@ struck; the surviving per-category precision ships in `meta.precision` and is
 displayed on the instrument. Regenerating it means re-running that merge — the
 file is a build artifact of the raw exports, not hand-authored like `R`.
 
+## THE LINE — the family tree
+
+`tree.html` is the Singularity's third door. It draws one dataset,
+`data/tree.json`, as an hourglass around a single focus person: ancestors
+climbing away above, descendants spreading below, spouses beside, and every card
+clickable to make that person the new focus. `js/tree.js` does the whole thing —
+layout, drawing, pan/zoom, the person panel and the searchable index — with no
+dependencies and no runtime from the Temple app.
+
+Three views, one keystroke apart: the diagram, the **INDEX** (every person,
+searchable by name, alias or place, filterable to the living / the undated / the
+unsourced / the hand-added), and the person panel. `/` opens search, `F` fits,
+`H` returns to the home person, `Backspace` walks back through the focus
+history, and `#<id>` in the URL deep-links to anybody.
+
+### Growing it
+
+The dataset is **generated, never hand-edited**. `data/tree.json` is overwritten
+on every build, so anything typed into it is destroyed. New people get in one of
+two ways:
+
+```sh
+tools/build-tree.py path/to/export.ged        # re-export from Ancestry, rebuild
+tools/build-tree.py --help-additions          # the other way, explained
+```
+
+The second way is `data/tree-additions.json`, which the build merges over the
+GEDCOM every time it runs. That is where people the Ancestry tree does not have
+yet belong, along with corrections to people it does — an entry whose `id`
+already exists patches that record field by field, an entry with a new id
+creates one. Everything it touches is tagged `added: true` and draws in cyan, so
+research-in-progress never reads as a sourced fact. Because it is merged rather
+than baked in, re-exporting from Ancestry never loses it.
+
+Nothing in `js/tree.js` knows how many people there are, how deep the tree goes,
+or which surnames exist; it reads all of that out of the data on load. The
+headline counts on `singularity.html`'s door come from `data/tree-meta.json`, a
+~150-byte file the same build writes, so the door stays honest without pulling
+343 KB down onto the index page.
+
+### What it does and does not claim
+
+The builder distinguishes recorded facts from its own inferences, and the page
+keeps that distinction visible:
+
+- Dates keep their GEDCOM qualifiers. `about 1812` renders as `about 1812`, not
+  as `1812`.
+- People the file never dated get an **estimated** birth year, resolved off the
+  dated people around them (a marriage, a dated child, a dated parent). It is
+  always shown bracketed — `[c. 1798]` — and the panel says in words that it is
+  an estimate rather than a record.
+- Source citations are counted, not reproduced. Each person carries how many
+  distinct sources cite them and what those sources are called, which is what
+  `71% SOURCED` in the header and the `NO SOURCES` tag are reading.
+- Ancestry exports routinely carry the same couple as two `FAM` records, so
+  relation lookups dedupe by person. Where the *source* holds two records for
+  what looks like one person, the panel shows both rather than picking one —
+  those are merge candidates for the research, not display bugs.
+
+### Living people
+
+An individual with no death record whose estimated birth year is inside 100
+years is flagged `living` and tagged as such in the panel. **Nothing is withheld
+on that basis by default**, and `data/tree.json` is committed as plaintext, so
+the birth dates and birthplaces of the ~36 living people in the current export
+are readable by anyone who can read this repository — the gate on `tree.html`
+gates rendering, not access, exactly as ["What the gate does not
+do"](#what-the-gate-does-not-do) describes for every other payload here.
+
+If that is not wanted, `tools/build-tree.py --redact-living` rebuilds with
+everything but a name stripped from those records, and the same three steps in
+that section apply: encrypt the payload, purge the history, make the repository
+private. The raw `.ged` export is deliberately not committed; keep it outside
+the working tree.
+
 ## Keeping the WIKI section in sync
 
 `.github/workflows/sync-wiki.yml` keeps `data/wiki-data.json` in step with
@@ -405,6 +497,23 @@ does not expire — swap to it if the annual rotation becomes a nuisance. The
 checkout runs with `persist-credentials: false` so the token is not left behind
 in `.wiki-brain/.git/config` for later steps to read. When wiki-brain *has* moved it rebuilds, commits the
 result with the upstream SHA in the message, and then deploys the site.
+
+Keeping the file current is only half of it — the pages that read it have to
+stop trusting their caches. Both consumers (`void.html`'s wiki instruments and
+`wiki.html`'s reader) fetch with `cache: 'no-cache'`, which revalidates rather
+than re-downloads: an unchanged dataset costs one 304 and a changed one is
+picked up on the next load instead of whenever the Pages `max-age` happens to
+lapse. `wiki.html` used `force-cache` until this note and would happily serve a
+copy from before the last sync.
+
+Nothing about the wiki's size is typed by hand anywhere. `build-wiki-data.py`
+also writes `data/wiki-meta.json` — page count, typed edges, words, domains,
+log ops, `source_commit`, about 175 bytes — because `void.html` quotes those
+figures on its landing sections, where no visitor has decrypted anything and a
+2.5 MB fetch would be absurd. `validate.yml` recomputes every field from the
+dataset and fails if the two disagree, so the small file can never drift away
+from the large one. (Before it existed, the landing page claimed 343 pages long
+after the corpus passed 400.)
 
 It deploys by calling `pages.yml` directly rather than relying on that
 workflow's own push trigger: a push made with `GITHUB_TOKEN` deliberately does

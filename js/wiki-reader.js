@@ -1,7 +1,7 @@
 // LEVIATHAN · WIKI READER — full rebuild
 //
 // A reading surface built for THIS corpus and the ENTER THE VOID motif:
-// chromatic aberration, glitch, scanlines, Unbounded mastheads carried over
+// chromatic aberration, glitch, scanlines, Zen Kaku mastheads carried over
 // from the splash — wrapped around a prose column that stays genuinely
 // readable. The rule throughout: the CHROME is loud, the PROSE is calm.
 // Every effect lives in the masthead, the furniture, and the interactions;
@@ -182,7 +182,7 @@
   background:repeating-linear-gradient(0deg,rgba(255,255,255,.075) 0 1px,transparent 1px 4px)}
 /* giant outlined domain watermark behind the title */
 .rdr-wm{position:absolute;right:-2%;top:50%;transform:translateY(-50%);z-index:-1;pointer-events:none;
-  font-family:'Unbounded',sans-serif;font-weight:900;font-size:clamp(70px,15vw,210px);line-height:.8;
+  font-family:'Zen Kaku Gothic New',sans-serif;font-weight: 900;font-size:clamp(70px,15vw,210px);line-height:.8;
   letter-spacing:-.03em;color:transparent;-webkit-text-stroke:2px color-mix(in srgb,var(--d) 42%,transparent);
   opacity:.5;white-space:nowrap}
 /* corner brackets */
@@ -200,10 +200,10 @@
 .rdr-eyebrow em{font-style:normal;padding:3px 9px;background:var(--d);color:#041206;font-weight:700;
   letter-spacing:.24em;box-shadow:0 0 22px var(--d)}
 
-/* the title: Unbounded 900 (same family as the splash) sitting WHITE and legible
+/* the title: Zen Kaku Gothic New (same family as the splash) sitting WHITE and legible
    with a permanent chromatic fringe; the RGB-split ghosts only flash on the
    rare glitch frames so the headline never becomes mush to read */
-.rdr-title{position:relative;margin:0;font-family:'Unbounded',sans-serif;font-weight:900;
+.rdr-title{position:relative;margin:0;font-family:'Zen Kaku Gothic New',sans-serif;font-weight: 900;
   font-size:clamp(36px,5.6vw,76px);line-height:1.02;letter-spacing:-.018em;color:#fff;
   text-wrap:balance;
   -webkit-text-stroke:3px #020a04;paint-order:stroke fill;
@@ -245,7 +245,7 @@
 @keyframes rdrSlide{to{background-position:-200% 0}}
 
 /* ── body ── */
-.rdr-body{padding:44px 0 0;font-family:'Space Grotesk',sans-serif;position:relative}
+.rdr-body{padding:44px 0 0;font-family:'Zen Kaku Gothic New',sans-serif;position:relative}
 .rdr-body p{margin:0 0 19px;font-size:16.6px;line-height:1.86;color:#030e05;max-width:72ch;font-weight:500}
 /* lead-in: weight and a domain rule rather than a drop cap, which straddles
    two lines and reads as if it belongs to both */
@@ -261,7 +261,7 @@
   border:1px solid #b026ff;padding:1px 6px;color:#39ff14}
 
 .rdr-body h2{position:relative;margin:52px 0 20px;padding-left:18px;
-  font-family:'Unbounded',sans-serif;font-weight:700;font-size:clamp(19px,2.3vw,27px);
+  font-family:'Zen Kaku Gothic New',sans-serif;font-weight: 900;font-size:clamp(19px,2.3vw,27px);
   line-height:1.2;color:#fff;letter-spacing:-.005em;
   -webkit-text-stroke:2px #020a04;paint-order:stroke fill;
   text-shadow:3px 0 rgba(176,38,255,.75),-3px 0 rgba(57,255,20,.75)}
@@ -333,7 +333,7 @@
   border-right:1px solid color-mix(in srgb,var(--e) 30%,transparent);text-align:right;line-height:1.5}
 .rdr-ebody{padding:11px 16px}
 .rdr-ebody .t{display:block;font-family:'IBM Plex Mono',monospace;font-size:11.5px;margin-bottom:5px}
-.rdr-ebody .c{font-family:'Space Grotesk',sans-serif;font-size:13.4px;line-height:1.7;color:#d9f2e0;font-style:italic}
+.rdr-ebody .c{font-family:'Zen Kaku Gothic New',sans-serif;font-size:13.4px;line-height:1.7;color:#d9f2e0;font-style:italic}
 
 /* ── inbound / footer ── */
 .rdr-foot{max-width:1080px;margin:66px auto 0;padding:26px 56px 0;border-top:3px solid #127020;
@@ -355,13 +355,13 @@
   box-shadow:0 0 50px -10px var(--d),0 18px 50px rgba(0,0,0,.75);transition:opacity .11s}
 .rdr-pv.on{opacity:1}
 .rdr-pv .h{padding:8px 12px;font-size:8.5px;letter-spacing:.26em;color:#041206;background:var(--d)}
-.rdr-pv .t{padding:11px 12px 4px;font-family:'Unbounded',sans-serif;font-weight:700;font-size:14px;color:#fff;line-height:1.25}
-.rdr-pv .s{padding:0 12px 12px;font-family:'Space Grotesk',sans-serif;font-size:12px;line-height:1.62;color:#d9f2e0}
+.rdr-pv .t{padding:11px 12px 4px;font-family:'Zen Kaku Gothic New',sans-serif;font-weight: 900;font-size:14px;color:#fff;line-height:1.25}
+.rdr-pv .s{padding:0 12px 12px;font-family:'Zen Kaku Gothic New',sans-serif;font-size:12;font-size:12px;line-height:1.62;color:#d9f2e0}
 .rdr-pv .m{padding:7px 12px;border-top:1px solid rgba(176,38,255,.4);font-size:8.5px;letter-spacing:.16em;color:#39ff14}
 
 /* ── 404 ── */
 .rdr-404{padding:120px 56px;text-align:center}
-.rdr-404 div:first-child{font-family:'Unbounded',sans-serif;font-weight:900;font-size:54px;color:#b026ff;
+.rdr-404 div:first-child{font-family:'Zen Kaku Gothic New',sans-serif;font-weight: 900;font-size:54px;color:#b026ff;
   text-shadow:3px 0 #39ff14,-3px 0 #7b2dff;animation:rdrGa 3s steps(1) infinite}
 .rdr-404 div:last-child{margin-top:18px;font-size:10px;letter-spacing:.3em;color:#0f5c1c;font-weight:700}
 

@@ -47,6 +47,7 @@ jobs:
         run: |
           python3 -m py_compile tools/build-wiki-data.py
           python3 -m py_compile tools/build-transcript.py
+          python3 -m py_compile tools/build-tree.py
 
       - name: Parse workflows
         run: |
@@ -104,6 +105,27 @@ jobs:
           print(f'{len(pages)} pages, {typed} typed edges, '
                 f'{sum(p["words"] for p in pages):,} words, '
                 f'{len(d["wikiLog"]["ops"])} log ops')
+
+          # data/wiki-meta.json is the same headline counts in a file small
+          # enough for void.html to fetch before anything is decrypted. It is
+          # only worth having if it agrees with the dataset it summarises, so
+          # recompute every field rather than trusting that the two were built
+          # together.
+          m = json.load(open('data/wiki-meta.json', encoding='utf-8'))
+          want = {
+              'source': d['source'],
+              'source_commit': d['source_commit'],
+              'pages': len(pages),
+              'typed_edges': typed,
+              'words': sum(p['words'] for p in pages),
+              'domains': len({p['domain'] for p in pages}),
+              'log_ops': len(d['wikiLog']['ops']),
+          }
+          drift = {k: (v, m.get(k)) for k, v in want.items() if m.get(k) != v}
+          if drift:
+              sys.exit('error: wiki-meta.json disagrees with wiki-data.json '
+                       f'(field: expected, found) {drift}')
+          print(f'wiki-meta.json agrees with the dataset ({len(pages)} pages)')
           PY
 
       - name: Check the transcript dataset
@@ -139,6 +161,92 @@ jobs:
           sent = sum(1 for row in m if row[1])
           print(f'{len(m):,} messages, {ts[0][:10]} to {ts[-1][:10]}, '
                 f'{sent:,} sent / {len(m) - sent:,} received')
+          PY
+
+      - name: Check the tree dataset
+        run: |
+          python3 - <<'PY'
+          import json, sys
+          d = json.load(open('data/tree.json', encoding='utf-8'))
+
+          missing = {'meta', 'people', 'families'} - set(d)
+          if missing:
+              sys.exit(f'error: tree.json is missing top-level keys: {sorted(missing)}')
+
+          people, fams = d['people'], d['families']
+          if not people:
+              sys.exit('error: no people')
+
+          # js/tree.js reads these unconditionally on every card it draws.
+          for p in people:
+              for k in ('id', 'name'):
+                  if k not in p:
+                      sys.exit(f'error: person {p.get("id", "?")} is missing "{k}"')
+
+          P = {p['id'] for p in people}
+          F = {f['id'] for f in fams}
+          if len(P) != len(people):
+              sys.exit('error: duplicate person ids')
+          if len(F) != len(fams):
+              sys.exit('error: duplicate family ids')
+
+          # The builder drops pointers to records that do not exist, so a dangling
+          # one here means a hand-written addition slipped past it. The renderer
+          # would strand the node rather than fail, which is worse than failing.
+          for p in people:
+              for key in ('famc', 'fams'):
+                  bad = [x for x in p.get(key, []) if x not in F]
+                  if bad:
+                      sys.exit(f'error: {p["id"]} .{key} points at missing families: {bad}')
+          for f in fams:
+              bad = [c for c in f.get('children', []) if c not in P]
+              bad += [s for s in (f.get('husband'), f.get('wife')) if s and s not in P]
+              if bad:
+                  sys.exit(f'error: family {f["id"]} points at missing people: {bad}')
+
+          root = d['meta'].get('root')
+          if root not in P:
+              sys.exit(f'error: meta.root {root!r} is not in the tree')
+
+          c = d['meta']['counts']
+          if c['people'] != len(people) or c['families'] != len(fams):
+              sys.exit(f'error: meta.counts disagrees with the arrays: {c}')
+
+          print(f'{len(people)} people, {len(fams)} families, '
+                f'{c["living"]} living, {c["added"]} from additions, '
+                f'generations {d["meta"]["generations"]}, span {d["meta"]["span"]}')
+
+          # data/tree-meta.json is the same headline counts in a file small enough
+          # for singularity.html's door to fetch. Same reasoning as wiki-meta.json
+          # above: recompute rather than trust that the two were built together.
+          m = json.load(open('data/tree-meta.json', encoding='utf-8'))
+          want = {
+              'people': len(people),
+              'families': len(fams),
+              'span': d['meta']['span'],
+              'generations': d['meta']['generations'],
+          }
+          drift = {k: (v, m.get(k)) for k, v in want.items() if m.get(k) != v}
+          if drift:
+              sys.exit('error: tree-meta.json disagrees with tree.json '
+                       f'(field: expected, found) {drift}')
+          print(f'tree-meta.json agrees with the dataset ({len(people)} people)')
+
+          # The additions overlay is the documented way to grow the tree, so a
+          # syntax error in it must fail here rather than silently drop people
+          # from the next build.
+          import pathlib
+          add = pathlib.Path('data/tree-additions.json')
+          if add.exists():
+              a = json.loads(add.read_text(encoding='utf-8'))
+              for kind in ('people', 'families'):
+                  if not isinstance(a.get(kind, []), list):
+                      sys.exit(f'error: tree-additions.json "{kind}" is not a list')
+                  for e in a.get(kind, []):
+                      if not e.get('id'):
+                          sys.exit(f'error: a tree-additions.json {kind} entry has no id')
+              print(f'tree-additions.json parses '
+                    f'({len(a.get("people", []))} people, {len(a.get("families", []))} families)')
           PY
 
       - name: Check index.html references files that exist

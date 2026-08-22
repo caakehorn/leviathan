@@ -43,7 +43,7 @@
   var hide = document.createElement('style');
   hide.setAttribute('data-lv-gate', '');
   hide.textContent = 'html.lv-locked body { visibility: hidden !important; }'
-    + 'html.lv-locked { background: #041206 !important; }';
+    + 'html.lv-locked { background: #0b0219 !important; }';
   (document.head || document.documentElement).appendChild(hide);
   document.documentElement.classList.add('lv-locked');
 
@@ -158,92 +158,70 @@
     var ov = document.getElementById('lv-gate');
     if (ov) ov.remove();
     window.dispatchEvent(new CustomEvent('lv-unlocked'));
-    score();
-  }
-
-  // THE SCORE loads here rather than from a <script> tag on each page, so it
-  // reaches every page the gate reaches and never plays to someone who has not
-  // got through the gate. Failing to load costs nothing but silence.
-  function score() {
-    if (window.LVScore || document.getElementById('lv-score-js')) return;
-    var s = document.createElement('script');
-    s.id = 'lv-score-js';
-    s.src = base() + 'js/score.js';
-    s.async = true;
-    document.head.appendChild(s);
-  }
-
-  // Pages sit at the repo root, but the root itself is served as a directory,
-  // so a relative src has to be resolved against the depth of the current path.
-  function base() {
-    var seg = location.pathname.replace(/\/[^\/]*$/, '/').split('/').length;
-    var root = document.querySelector('script[src*="js/gate.js"]');
-    if (root) return root.getAttribute('src').replace(/js\/gate\.js.*$/, '');
-    return seg > 2 ? '../' : './';
   }
 
   // ── the gate itself ─────────────────────────────────────────────────────
   var CSS = [
     '#lv-gate{position:fixed;inset:0;z-index:2147483647;display:flex;align-items:center;',
-    'justify-content:center;padding:24px;background:#041206;',
+    'justify-content:center;padding:24px;background:#0b0219;',
     "font-family:'IBM Plex Mono',ui-monospace,monospace;visibility:visible!important}",
     '#lv-gate::before{content:"";position:absolute;inset:0;pointer-events:none;background:',
-    'radial-gradient(ellipse 70% 55% at 22% 20%,rgba(57,255,20,0.20),transparent 66%),',
-    'radial-gradient(ellipse 55% 45% at 82% 76%,rgba(255,47,157,0.14),transparent 62%),',
+    'radial-gradient(ellipse 70% 55% at 22% 20%,rgba(0,225,255,0.20),transparent 66%),',
+    'radial-gradient(ellipse 55% 45% at 82% 76%,rgba(255,47,191,0.14),transparent 62%),',
     'radial-gradient(ellipse 50% 42% at 70% 14%,rgba(176,38,255,0.14),transparent 64%),',
-    'radial-gradient(ellipse 45% 38% at 10% 84%,rgba(0,183,255,0.12),transparent 62%)}',
+    'radial-gradient(ellipse 45% 38% at 10% 84%,rgba(176,38,255,0.12),transparent 62%)}',
     '#lv-gate::after{content:"";position:absolute;inset:0;pointer-events:none;mix-blend-mode:screen;',
-    'background:repeating-linear-gradient(0deg,rgba(0,7,2,0.22) 0px,rgba(0,7,2,0.22) 1px,rgba(57,255,20,0.035) 1px,transparent 3px)}',
-    '#lv-gate .bx{position:relative;z-index:1;width:min(520px,92vw);border:1px solid rgba(57,255,20,0.55);',
-    'background:rgba(3,13,7,0.96);padding:34px 30px;box-shadow:0 0 90px rgba(57,255,20,0.22)}',
-    '#lv-gate .tag{font-size:11px;letter-spacing:0.3em;color:#39ff14;text-shadow:0 0 14px rgba(57,255,20,0.7)}',
-    '#lv-gate .say{margin:16px 0 22px;font-size:15px;line-height:1.75;color:#e9ffe6;',
-    "font-family:'Space Grotesk',sans-serif;text-wrap:pretty}",
+    'background:repeating-linear-gradient(0deg,rgba(4,0,12,0.22) 0px,rgba(4,0,12,0.22) 1px,rgba(0,225,255,0.035) 1px,transparent 3px)}',
+    '#lv-gate .bx{position:relative;z-index:1;width:min(520px,92vw);border:1px solid rgba(0,225,255,0.55);',
+    'background:rgba(14,3,32,0.96);padding:34px 30px;box-shadow:0 0 90px rgba(0,225,255,0.22)}',
+    '#lv-gate .tag{font-size:11px;letter-spacing:0.3em;color:#00e1ff;text-shadow:0 0 14px rgba(0,225,255,0.7)}',
+    '#lv-gate .say{margin:16px 0 22px;font-size:15px;line-height:1.75;color:#f0e2ff;',
+    "font-family:'Zen Kaku Gothic New',sans-serif;text-wrap:pretty}",
     '#lv-gate input{width:100%;box-sizing:border-box;background:rgba(0,0,0,0.55);',
-    'border:1px solid rgba(57,255,20,0.45);color:#b6ff8f;font-family:inherit;font-size:13px;',
+    'border:1px solid rgba(0,225,255,0.45);color:#7ff4ff;font-family:inherit;font-size:13px;',
     'padding:12px 13px;letter-spacing:0.05em;outline:none}',
-    '#lv-gate input:focus{border-color:#00b7ff;box-shadow:0 0 0 1px rgba(0,183,255,0.35)}',
-    '#lv-gate .err{min-height:16px;font-size:10px;letter-spacing:0.1em;color:#ff2f9d;margin:9px 2px 0}',
-    '#lv-gate button{width:100%;margin-top:10px;cursor:pointer;background:#39ff14;border:1px solid #39ff14;',
-    'color:#041206;font-family:inherit;font-weight:700;font-size:11px;letter-spacing:0.22em;padding:13px}',
-    '#lv-gate button:hover{background:#b6ff8f}',
+    '#lv-gate input:focus{border-color:#b026ff;box-shadow:0 0 0 1px rgba(176,38,255,0.35)}',
+    '#lv-gate .err{min-height:16px;font-size:10px;letter-spacing:0.1em;color:#ff2fbf;margin:9px 2px 0}',
+    '#lv-gate button{width:100%;margin-top:10px;cursor:pointer;background:#00e1ff;border:1px solid #00e1ff;',
+    'color:#0b0219;font-family:inherit;font-weight:700;font-size:11px;letter-spacing:0.22em;padding:13px}',
+    '#lv-gate button:hover{background:#7ff4ff}',
     '#lv-gate button[disabled]{opacity:0.6;cursor:default}',
-    '#lv-gate .ft{margin-top:16px;font-size:9px;letter-spacing:0.18em;color:#4f8a63;line-height:1.9}',
+    '#lv-gate .ft{margin-top:16px;font-size:9px;letter-spacing:0.18em;color:#7a5aa8;line-height:1.9}',
     // ── the taunt: 30 seconds of the whole viewport, for a wrong passphrase ──
     // Doubles as the rate limit. It is stored as a deadline rather than a
     // timer, so reloading the page does not skip the wait.
     '#lv-taunt{position:fixed;inset:0;z-index:2147483647;display:flex;flex-direction:column;',
     'align-items:center;justify-content:center;text-align:center;padding:3vmin;gap:3vmin;',
     'background:#000;overflow:hidden;visibility:visible!important;',
-    "font-family:'Unbounded','Space Grotesk',system-ui,sans-serif;",
+    "font-family:'Zen Kaku Gothic New',system-ui,sans-serif;",
     'animation:lvTauntBg .34s steps(1) infinite}',
-    '#lv-taunt b{display:block;font-weight:900;line-height:0.92;letter-spacing:-0.01em;',
-    'font-size:clamp(42px,12.5vw,230px);color:#ff2f9d;text-transform:uppercase;',
-    'overflow-wrap:anywhere;text-shadow:0 0 30px #ff2f9d,0 0 90px rgba(255,47,157,0.8);',
+    '#lv-taunt b{display:block;font-weight: 900;line-height:0.92;letter-spacing:-0.01em;',
+    'font-size:clamp(42px,12.5vw,230px);color:#ff2fbf;text-transform:uppercase;',
+    'overflow-wrap:anywhere;text-shadow:0 0 30px #ff2fbf,0 0 90px rgba(255,47,191,0.8);',
     'animation:lvTauntTxt .34s steps(1) infinite}',
     '#lv-taunt .cd{font-family:\'IBM Plex Mono\',ui-monospace,monospace;font-size:clamp(10px,1.5vw,15px);',
-    'letter-spacing:0.34em;color:#39ff14;text-shadow:0 0 16px rgba(57,255,20,0.9)}',
+    'letter-spacing:0.34em;color:#00e1ff;text-shadow:0 0 16px rgba(0,225,255,0.9)}',
     // The echo line: empty until someone starts typing the code, so the screen
     // gives nothing away to anyone who does not already know there is one.
-    '#lv-taunt .cd.bad{color:#ff2f9d;text-shadow:0 0 16px rgba(255,47,157,0.9)}',
+    '#lv-taunt .cd.bad{color:#ff2fbf;text-shadow:0 0 16px rgba(255,47,191,0.9)}',
     // 0.34s per on-off cycle is ~2.9 flashes/second, just under the 3 Hz
     // general-flash threshold in WCAG 2.3.1 — the same line index.html's
     // enterflash comment draws. Fast enough to be unbearable, slow enough not
     // to be a seizure risk.
-    '@keyframes lvTauntBg{0%{background:#000}50%{background:#ff2f9d}}',
-    '@keyframes lvTauntTxt{0%{color:#ff2f9d;transform:scale(1)}50%{color:#000;transform:scale(1.04)}}',
+    '@keyframes lvTauntBg{0%{background:#000}50%{background:#ff2fbf}}',
+    '@keyframes lvTauntTxt{0%{color:#ff2fbf;transform:scale(1)}50%{color:#000;transform:scale(1.04)}}',
     // Same contract as every other animation on this site: the OS setting wins.
     // The taunt still takes the whole page for the whole 30 seconds — it just
     // stops strobing.
     '@media (prefers-reduced-motion:reduce){',
-    '#lv-taunt{animation:none;background:#0a0002}',
-    '#lv-taunt b{animation:none;color:#ff2f9d}}',
-    '#lv-decoy{position:fixed;inset:0;z-index:2147483647;background:#041206;overflow:auto;visibility:visible!important}',
-    '#lv-decoy .ldbar{position:fixed;top:0;left:0;right:0;height:26px;z-index:3;background:rgba(3,13,7,0.97);',
-    'border-bottom:1px solid #14471f;display:flex;align-items:center;gap:10px;padding:0 12px;',
-    "font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:9px;letter-spacing:0.2em;color:#39ff14}",
-    '#lv-decoy .ldtrack{flex:1;height:6px;background:#0a2410;border:1px solid #1c6b2e}',
-    '#lv-decoy .ldfill{height:100%;width:0%;background:#39ff14;box-shadow:0 0 10px rgba(57,255,20,0.8)}'
+    '#lv-taunt{animation:none;background:#050010}',
+    '#lv-taunt b{animation:none;color:#ff2fbf}}',
+    '#lv-decoy{position:fixed;inset:0;z-index:2147483647;background:#0b0219;overflow:auto;visibility:visible!important}',
+    '#lv-decoy .ldbar{position:fixed;top:0;left:0;right:0;height:26px;z-index:3;background:rgba(14,3,32,0.97);',
+    'border-bottom:1px solid #2a1147;display:flex;align-items:center;gap:10px;padding:0 12px;',
+    "font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:9px;letter-spacing:0.2em;color:#00e1ff}",
+    '#lv-decoy .ldtrack{flex:1;height:6px;background:#160331;border:1px solid #4a1f7d}',
+    '#lv-decoy .ldfill{height:100%;width:0%;background:#00e1ff;box-shadow:0 0 10px rgba(0,225,255,0.8)}'
   ].join('');
 
   // ── the copy ────────────────────────────────────────────────────────────
@@ -396,7 +374,6 @@
   function paintGate() {
     styleOnce();
     tally('passphrase-shown');
-    score();   // load the score engine now, so LVScore.prewarm() exists on submit
 
     var ov = document.createElement('div');
     ov.id = 'lv-gate';
@@ -420,10 +397,6 @@
     var submit = async function () {
       var v = input.value;
       if (!v || go.disabled) return;
-      // Pre-warm audio inside this gesture, before the await below spends the
-      // user activation. On success the score starts the moment we unlock, with
-      // no second click needed. Harmless if the passphrase turns out wrong.
-      try { if (window.LVScore) window.LVScore.prewarm(); } catch (e) { }
       err.textContent = ''; go.disabled = true; go.textContent = 'CHECKING…';
       try {
         await tryPassphrase(v);

@@ -20,7 +20,7 @@
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous">
-<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@700;900&amp;family=Space+Grotesk:wght@400;500;700&amp;family=IBM+Plex+Mono:wght@400;600;700&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700;900&amp;family=IBM+Plex+Mono:wght@400;600;700&amp;display=swap" rel="stylesheet">
 <link rel="stylesheet" href="./css/slime.css">
 <style>
   * { box-sizing: border-box; }
@@ -35,10 +35,10 @@
 
   .wrap { position: relative; z-index: 2; max-width: 940px; margin: 0 auto; padding: 34px 22px 140px; }
   .chap { font-size: 10px; letter-spacing: .42em; color: #ff2f9d; text-shadow: 0 0 14px rgba(255,47,157,.8); }
-  h1 { font-family: 'Unbounded', sans-serif; font-weight: 900; font-size: clamp(40px, 10vw, 116px);
+  h1 { font-family: 'Zen Kaku Gothic New', sans-serif; font-weight: 900; font-size: clamp(40px, 10vw, 116px);
     line-height: .9; letter-spacing: -.02em; margin: 12px 0 0; color: #fff;
     text-shadow: 0 0 30px rgba(255,47,157,.8), 0 0 90px rgba(255,47,157,.4), 0 0 170px rgba(176,38,255,.5); }
-  .creed { margin-top: 18px; font-family: 'Space Grotesk', sans-serif; font-size: 15px; line-height: 1.85;
+  .creed { margin-top: 18px; font-family: 'Zen Kaku Gothic New', sans-serif; font-size: 15px; line-height: 1.85;
     color: #cfe6c4; max-width: 62ch; text-wrap: pretty; text-shadow: 0 1px 10px #041206; }
   .scale { margin-top: 14px; font-size: 9.5px; letter-spacing: .2em; color: #b6ff8f; line-height: 2;
     text-shadow: 0 0 10px #041206; }
@@ -62,7 +62,7 @@
   #stream { margin-top: 28px; }
   .utt { border-left: 3px solid #ff2f9d; background: rgba(3,13,7,.82); backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px); padding: 16px 20px; margin-bottom: 12px;
-    font-family: 'Space Grotesk', sans-serif; font-size: clamp(17px, 2.4vw, 23px); line-height: 1.55;
+    font-family: 'Zen Kaku Gothic New', sans-serif; font-size: clamp(17px, 2.4vw, 23px); line-height: 1.55;
     color: #ffe1f2; overflow-wrap: anywhere; opacity: 0; animation: rise .7s cubic-bezier(.2,.8,.3,1) forwards; }
   @keyframes rise { to { opacity: 1; } }
   .utt .cursor { display: inline-block; width: .58ch; background: #ff2f9d; animation: blink 1s steps(1) infinite; }
@@ -152,11 +152,6 @@
     T.state.mx = (e.clientX / innerWidth - .5) * 2;
     T.state.my = -(e.clientY / innerHeight - .5) * 2;
   });
-  var armed = false;
-  function arm() { if (armed) return; armed = true; try { T.audio(); T.startDrone(); } catch (e) {} }
-  addEventListener('pointerdown', arm, { once: true });
-  addEventListener('keydown', arm, { once: true });
-
   A.load(function (m) { statusEl.textContent = m; })
     .then(function () {
       var meta = A.meta();
@@ -221,12 +216,11 @@
     setTimeout(function () { T.state.tCharge = 0.16; }, 700);
   }
 
-  goEl.addEventListener('click', function () { arm(); once(); });
+  goEl.addEventListener('click', function () { once(); });
   seedEl.addEventListener('keydown', function (e) {
-    if (e.key === 'Enter') { e.preventDefault(); arm(); once(); }
+    if (e.key === 'Enter') { e.preventDefault(); once(); }
   });
   loopEl.addEventListener('click', function () {
-    arm();
     running = !running;
     loopEl.textContent = running ? '■ STOP' : 'LET IT RUN ▸';
     statusEl.textContent = running ? 'IT IS TALKING. IT DOES NOT STOP ON ITS OWN.' : 'STOPPED.';
