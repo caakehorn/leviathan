@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./js/singate.js"></script>
+<title>THE SINGULARITY</title>
+<!-- THE SINGULARITY — Wing II, and now the home of the wiki.
+     Sealed by js/singate.js: consent + IP, then a name (both logged), then the
+     same passphrase as the Temple. The endless encyclopedia that used to live
+     here is gone. -->
+<meta name="robots" content="noindex, nofollow">
+<meta name="referrer" content="no-referrer">
+<meta name="theme-color" content="#03040a">
+<link rel="icon" href="data:,">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous">
+<link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700;900&amp;family=IBM+Plex+Mono:wght@400;600;700&amp;display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; min-height: 100%; background: #03040a; color: #e7e0f2;
+    font-family: 'IBM Plex Mono', ui-monospace, monospace; overflow-x: hidden; }
+  #hole { position: fixed; inset: 0; z-index: 0; display: block; width: 100%; height: 100%; }
+  #veil { position: fixed; inset: 0; z-index: 1; pointer-events: none;
+    background: linear-gradient(180deg, rgba(3,4,10,.1), rgba(3,4,10,.5) 44%, rgba(3,4,10,.93)); }
+  #grain { position: fixed; inset: 0; z-index: 1; pointer-events: none; opacity: .45;
+    background: repeating-linear-gradient(0deg, rgba(0,0,0,.28) 0 1px, transparent 1px 3px); }
+
+  .wrap { position: relative; z-index: 3; max-width: 1000px; margin: 0 auto; padding: 11vh 22px 12vh; }
+  header.t { text-align: center; }
+  .kick { font-size: 10px; letter-spacing: .46em; color: #cf9dff; text-transform: uppercase; }
+  h1 { margin: 14px 0 0; font-family: 'Zen Kaku Gothic New', sans-serif; font-weight: 900;
+    font-size: clamp(40px, 11.5vw, 150px); line-height: .82; letter-spacing: -.035em; color: #fff;
+    text-shadow: 0 0 44px rgba(176,38,255,.6), 0 0 150px rgba(0,183,255,.4); }
+  .creed { margin: 24px auto 0; max-width: 62ch; font-family: 'Zen Kaku Gothic New', sans-serif;
+    font-size: 15px; line-height: 1.82; color: #b9add0; text-wrap: pretty; text-shadow: 0 1px 14px #03040a; }
+  .creed em { color: #7fe3ff; font-style: normal; }
+
+  .doors { margin: 48px 0 0; display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+  @media (max-width: 760px) { .doors { grid-template-columns: 1fr; } }
+  a.door { display: flex; flex-direction: column; text-decoration: none; border: 1px solid rgba(176,38,255,.3);
+    background: rgba(6,8,16,.7); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+    padding: 30px 28px 26px; min-height: 250px;
+    transition: border-color .2s ease, transform .2s ease, box-shadow .2s ease; }
+  a.door:hover { transform: translateY(-4px); border-color: #cf9dff; box-shadow: 0 0 80px rgba(176,38,255,.26); }
+  a.door .no { font-size: 9.5px; letter-spacing: .4em; color: #cf9dff; }
+  a.door h2 { margin: 12px 0 0; font-family: 'Zen Kaku Gothic New', sans-serif; font-weight: 900;
+    font-size: clamp(26px, 5vw, 44px); line-height: .98; color: #fff; letter-spacing: -.02em; }
+  a.door p { margin: 14px 0 0; font-family: 'Zen Kaku Gothic New', sans-serif; font-size: 14px;
+    line-height: 1.72; color: #b3aac8; flex: 1; text-wrap: pretty; }
+  a.door .meta { margin-top: 14px; font-size: 9px; letter-spacing: .2em; color: #7a6f96; }
+  a.door .go { margin-top: 14px; font-size: 10.5px; letter-spacing: .26em; color: #cf9dff; }
+  a.feed { border-color: rgba(255,196,60,.36); }
+  a.feed:hover { border-color: #ffc43c; box-shadow: 0 0 80px rgba(255,196,60,.24); }
+  a.feed .no, a.feed .go { color: #ffc43c; }
+  a.line { border-color: rgba(232,176,75,.34); }
+  a.line:hover { border-color: #e8b04b; box-shadow: 0 0 80px rgba(232,176,75,.24); }
+  a.line .no, a.line .go { color: #e8b04b; }
+  a.wiki { border-color: rgba(0,183,255,.34); }
+  a.wiki:hover { border-color: #00b7ff; box-shadow: 0 0 80px rgba(0,183,255,.26); }
+  a.wiki .no, a.wiki .go { color: #7fe3ff; }
+
+  .backrow { position: relative; z-index: 3; text-align: center; padding: 0 22px 60px; }
+  .back { font-size: 10px; letter-spacing: .24em; color: #5a6b60; text-decoration: none;
+    border: 1px solid rgba(120,140,120,.3); padding: 10px 18px; }
+  .back:hover { color: #b6ff8f; border-color: #b6ff8f; }
+  @media (prefers-reduced-motion: reduce) { a.door { transition: none; } }
+</style>
+</head>
+<body>
+<canvas id="hole" aria-hidden="true"></canvas>
+<div id="veil" aria-hidden="true"></div>
+<div id="grain" aria-hidden="true"></div>
+
+<div class="wrap">
+  <header class="t">
+    <div class="kick">VOID + LEVIATHAN · WING II</div>
+    <h1>THE SINGULARITY</h1>
+    <p class="creed">The whole of the knowledge base, and the mind it adds up to.
+      <em>Everything past this point is recorded on the way in.</em></p>
+  </header>
+
+  <div class="doors">
+    <a class="door wiki" href="./wiki.html">
+      <div class="no">I</div>
+      <h2>THE WIKI</h2>
+      <p>The compiled second brain, in full — every domain, every page, every
+        typed connection between them. This is the written record itself, not a
+        visualisation of it. Read it straight through or follow the links.</p>
+      <div class="meta">NINE DOMAINS · 320 PAGES · READ IN FULL</div>
+      <div class="go">READ ►</div>
+    </a>
+
+    <a class="door" href="./brain.html">
+      <div class="no">II</div>
+      <h2>THE MIND</h2>
+      <p>The same knowledge with the words taken out — rendered as shape. Depth
+        is altitude, districts are domains sized by how built they are, and the
+        core states what the graph concludes about itself without anyone writing
+        it down.</p>
+      <div class="meta">311 NODES · 2,719 ARGUMENTS · SELF-DERIVED</div>
+      <div class="go">FALL IN ►</div>
+    </a>
+
+    <a class="door line" href="./tree.html">
+      <div class="no">III</div>
+      <h2>THE LINE</h2>
+      <p>The family tree, drawn and walkable — every person the research has
+        found, with the dates and places that are actually on record. Click
+        anyone to stand where they stood: ancestors climb away above them,
+        descendants spread out below.</p>
+      <div class="meta" id="line-meta">A GROWING RECORD</div>
+      <div class="go">WALK IT ►</div>
+    </a>
+
+    <a class="door feed" href="./factstory.html" style="grid-column:1/-1;min-height:0">
+      <div class="no">IV · THE WAY IN</div>
+      <h2>FACT TIME / STORY TIME</h2>
+      <p>The manual ingestion queue. The corpus only knows what was already written
+        down somewhere — every formative thing that was only ever said out loud is
+        invisible to it. Type it here and it gets analysed, linked and written into
+        the wiki as readable pages.</p>
+      <div class="meta">FACT OR STORY · APPENDED TO AN ONGOING ARTICLE · PENDING UNTIL INGESTED</div>
+      <div class="go">ADD SOMETHING ►</div>
+    </a>
+  </div>
+</div>
+
+<div class="backrow"><a class="back" href="./">◂ BACK TO THE THRESHOLD</a></div>
+
+<script>
+(function () {
+  // The accretion disk. Canvas 2D, additive, dark core — no shader to fail.
+  var cv = document.getElementById('hole'), g = cv.getContext('2d');
+  var DPR = Math.min(2, window.devicePixelRatio || 1), W, H, cx, cy, R;
+  var reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var M = 850, mote = [];
+  function seed() {
+    mote = [];
+    for (var i = 0; i < M; i++) mote.push({
+      a: Math.random() * Math.PI * 2, r: 0.16 + Math.pow(Math.random(), 0.5) * 0.84,
+      w: 0.2 + Math.random() * 0.9,
+      h: Math.random() < 0.2 ? '0,183,255' : (Math.random() < 0.3 ? '176,38,255' : '255,180,120'),
+      z: 0.4 + Math.random() * 0.6
+    });
+  }
+  function resize() {
+    W = cv.clientWidth = innerWidth; H = cv.clientHeight = innerHeight;
+    cv.width = W * DPR; cv.height = H * DPR; g.setTransform(DPR, 0, 0, DPR, 0, 0);
+    cx = W / 2; cy = H * 0.34; R = Math.min(W, H) * 0.46; seed();
+  }
+  addEventListener('resize', resize); resize();
+  function frame() {
+    g.clearRect(0, 0, W, H);
+    g.globalCompositeOperation = 'lighter';
+    var ring = g.createRadialGradient(cx, cy, R * 0.30, cx, cy, R * 0.54);
+    ring.addColorStop(0, 'rgba(0,0,0,0)');
+    ring.addColorStop(0.60, 'rgba(255,196,140,0.26)');
+    ring.addColorStop(0.71, 'rgba(255,255,238,0.48)');
+    ring.addColorStop(0.80, 'rgba(0,183,255,0.19)');
+    ring.addColorStop(0.9, 'rgba(176,38,255,0.15)');
+    ring.addColorStop(1, 'rgba(0,0,0,0)');
+    g.fillStyle = ring; g.beginPath(); g.arc(cx, cy, R * 0.95, 0, 7); g.fill();
+    for (var i = 0; i < mote.length; i++) {
+      var m = mote[i];
+      if (!reduce) {
+        m.a += (0.5 + (1 - m.r) * 1.7) * 0.010 * m.w;
+        m.r -= 0.00035 * (1.1 - m.r);
+        if (m.r < 0.16) { m.r = 1.0; m.a = Math.random() * Math.PI * 2; }
+      }
+      var rr = m.r * R, x = cx + Math.cos(m.a) * rr, y = cy + Math.sin(m.a) * rr * 0.42;
+      var beam = 0.55 + 0.45 * Math.sin(m.a), s = m.z * (1.5 - m.r) * 2.4;
+      var al = (0.08 + 0.72 * beam) * (1.05 - m.r);
+      g.fillStyle = 'rgba(' + m.h + ',' + al.toFixed(3) + ')';
+      g.fillRect(x, y, Math.max(0.7, s), Math.max(0.7, s));
+    }
+    g.globalCompositeOperation = 'source-over';
+    var core = g.createRadialGradient(cx, cy, 0, cx, cy, R * 0.34);
+    core.addColorStop(0, 'rgba(3,4,10,1)'); core.addColorStop(0.72, 'rgba(3,4,10,1)');
+    core.addColorStop(1, 'rgba(3,4,10,0)');
+    g.fillStyle = core; g.beginPath(); g.arc(cx, cy, R * 0.34, 0, 7); g.fill();
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+})();
+
+// THE LINE's door carries live counts. data/tree-meta.json is a few hundred
+// bytes — the whole tree is ~340 KB and has no business loading here. If the
+// fetch fails the door keeps its written fallback rather than showing zeroes.
+(function () {
+  fetch('./data/tree-meta.json', { cache: 'no-cache' })
+    .then(function (r) { return r.ok ? r.json() : null; })
+    .then(function (m) {
+      if (!m || !m.people) return;
+      var bits = [m.people + ' PEOPLE', m.families + ' FAMILIES'];
+      if (m.span) bits.push('BACK TO ' + m.span[0]);
+      document.getElementById('line-meta').textContent = bits.join(' · ');
+    })
+    .catch(function () { });
+})();
+</script>
+</body>
+</html>

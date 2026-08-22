@@ -125,13 +125,13 @@
     'uniform float uHueShift;',
     'out vec3 vColor;',
     'out float vGlow;',
-    /* the four site neons, blended on a loop: cyan→magenta→purple→green→cyan */
+    /* the four site neons, blended on a loop: slime→cerulean→purple→hot pink→slime */
     'vec3 neon(float h){',
     '  h = fract(h) * 4.0;',
-    '  vec3 c0 = vec3(0.0, 0.94, 1.0);',
-    '  vec3 c1 = vec3(1.0, 0.176, 0.584);',
-    '  vec3 c2 = vec3(0.482, 0.176, 1.0);',
-    '  vec3 c3 = vec3(0.0, 1.0, 0.616);',
+    '  vec3 c0 = vec3(0.224, 1.0, 0.078);',
+    '  vec3 c1 = vec3(0.0, 0.718, 1.0);',
+    '  vec3 c2 = vec3(0.69, 0.149, 1.0);',
+    '  vec3 c3 = vec3(1.0, 0.184, 0.616);',
     '  if (h < 1.0) return mix(c0, c1, h);',
     '  if (h < 2.0) return mix(c1, c2, h - 1.0);',
     '  if (h < 3.0) return mix(c2, c3, h - 2.0);',
@@ -192,22 +192,22 @@
     'void main(){',
     '  vec2 uv = (gl_FragCoord.xy * 2.0 - uRes) / uRes.y;',
     '  float r = length(uv);',
-    '  vec3 col = vec3(0.004, 0.0, 0.016);',
+    '  vec3 col = vec3(0.016, 0.071, 0.024);',
     '  float n = fbm(uv * 1.6 + vec2(uTime * 0.015, -uTime * 0.01));',
     '  float n2 = fbm(uv * 3.1 - vec2(uTime * 0.02, 0.0) + n);',
-    '  col += vec3(0.055, 0.0, 0.11) * smoothstep(0.35, 0.95, n) * 1.1;',
-    '  col += vec3(0.0, 0.05, 0.075) * smoothstep(0.5, 0.97, n2);',
-    '  col += vec3(0.09, 0.015, 0.15) * exp(-r * 1.5) * 0.8;',
+    '  col += vec3(0.035, 0.13, 0.04) * smoothstep(0.35, 0.95, n) * 1.15;',
+    '  col += vec3(0.09, 0.02, 0.10) * smoothstep(0.5, 0.97, n2);',
+    '  col += vec3(0.10, 0.02, 0.09) * exp(-r * 1.5) * 0.8;',
     '  /* pinprick starfield */',
     '  vec2 cell = floor(uv * 110.0);',
     '  float h = hash(cell);',
     '  if (h > 0.9965){',
     '    vec2 f = fract(uv * 110.0) - 0.5;',
-    '    col += vec3(0.6, 0.8, 1.0) * exp(-dot(f, f) * 38.0) * (0.25 + 0.55 * (0.5 + 0.5 * sin(uTime * 2.4 + h * 911.0)));',
+    '    col += vec3(0.72, 1.0, 0.66) * exp(-dot(f, f) * 38.0) * (0.25 + 0.55 * (0.5 + 0.5 * sin(uTime * 2.4 + h * 911.0)));',
     '  }',
     '  /* black hole + charging accretion rim */',
     '  col *= smoothstep(0.045, 0.26, r);',
-    '  vec3 rim = mix(vec3(0.0, 0.94, 1.0), vec3(1.0, 0.176, 0.584), uCharge);',
+    '  vec3 rim = mix(vec3(0.224, 1.0, 0.078), vec3(1.0, 0.184, 0.616), uCharge);',
     '  col += rim * exp(-abs(r - 0.27) * 26.0) * (0.16 + 0.85 * uCharge) * (0.7 + 0.3 * sin(uTime * 3.1)) * uIntensity;',
     '  col *= 1.0 - 0.45 * pow(min(r * 0.55, 1.2), 2.0);',
     '  fragColor = vec4(col, 1.0);',
@@ -254,7 +254,7 @@
     if (!isFinite(h)) h = 0;
     h = ((h % 1) + 1) % 1 * 4;
     h = Math.min(h, 3.99999);
-    var stops = [[0, 240, 255], [255, 45, 149], [123, 45, 255], [0, 255, 157], [0, 240, 255]];
+    var stops = [[57, 255, 20], [0, 183, 255], [176, 38, 255], [255, 47, 157], [57, 255, 20]];
     var i = Math.floor(h), f = h - i;
     var a = stops[i], b = stops[i + 1];
     return [
@@ -300,7 +300,7 @@
       if (!this.style.width && !this.style.inset) this.style.inset = '0';
       this.style.touchAction = 'none';
       this.style.cursor = 'crosshair';
-      this.style.background = '#10001f';
+      this.style.background = '#041206';
 
       var f0 = parseFloat(this.getAttribute('intensity'));
       if (!isNaN(f0)) { this._tintensity = f0; this._intensity = f0; }
@@ -353,7 +353,7 @@
         if (!this._2d) {
           /* no canvas at all — only now do we surrender */
           document.dispatchEvent(new CustomEvent('void:fluid-failed'));
-          this.style.background = 'radial-gradient(circle at 50% 45%, #1a0030 0%, #10001f 70%)';
+          this.style.background = 'radial-gradient(circle at 50% 45%, #06180a 0%, #041206 70%)';
           return;
         }
       }
@@ -594,18 +594,18 @@
       var o = document.createElement('canvas');
       o.width = w; o.height = h;
       var x = o.getContext('2d');
-      x.fillStyle = '#10001f';
+      x.fillStyle = '#041206';
       x.fillRect(0, 0, w, h);
       var g = x.createRadialGradient(w / 2, h / 2, 0, w / 2, h / 2, Math.max(w, h) * 0.7);
-      g.addColorStop(0, 'rgba(34,6,58,0.9)');
-      g.addColorStop(0.4, 'rgba(16,3,34,0.6)');
-      g.addColorStop(1, 'rgba(2,0,8,0)');
+      g.addColorStop(0, 'rgba(9,39,15,0.9)');
+      g.addColorStop(0.4, 'rgba(5,20,8,0.6)');
+      g.addColorStop(1, 'rgba(1,8,3,0)');
       x.fillStyle = g;
       x.fillRect(0, 0, w, h);
       var blobs = [
-        [0.22, 0.3, 0.3, 'rgba(0,55,70,0.30)'],
+        [0.22, 0.3, 0.3, 'rgba(20,120,40,0.34)'],
         [0.78, 0.68, 0.34, 'rgba(60,12,110,0.32)'],
-        [0.6, 0.18, 0.22, 'rgba(90,8,60,0.22)']
+        [0.6, 0.18, 0.22, 'rgba(124,14,82,0.24)']
       ];
       for (var b = 0; b < blobs.length; b++) {
         var bb = blobs[b];
@@ -617,8 +617,9 @@
       }
       for (var i = 0; i < 220; i++) {
         var sxp = Math.random() * w, syp = Math.random() * h;
-        x.fillStyle = 'rgba(' + (150 + Math.floor(Math.random() * 105)) + ',' +
-          (190 + Math.floor(Math.random() * 65)) + ',255,' + (0.15 + Math.random() * 0.5) + ')';
+        x.fillStyle = 'rgba(' + (120 + Math.floor(Math.random() * 110)) + ',' +
+          (225 + Math.floor(Math.random() * 30)) + ',' + (140 + Math.floor(Math.random() * 90)) +
+          ',' + (0.15 + Math.random() * 0.5) + ')';
         x.fillRect(sxp, syp, Math.random() < 0.12 ? 2 : 1, Math.random() < 0.12 ? 2 : 1);
       }
       this._backdrop = o;
@@ -630,7 +631,7 @@
       var self = this;
       this._buildWordmark();
       if (document.fonts && document.fonts.load) {
-        document.fonts.load('900 100px Unbounded').then(function () { self._buildWordmark(); }).catch(function () {});
+        document.fonts.load('900 100px Zen Kaku Gothic New').then(function () { self._buildWordmark(); }).catch(function () {});
       }
     }
 
@@ -644,10 +645,10 @@
       x.textAlign = 'center';
       x.textBaseline = 'middle';
       var fs = w * 0.15;
-      x.font = '900 ' + fs + 'px Unbounded, sans-serif';
+      x.font = '900 ' + fs + 'px Zen Kaku Gothic New, sans-serif';
       var tw = x.measureText('@danfrank').width;
       if (tw > w * 0.92) fs *= (w * 0.92) / tw;
-      x.font = '900 ' + fs + 'px Unbounded, sans-serif';
+      x.font = '900 ' + fs + 'px Zen Kaku Gothic New, sans-serif';
       x.fillStyle = '#fff';
       x.fillText('@danfrank', w / 2, h / 2 - fs * 0.16);
       x.font = '700 ' + (fs * 0.19) + 'px "IBM Plex Mono", monospace';
@@ -870,9 +871,9 @@
       var rimR = 0.27 * syw;
       if (!this._holeGrad || this._holeGradW !== w || this._holeGradH !== h) {
         var hole = ctx.createRadialGradient(cx, cy, 0, cx, cy, rimR * 1.25);
-        hole.addColorStop(0, 'rgba(2,0,8,1)');
-        hole.addColorStop(0.72, 'rgba(2,0,8,0.85)');
-        hole.addColorStop(1, 'rgba(2,0,8,0)');
+        hole.addColorStop(0, 'rgba(1,8,3,1)');
+        hole.addColorStop(0.72, 'rgba(1,8,3,0.85)');
+        hole.addColorStop(1, 'rgba(1,8,3,0)');
         this._holeGrad = hole; this._holeGradW = w; this._holeGradH = h;
       }
       ctx.fillStyle = this._holeGrad;

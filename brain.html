@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./js/singate.js"></script>
+<title>THE MIND — THE SINGULARITY</title>
+<!-- THE SINGULARITY BRAIN — the rendered mind (docs/SINGULARITY-BRAIN.md).
+     Sealed by js/singate.js like the rest of the Singularity: consent + IP,
+     then a name (both logged), then the passphrase. The
+     graph it draws is data/brain.json — opaque topology, no readable content.
+     The one readable surface is the self-model at the core, which the builder
+     derives from the topology rather than from any private page. -->
+<meta name="robots" content="noindex, nofollow">
+<meta name="referrer" content="no-referrer">
+<meta name="theme-color" content="#03040a">
+<link rel="icon" href="data:,">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous">
+<link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700;900&amp;family=IBM+Plex+Mono:wght@400;600;700&amp;family=Newsreader:ital,opsz@0,6..72;1,6..72&amp;display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; height: 100%; background: #03040a; color: #e7e0f2;
+    font-family: 'IBM Plex Mono', ui-monospace, monospace; overflow: hidden; }
+  #mind { position: fixed; inset: 0; z-index: 0; display: block; width: 100%; height: 100%; cursor: grab; }
+  #mind:active { cursor: grabbing; }
+  #grain { position: fixed; inset: 0; z-index: 1; pointer-events: none; opacity: .45;
+    background: repeating-linear-gradient(0deg, rgba(0,0,0,.28) 0 1px, transparent 1px 3px); }
+
+  /* ── HUD ── */
+  .hud { position: fixed; z-index: 3; pointer-events: none; }
+  .top { top: 0; left: 0; right: 0; padding: 20px 22px 0; display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; }
+  .brandwrap { pointer-events: auto; }
+  .kick { font-size: 9.5px; letter-spacing: .4em; color: #cf9dff; text-transform: uppercase; }
+  h1 { margin: 6px 0 0; font-family: 'Zen Kaku Gothic New', sans-serif; font-weight: 900; font-size: clamp(24px, 4.4vw, 46px);
+    line-height: .9; letter-spacing: -.02em; color: #fff; text-shadow: 0 0 30px rgba(176,38,255,.55); }
+  .count { margin-top: 8px; font-size: 10px; letter-spacing: .16em; color: #7f8aa6; }
+  .count b { color: #9fe0ff; }
+  .exit { pointer-events: auto; font-size: 9.5px; letter-spacing: .2em; color: #5a6b60; text-decoration: none;
+    border: 1px solid rgba(120,140,120,.3); padding: 8px 12px; }
+  .exit:hover { color: #b6ff8f; border-color: #b6ff8f; }
+
+  /* legend + frontier, bottom-left */
+  .legend { position: fixed; left: 22px; bottom: 16px; z-index: 3; pointer-events: auto;
+    display: flex; flex-direction: column; gap: 5px; font-size: 9.5px; letter-spacing: .1em; }
+  .legend .row { display: flex; align-items: center; gap: 7px; cursor: pointer; color: #9aa6b8; opacity: .85; }
+  .legend .row:hover { opacity: 1; color: #fff; }
+  .legend .dot { width: 8px; height: 8px; border-radius: 50%; box-shadow: 0 0 8px currentColor; }
+  .legend .row .n { color: #6b7690; margin-left: 2px; }
+  .legend .row.thin .name { color: #ff9a9a; }
+  .legend .row.thin::after { content: ' ◂ THIN'; color: #ff5a5a; font-size: 8px; letter-spacing: .12em; }
+  .legend .hint { margin-top: 8px; color: #55607a; font-size: 8.5px; letter-spacing: .14em; max-width: 210px; line-height: 1.7; }
+
+  /* inspector, bottom-right */
+  .inspect { position: fixed; right: 22px; bottom: 16px; z-index: 3; width: 330px; max-height: 78vh; overflow-y: auto; pointer-events: auto;
+    border: 1px solid rgba(176,38,255,.28); background: rgba(6,8,16,.88); backdrop-filter: blur(10px);
+    padding: 16px 16px 14px; transform: translateY(140%); transition: transform .28s cubic-bezier(.2,.7,.2,1); }
+  .inspect.on { transform: translateY(0); }
+  .inspect::-webkit-scrollbar { width: 4px; }
+  .inspect::-webkit-scrollbar-thumb { background: rgba(176,38,255,.4); }
+  .inspect .h { font-size: 9px; letter-spacing: .28em; color: #cf9dff; }
+  .inspect .ttl { margin-top: 7px; font-family: 'Zen Kaku Gothic New', sans-serif; font-weight: 900;
+    font-size: 19px; line-height: 1.18; color: #fff; }
+  .inspect .dom { margin-top: 7px; font-size: 9px; letter-spacing: .2em; text-transform: uppercase; color: #8f9ab2; }
+  .inspect .dom b { color: #cf9dff; font-weight: 600; }
+  .inspect .sum { margin-top: 10px; font-family: 'Zen Kaku Gothic New', sans-serif; font-size: 12px;
+    line-height: 1.62; color: #b9c6dc; }
+  /* the infobox — the derived layer, in no source */
+  .inspect .box { margin-top: 13px; border: 1px solid rgba(120,140,160,.22); }
+  .inspect .box .bh { font-size: 8px; letter-spacing: .26em; color: #7fe3ff;
+    padding: 6px 9px; border-bottom: 1px solid rgba(120,140,160,.18); }
+  .inspect .box dl { margin: 0; display: grid; grid-template-columns: 1fr auto; gap: 0; }
+  .inspect .box dt, .inspect .box dd { margin: 0; padding: 4px 9px; font-size: 10px; letter-spacing: .06em; }
+  .inspect .box dt { color: #6f7a90; }
+  .inspect .box dd { color: #d7e6f5; text-align: right; font-variant-numeric: tabular-nums; }
+  .inspect .box dd b { color: #9fe0ff; font-weight: 600; }
+  .inspect .box .role { color: #b6ff8f; text-transform: uppercase; letter-spacing: .14em; font-size: 9px; }
+  .inspect .sec { margin-top: 13px; font-size: 8px; letter-spacing: .26em; color: #cf9dff; }
+  .inspect .types { margin-top: 7px; display: flex; flex-wrap: wrap; gap: 5px; }
+  .inspect .types span { font-size: 8.5px; letter-spacing: .08em; color: #cbd8ee; border: 1px solid rgba(120,140,160,.3); padding: 3px 6px; }
+  .inspect .args { margin-top: 7px; }
+  .inspect .args .a { border-left: 2px solid rgba(176,38,255,.45); padding: 4px 0 5px 8px; margin-bottom: 7px; }
+  .inspect .args .a .t { font-size: 8.5px; letter-spacing: .14em; text-transform: uppercase; color: #7fe3ff; }
+  .inspect .args .a .t i { font-style: normal; color: #6f7a90; }
+  .inspect .args .a .c { margin-top: 3px; font-family: 'Zen Kaku Gothic New', sans-serif; font-size: 11.5px;
+    line-height: 1.55; color: #c3d2e6; }
+  .inspect .kin { margin-top: 7px; }
+  .inspect .kin .k { display: flex; justify-content: space-between; gap: 8px; font-size: 10px;
+    color: #b9c6dc; padding: 3px 0; border-bottom: 1px dashed rgba(120,140,160,.16); }
+  .inspect .kin .k .s { color: #6f7a90; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .inspect .kin .k.un .s { color: #ffc43c; }
+  .inspect .note { margin-top: 11px; font-size: 8.5px; letter-spacing: .1em; color: #55607a; line-height: 1.6; }
+  .inspect .note a { color: #b6ff8f; }
+
+  /* the core button + reader */
+  .corebtn { position: fixed; left: 50%; bottom: 20px; transform: translateX(-50%); z-index: 3; pointer-events: auto;
+    font-size: 10px; letter-spacing: .26em; color: #03040a; background: #cf9dff; border: none; padding: 12px 20px; cursor: pointer;
+    transition: background .16s, transform .16s; }
+  .corebtn:hover { background: #fff; transform: translateX(-50%) translateY(-2px); }
+
+  .reader { position: fixed; inset: 0; z-index: 5; display: none; align-items: center; justify-content: center; padding: 24px;
+    background: radial-gradient(ellipse 60% 60% at 50% 46%, rgba(10,6,20,.7), rgba(3,4,10,.94)); backdrop-filter: blur(6px); }
+  .reader.on { display: flex; }
+  .reader .card { position: relative; width: min(680px, 94vw); max-height: 88vh; overflow-y: auto;
+    border: 1px solid rgba(176,38,255,.4); background: rgba(6,8,16,.96); padding: 40px clamp(22px,5vw,50px) 44px; }
+  .reader .ec { font-size: 9px; letter-spacing: .3em; color: #6b6280; }
+  .reader h2 { margin: 14px 0 0; font-family: 'Zen Kaku Gothic New', sans-serif; font-weight: 900; font-size: clamp(26px,5vw,42px); color: #fff; letter-spacing: -.02em; }
+  .reader .body { margin-top: 20px; font-family: 'Newsreader', Georgia, serif; font-size: 18px; line-height: 1.75; color: #ded6ee; }
+  .reader .body p { margin: 0 0 15px; text-wrap: pretty; }
+  .reader .draftflag { margin-top: 20px; font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: .16em;
+    color: #8a7a5a; border-top: 1px solid rgba(176,38,255,.2); padding-top: 14px; line-height: 1.8; }
+  .reader .lede { margin-top: 16px; font-family: 'Zen Kaku Gothic New', sans-serif; font-size: 13px; line-height: 1.75;
+    color: #8f96b2; text-wrap: pretty; }
+
+  /* the derived findings */
+  ol.findings { margin: 24px 0 0; padding: 0; list-style: none; counter-reset: f; }
+  ol.findings li { counter-increment: f; position: relative; padding: 0 0 15px 40px; margin-bottom: 14px;
+    border-bottom: 1px solid rgba(176,38,255,.12);
+    font-family: 'Newsreader', Georgia, serif; font-size: 18.5px; line-height: 1.62; color: #ded6ee; text-wrap: pretty; }
+  ol.findings li:last-child { border-bottom: none; }
+  ol.findings li::before { content: counter(f, decimal-leading-zero); position: absolute; left: 0; top: 4px;
+    font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .1em; color: #cf9dff; }
+
+  /* the completeness meter */
+  .meterwrap { margin-top: 26px; border-top: 1px solid rgba(176,38,255,.22); padding-top: 20px; }
+  .meterhead { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap;
+    font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: .26em; color: #cf9dff; }
+  .meterhead .key { color: #6b7690; letter-spacing: .14em; display: flex; align-items: center; gap: 6px; }
+  .meterhead .key i { width: 9px; height: 9px; display: inline-block; }
+  .meterhead .key i.v { background: #00b7ff; }
+  .meterhead .key i.l { background: #cf9dff; }
+  .mrow { margin-top: 13px; font-family: 'IBM Plex Mono', monospace; }
+  .mrow .lbl { display: flex; justify-content: space-between; font-size: 9.5px; letter-spacing: .14em; color: #9aa6b8; }
+  .mrow .lbl b { color: #fff; font-weight: 600; text-transform: capitalize; }
+  .mrow .lbl .n { color: #6b7690; }
+  .mrow .bars { margin-top: 5px; display: flex; flex-direction: column; gap: 3px; }
+  .mrow .bar { height: 5px; background: rgba(255,255,255,.06); position: relative; overflow: hidden; }
+  .mrow .bar i { position: absolute; left: 0; top: 0; bottom: 0; display: block; }
+  .mrow .bar i.v { background: linear-gradient(90deg, rgba(0,183,255,.45), #00b7ff); }
+  .mrow .bar i.l { background: linear-gradient(90deg, rgba(207,157,255,.45), #cf9dff); }
+  .mrow.zero .lbl b { color: #ff9a9a; }
+  .method { margin-top: 18px; font-family: 'IBM Plex Mono', monospace; font-size: 8.5px; letter-spacing: .1em;
+    line-height: 1.9; color: #55607a; }
+  .reader .close { position: absolute; top: 14px; right: 16px; font-size: 11px; letter-spacing: .2em; color: #cf9dff;
+    background: none; border: none; cursor: pointer; }
+
+  /* ── the consent layer ── */
+  .consent { position: fixed; inset: 0; z-index: 20; display: flex; align-items: center; justify-content: center; padding: 24px;
+    background: #03040a; }
+  .consent.off { display: none; }
+  .consent .bx { width: min(560px, 94vw); text-align: center; }
+  .consent .mark { font-size: 10px; letter-spacing: .44em; color: #cf9dff; text-transform: uppercase; }
+  .consent h2 { margin: 16px 0 0; font-family: 'Zen Kaku Gothic New', sans-serif; font-weight: 900; font-size: clamp(30px, 7vw, 60px);
+    line-height: .9; letter-spacing: -.02em; color: #fff; text-shadow: 0 0 40px rgba(176,38,255,.5); }
+  .consent p { margin: 22px auto 0; max-width: 52ch; font-family: 'Zen Kaku Gothic New', sans-serif; font-size: 14.5px;
+    line-height: 1.85; color: #b9add0; text-wrap: pretty; }
+  .consent p em { color: #7fe3ff; font-style: normal; }
+  .consent .terms { margin: 22px auto 0; max-width: 54ch; text-align: left; border: 1px solid rgba(176,38,255,.24);
+    background: rgba(8,8,16,.6); padding: 16px 18px; font-size: 10.5px; letter-spacing: .04em; line-height: 1.95; color: #8f96b2; }
+  .consent .terms b { color: #cf9dff; font-weight: 600; }
+  .consent .go { margin-top: 24px; font-size: 11px; letter-spacing: .24em; color: #03040a; background: #cf9dff; border: none;
+    padding: 15px 26px; cursor: pointer; transition: background .16s, transform .16s; }
+  .consent .go:hover { background: #fff; transform: translateY(-2px); }
+  .consent .leave { display: block; margin: 16px auto 0; font-size: 9.5px; letter-spacing: .2em; color: #5a6b60; text-decoration: none; }
+  .consent .leave:hover { color: #b6ff8f; }
+
+  @media (max-width: 720px) { .inspect { width: 210px; } .legend .hint { display: none; } }
+  @media (prefers-reduced-motion: reduce) { .corebtn, .inspect, .consent .go { transition: none; } }
+</style>
+</head>
+<body>
+<canvas id="mind"></canvas>
+<div id="grain" aria-hidden="true"></div>
+
+<div class="hud top">
+  <div class="brandwrap">
+    <div class="kick">THE SINGULARITY · A MODEL OF A PERSON</div>
+    <h1>THE MIND</h1>
+    <div class="count" id="count">—</div>
+  </div>
+  <a class="exit" href="./singularity.html">◂ THE SINGULARITY</a>
+</div>
+
+<div class="legend" id="legend" aria-hidden="true"></div>
+
+<div class="inspect" id="inspect" aria-live="polite">
+  <div class="h">ENTRY</div>
+  <div class="ttl" id="i-title">—</div>
+  <div class="dom" id="i-dom"></div>
+  <div class="sum" id="i-sum"></div>
+
+  <div class="box">
+    <div class="bh">DERIVED — IN NO SOURCE</div>
+    <dl id="i-box"></dl>
+  </div>
+
+  <div class="sec" id="i-argh" hidden>ARGUMENTS IT MAKES</div>
+  <div class="args" id="i-args"></div>
+
+  <div class="sec" id="i-typh" hidden>EDGE TYPES</div>
+  <div class="types" id="i-types"></div>
+
+  <div class="sec" id="i-kinh" hidden>NEAREST KIN</div>
+  <div class="kin" id="i-kin"></div>
+
+  <div class="note" id="i-note"></div>
+</div>
+
+<button class="corebtn" id="corebtn">◇ OPEN THE CORE</button>
+
+<div class="reader" id="reader">
+  <div class="card">
+    <button class="close" id="readerclose">CLOSE ✕</button>
+    <div class="ec" id="core-ec">THE CORE · THE SELF-MODEL · DERIVED, NOT WRITTEN</div>
+    <h2 id="portrait-title">What The Graph Says About Itself</h2>
+    <div class="lede">Nobody wrote this page. Every line below is recomputed from
+      the shape of the graph each time it is built — so it cannot flatter, and it
+      goes out of date the moment the mind changes.</div>
+
+    <ol class="findings" id="findings"></ol>
+
+    <div class="meterwrap">
+      <div class="meterhead">
+        <span>HOW BUILT EACH DISTRICT IS</span>
+        <span class="key"><i class="v"></i>VOLUME <i class="l"></i>LIFT</span>
+      </div>
+      <div id="meters"></div>
+      <div class="method" id="method"></div>
+    </div>
+
+    <div class="draftflag">◆ The one thing still missing is a self-portrait in
+      Dan's own words. Until it exists the graph speaks for itself, which is
+      arguably the more honest arrangement.</div>
+  </div>
+</div>
+
+<script src="./js/brain.js"></script>
+<script>
+(function () {
+  // Gated by js/singate.js (consent + IP, name, passphrase). By the time this
+  // runs the visitor is already through all three checks, so just load.
+  fetch('./data/brain.json', { cache: 'no-cache' })
+    .then(function (r) { return r.json(); })
+    .then(boot)
+    .catch(function () { document.getElementById('count').textContent = 'the mind failed to load'; });
+
+  function boot(brain) {
+    var api = window.LVBrain.build(document.getElementById('mind'), brain, { onPick: inspect });
+    var c = brain.counts || {};
+    document.getElementById('count').innerHTML =
+      '<b>' + (c.nodes || 0) + '</b> NODES · <b>' + (c.edges || 0) + '</b> ARGUMENTS · <b>' +
+      (c.domains || 0) + '</b> DISTRICTS';
+    window.__brainDomains = (c.domains || 9);
+    buildLegend(brain, api);
+    buildCore(brain);
+  }
+
+  // ── the apex ───────────────────────────────────────────────────────────────
+  // The self-model is not written into the page; it is read out of brain.json,
+  // where the builder derived it from the topology. Rebuild the graph and this
+  // section says something different.
+  function buildCore(brain) {
+    var s = brain.self;
+    if (!s) return;
+    document.getElementById('core-ec').textContent =
+      'THE CORE · THE SELF-MODEL · DERIVED ' + s.derived_at;
+
+    var F = document.getElementById('findings');
+    F.innerHTML = '';
+    (s.statements || []).forEach(function (line) {
+      var li = document.createElement('li');
+      li.textContent = line;
+      F.appendChild(li);
+    });
+
+    var M = document.getElementById('meters');
+    M.innerHTML = '';
+    (s.composition || []).forEach(function (c) {
+      var row = document.createElement('div');
+      row.className = 'mrow' + (c.built === 0 ? ' zero' : '');
+      var pct = function (x) { return Math.round(x * 100); };
+      row.innerHTML =
+        '<div class="lbl"><b>' + c.domain + '</b>' +
+        '<span class="n">' + c.count + ' nodes · built ' + pct(c.built) + '%</span></div>' +
+        '<div class="bars">' +
+        '<div class="bar"><i class="v" style="width:' + pct(c.volume) + '%"></i></div>' +
+        '<div class="bar"><i class="l" style="width:' + pct(c.lift) + '%"></i></div>' +
+        '</div>';
+      M.appendChild(row);
+    });
+    document.getElementById('method').textContent = s.method || '';
+  }
+
+  function buildLegend(brain, api) {
+    var L = document.getElementById('legend');
+    var doms = brain.domains || {}, thin = api.frontier();
+    var cols = { self:[57,255,20], mind:[176,38,255], people:[255,47,157], interests:[0,183,255],
+      work:[255,196,60], timeline:[0,255,163], places:[123,45,255], health:[255,90,90], legal:[160,200,180] };
+    Object.keys(doms).sort(function (a, b) { return doms[b] - doms[a]; }).forEach(function (d) {
+      var c = cols[d] || [180,200,190];
+      var row = document.createElement('div');
+      row.className = 'row' + (thin.indexOf(d) >= 0 ? ' thin' : '');
+      row.innerHTML = '<span class="dot" style="background:rgb(' + c.join(',') + ');color:rgb(' + c.join(',') + ')"></span>' +
+        '<span class="name">' + d + '</span><span class="n">' + doms[d] + '</span>';
+      row.addEventListener('click', function () { api.focusDomain(d); });
+      L.appendChild(row);
+    });
+    var hint = document.createElement('div');
+    hint.className = 'hint';
+    hint.textContent = 'drag to turn · scroll to fall in · click a node · click a district to face it';
+    L.appendChild(hint);
+  }
+
+  // The node IS the entry. Identity first (what is this), then the derived
+  // infobox (what does it do in the structure), then the arguments it actually
+  // makes, then the kin the graph can see but nobody has linked yet.
+  function inspect(node) {
+    var box = document.getElementById('inspect');
+    if (!node) { box.classList.remove('on'); return; }
+    var $ = function (id) { return document.getElementById(id); };
+    var pct = function (x) { return Math.round(x * 100) + '%'; };
+
+    $('i-title').textContent = node.title;
+    $('i-dom').innerHTML = '<b>' + node.domain + '</b> · ' + node.page_type +
+      ' · ' + node.altitude + (node.status ? ' · ' + node.status : '');
+    $('i-sum').textContent = node.summary || '';
+
+    var b = node.box || {};
+    var rows = [
+      ['tier', b.tier || '—'],
+      ['role', '<span class="role">' + (b.role || '—') + '</span>'],
+      ['arguments', '<b>' + (b.arguments || 0) + '</b> (' + (b.inbound || 0) + ' in / ' + (b.outbound || 0) + ' out)'],
+      ['load-bearing rank', '<b>' + pct(b.rank || 0) + '</b>'],
+      ['cross-district reach', pct(b.reach || 0)],
+      ['districts touched', (b.districts || 0) + ' of ' + (window.__brainDomains || 9)],
+      ['words', (b.words || 0).toLocaleString()],
+      ['raw sources', b.sources || 0],
+      ['first written', node.created || '—']
+    ];
+    if (b.contested) rows.push(['open contradictions', '<b>' + b.contested + '</b>']);
+    $('i-box').innerHTML = rows.map(function (r) {
+      return '<dt>' + r[0] + '</dt><dd>' + r[1] + '</dd>';
+    }).join('');
+
+    var A = $('i-args'), args = (node.args || []).slice(0, 6);
+    $('i-argh').hidden = !args.length;
+    A.innerHTML = args.map(function (a) {
+      return '<div class="a"><div class="t">' + a.type +
+        ' <i>' + (a.dir === 'out' ? '→' : '←') + ' ' + esc(a.title) + '</i></div>' +
+        '<div class="c">' + esc(a.claim) + '</div></div>';
+    }).join('');
+
+    var T = $('i-types'), keys = Object.keys(node.types || {})
+      .sort(function (x, y) { return node.types[y] - node.types[x]; }).slice(0, 8);
+    $('i-typh').hidden = !keys.length;
+    T.innerHTML = keys.map(function (k) { return '<span>' + k + ' \u00d7' + node.types[k] + '</span>'; }).join('');
+
+    var K = $('i-kin'), kin = (b.kin || []).slice(0, 4);
+    $('i-kinh').hidden = !kin.length;
+    K.innerHTML = kin.map(function (k) {
+      return '<div class="k' + (k.linked ? '' : ' un') + '">' +
+        '<span>' + esc(k.title) + '</span>' +
+        '<span class="s">' + Math.round(k.score * 100) + '%' + (k.linked ? '' : ' · unlinked') + '</span></div>';
+    }).join('');
+
+    var unl = kin.filter(function (k) { return !k.linked; }).length;
+    $('i-note').innerHTML = 'Kin is neighbour-set and tag overlap, not a written link — ' +
+      (unl ? '<b>' + unl + (unl === 1 ? ' of these has' : ' of these have') +
+        ' never been connected to this page.</b> That is work the graph can see ' +
+        'and nobody has done yet.'
+           : 'every one of these is already linked.') +
+      '<br>Full text: <a href="./wiki.html#' + encodeURIComponent(node.id) + '">open in the reader ▸</a>';
+
+    box.classList.add('on');
+  }
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c];
+    });
+  }
+
+  var reader = document.getElementById('reader');
+  document.getElementById('corebtn').addEventListener('click', function () { reader.classList.add('on'); });
+  document.getElementById('readerclose').addEventListener('click', function () { reader.classList.remove('on'); });
+  reader.addEventListener('click', function (e) { if (e.target === reader) reader.classList.remove('on'); });
+  addEventListener('keydown', function (e) { if (e.key === 'Escape') { reader.classList.remove('on'); if (window.LVBrain) window.LVBrain.deselect(); } });
+})();
+</script>
+</body>
+</html>

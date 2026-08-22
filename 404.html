@@ -3,10 +3,14 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- THE GATE — must be first: it hides the document synchronously, so
+     nothing behind the passphrase paints even for a frame. -->
+<script src="./js/gate.js"></script>
 <title>404 — VOID + LEVIATHAN</title>
 <meta name="robots" content="noindex">
+<link rel="stylesheet" href="./css/slime.css">
 <style>
-  html, body { margin: 0; padding: 0; height: 100%; background: #10001f; color: #39ff14;
+  html, body { margin: 0; padding: 0; height: 100%; background: #041206; color: #39ff14;
                font-family: 'IBM Plex Mono', ui-monospace, monospace; }
   main { height: 100%; display: flex; flex-direction: column; align-items: center;
          justify-content: center; gap: 18px; text-align: center; padding: 24px; }
@@ -18,6 +22,19 @@
 </style>
 </head>
 <body>
+<!-- ── slime drips: the theme layer's ooze, both edges ── -->
+<div class="sl-drips l" aria-hidden="true">
+  <i style="left:2px;--h:210px;--dur:15s;--del:0s"></i>
+  <i class="pink" style="left:10px;--h:128px;--dur:19s;--del:3.5s"></i>
+  <i style="left:6px;--h:300px;--dur:23s;--del:8s"></i>
+  <i class="cer" style="left:13px;--h:96px;--dur:12.5s;--del:6.2s"></i>
+</div>
+<div class="sl-drips r" aria-hidden="true">
+  <i style="right:3px;--h:250px;--dur:17s;--del:1.4s"></i>
+  <i class="cer" style="right:11px;--h:110px;--dur:21s;--del:5s"></i>
+  <i style="right:7px;--h:168px;--dur:13.5s;--del:9.5s"></i>
+  <i class="pink" style="right:14px;--h:340px;--dur:26s;--del:12s"></i>
+</div>
 <main>
   <h1>404</h1>
   <p>NO SUCH PATH IN THE RECORD</p>

@@ -1,0 +1,165 @@
+/* ══════════════════════════════════════════════════════════════════════
+   SLIME — the shared theme layer for the standalone visualizer pages.
+
+   Radioactive green is the ground, not the accent: the ink is a green-black
+   lit from underneath, purple is the counter-hue, and hot pink / cerulean
+   are the two spot channels. Every page-level stylesheet already resolves
+   to those five; this file supplies what none of them can do alone — the
+   glowing backdrop, the scanlines, the ooze down both edges, and the shared
+   chrome (selection, scrollbars, focus ring).
+
+   It only ever *adds* atmosphere. Layout, type scale and typeface belong to
+   the page. Load it before the page's own <style> so a page can still win.
+   ══════════════════════════════════════════════════════════════════════ */
+
+:root {
+  --slime: #39ff14;
+  --slime-hi: #b6ff8f;
+  --acid: #ccff00;
+  --mint: #00ffa3;
+  --purple: #b026ff;
+  --violet: #7b2dff;
+  --purple-hi: #e0aaff;
+  --pink: #ff2f9d;
+  --pink-hi: #ff86c9;
+  --cerulean: #00b7ff;
+  --cerulean-hi: #7fe3ff;
+  --ink: #041206;
+  --ink-2: #0a2410;
+  --line: #14471f;
+  --txt: #e9ffe6;
+  --dim: #6f8a5e;
+  --faint: #3d5230;
+}
+
+/* ── the tank: pools of slime under the page, purple and pink and cerulean
+      bleeding in from the corners. Painted by a pseudo-element so a page's
+      own `background: <colour>` shorthand cannot wipe it. ── */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 75% 55% at 18% 12%, rgba(57,255,20,0.16) 0%, rgba(57,255,20,0.04) 40%, transparent 68%),
+    radial-gradient(ellipse 60% 45% at 86% 30%, rgba(176,38,255,0.13) 0%, transparent 62%),
+    radial-gradient(ellipse 55% 45% at 78% 88%, rgba(255,47,157,0.12) 0%, transparent 62%),
+    radial-gradient(ellipse 50% 40% at 8% 82%, rgba(0,183,255,0.11) 0%, transparent 62%),
+    radial-gradient(ellipse 90% 70% at 50% 50%, rgba(0,255,163,0.07) 0%, transparent 72%);
+}
+
+/* ── scanlines + a slime bloom top and bottom ── */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 9998;
+  pointer-events: none;
+  mix-blend-mode: screen;
+  background:
+    repeating-linear-gradient(0deg, rgba(0,7,2,0.16) 0px, rgba(0,7,2,0.16) 1px, rgba(57,255,20,0.03) 1px, transparent 3px),
+    radial-gradient(ellipse 120% 40% at 50% 104%, rgba(57,255,20,0.13) 0%, transparent 60%),
+    radial-gradient(ellipse 110% 34% at 50% -6%, rgba(176,38,255,0.11) 0%, transparent 60%);
+}
+
+/* ── shared chrome ── */
+::selection { background: #39ff14; color: #041206; text-shadow: none; }
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: #041206; }
+::-webkit-scrollbar-thumb { background: linear-gradient(180deg, #39ff14, #00ffa3 45%, #b026ff); }
+::-webkit-scrollbar-thumb:hover { background: linear-gradient(180deg, #b6ff8f, #39ff14 55%, #ff2f9d); }
+* { scrollbar-width: thin; scrollbar-color: #39ff14 #041206; }
+:focus-visible { outline: 2px solid #00b7ff; outline-offset: 2px; }
+
+/* ── the ooze: strands creeping down both edges, each with its own length,
+      offset, duration and delay so they never march in step ── */
+.sl-drips { position: fixed; top: 0; bottom: 0; width: 22px; z-index: 9997; pointer-events: none; overflow: hidden; }
+.sl-drips.l { left: 0; }
+.sl-drips.r { right: 0; }
+.sl-drips i {
+  position: absolute; top: -4px; width: 6px; height: 0;
+  border-radius: 0 0 8px 8px;
+  background: linear-gradient(180deg, #39ff14, #00ffa3 40%, #b026ff);
+  box-shadow: 0 0 14px #39ff14, 0 0 34px rgba(57,255,20,0.55), 0 0 70px rgba(176,38,255,0.3);
+  animation: slDrip var(--dur, 16s) cubic-bezier(.35,0,.25,1) var(--del, 0s) infinite;
+}
+.sl-drips i::after {
+  content: ''; position: absolute; left: 50%; bottom: -7px; transform: translateX(-50%);
+  width: 14px; height: 15px; border-radius: 0 0 50% 50% / 0 0 60% 60%;
+  background: radial-gradient(circle at 50% 35%, #b6ff8f, #39ff14 55%, #00ffa3);
+  box-shadow: 0 0 18px #39ff14, 0 0 40px rgba(57,255,20,0.6);
+}
+.sl-drips i.pink { background: linear-gradient(180deg, #ff86c9, #ff2f9d 45%, #b026ff);
+  box-shadow: 0 0 14px #ff2f9d, 0 0 34px rgba(255,47,157,0.5); }
+.sl-drips i.pink::after { background: radial-gradient(circle at 50% 35%, #ffd7ec, #ff2f9d 55%, #b026ff);
+  box-shadow: 0 0 18px #ff2f9d, 0 0 40px rgba(255,47,157,0.55); }
+.sl-drips i.cer { background: linear-gradient(180deg, #7fe3ff, #00b7ff 45%, #39ff14);
+  box-shadow: 0 0 14px #00b7ff, 0 0 34px rgba(0,183,255,0.5); }
+.sl-drips i.cer::after { background: radial-gradient(circle at 50% 35%, #d3f4ff, #00b7ff 55%, #39ff14);
+  box-shadow: 0 0 18px #00b7ff, 0 0 40px rgba(0,183,255,0.55); }
+@keyframes slDrip {
+  0%, 6% { height: 0; opacity: 0; }
+  10% { opacity: 1; }
+  60%, 86% { height: var(--h, 200px); opacity: 1; }
+  100% { height: var(--h, 200px); opacity: 0; }
+}
+
+/* ── atmosphere on the page's own chrome. Additive only: colour, glow and
+      hover states, never geometry. ── */
+h1 { text-shadow: 0 0 18px rgba(57,255,20,0.55), 0 0 46px rgba(57,255,20,0.22); }
+
+header {
+  position: relative;
+  border-bottom-color: transparent !important;
+}
+header::after {
+  content: '';
+  position: absolute; left: 0; right: 0; bottom: -1px; height: 1px;
+  background: linear-gradient(90deg, #39ff14, #00ffa3 22%, #b026ff 50%, #ff2f9d 74%, #00b7ff);
+  box-shadow: 0 0 14px rgba(57,255,20,0.55);
+}
+
+.chip { transition: color 120ms ease, border-color 120ms ease, box-shadow 120ms ease, background 120ms ease; }
+.chip:hover { box-shadow: 0 0 18px rgba(57,255,20,0.35); }
+.chip.on { box-shadow: 0 0 22px rgba(57,255,20,0.45), inset 0 0 14px rgba(57,255,20,0.12); }
+
+.stat { position: relative; transition: border-color 140ms ease, box-shadow 140ms ease; }
+.stat:hover { border-color: #39ff14; box-shadow: 0 0 34px rgba(57,255,20,0.28); }
+.stat .n { text-shadow: 0 0 16px rgba(57,255,20,0.5); }
+.stat .n.bad, .stat .n.v { text-shadow: 0 0 16px rgba(255,47,157,0.55); }
+
+footer { position: relative; }
+footer::before {
+  content: '';
+  position: absolute; left: 0; right: 0; top: -1px; height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(57,255,20,0.7) 30%, rgba(176,38,255,0.6) 62%, transparent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sl-drips { display: none; }
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   TYPE — one family, Zen Kaku Gothic New: a Japanese foundry's modern
+   gothic, the face Tokyo signage is set in. 900 shouts, 700 labels, 400
+   reads. IBM Plex Mono stays on the data readouts.
+
+   Deliberately undecorated: no outline, no extrude, no gradient fill. The
+   page is already loud — the type does not need to be drawn on.
+   ══════════════════════════════════════════════════════════════════════ */
+
+.lock { font-family: 'Zen Kaku Gothic New', sans-serif; font-weight: 900;
+  text-transform: uppercase; letter-spacing: -.02em; }
+.plate { font-family: 'Zen Kaku Gothic New', sans-serif; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .16em; }
+.lean { transform: none; }
+
+.fill-chrome, .fill-gold, .fill-spectrum, .fill-flat {
+  -webkit-text-stroke: 0; -webkit-text-fill-color: currentColor;
+  background: none; color: #fff;
+}
+.fill-chrome { text-shadow: 0 0 .7em var(--edge-glow, rgba(0,183,255,.5)); }
+.fill-gold { color: #ffd400; text-shadow: 0 0 .7em rgba(255,212,0,.45); }
+.fill-spectrum { text-shadow: 0 0 .5em rgba(255,47,157,.55), 0 0 1.4em rgba(0,183,255,.4); }
+.fill-flat { text-shadow: 0 0 .5em var(--edge-glow, rgba(176,38,255,.45)); }

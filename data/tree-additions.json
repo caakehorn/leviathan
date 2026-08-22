@@ -1,0 +1,23 @@
+{
+  "_readme": [
+    "People and corrections that are NOT in the Ancestry export, merged over it by",
+    "tools/build-tree.py on every build. This is the file to edit as the research",
+    "turns up new people — data/tree.json is generated and anything typed into it",
+    "is destroyed on the next build.",
+    "",
+    "Run `tools/build-tree.py --help-additions` for the full field list. In short:",
+    "an entry whose `id` already exists in the GEDCOM patches that person field by",
+    "field; an entry with a new id creates one. Everything touched here is tagged",
+    "`added: true` and draws in cyan on the diagram, so research-in-progress never",
+    "looks like a sourced fact.",
+    "",
+    "Links are not made symmetric for you. To attach a new person to the tree,",
+    "give them a `fams`/`famc` AND put them in that family's husband/wife/children.",
+    "",
+    "Both arrays may be left empty. This file is optional — the build works fine",
+    "without it."
+  ],
+
+  "people": [],
+  "families": []
+}

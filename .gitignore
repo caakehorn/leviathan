@@ -7,3 +7,7 @@ __pycache__/
 
 # macOS noise
 .DS_Store
+
+# THE LINE — keep the genealogy export out of the tree; it is the input, not an artefact
+*.ged
+*.gedcom

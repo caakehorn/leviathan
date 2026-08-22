@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./js/gate.js"></script>
+<title>THE TEMPLE — VOID + LEVIATHAN</title>
+<meta name="robots" content="noindex, nofollow">
+<meta name="referrer" content="no-referrer">
+<meta name="theme-color" content="#041206">
+<link rel="icon" href="data:,">
+
+<!-- THE TEMPLE — the section index.
+     Chapels are experiments on one subject, built from her half of the record
+     and nothing else. The governing rule lives at the top of js/annie.js: no
+     sentiment scoring, no curated vocabulary, no chosen thresholds. Counts,
+     timestamps, transition probabilities. Nothing here argues. -->
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous">
+<link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700;900&amp;family=IBM+Plex+Mono:wght@400;600;700&amp;display=swap" rel="stylesheet">
+<link rel="stylesheet" href="./css/slime.css">
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; min-height: 100%; background: #041206; color: #e9ffe6;
+    font-family: 'IBM Plex Mono', ui-monospace, monospace; overflow-x: hidden; }
+  #field { position: fixed; inset: 0; z-index: 0; display: block; width: 100%; height: 100%; }
+  #scrim { position: fixed; inset: 0; z-index: 1; pointer-events: none;
+    background: linear-gradient(180deg, rgba(4,18,6,.58), rgba(4,18,6,.34) 28%, rgba(4,18,6,.7)),
+      radial-gradient(ellipse 62% 80% at 50% 46%, rgba(4,18,6,.84), rgba(4,18,6,.24) 70%, transparent); }
+  #grain { position: fixed; inset: 0; z-index: 1; pointer-events: none;
+    background: repeating-linear-gradient(0deg, rgba(0,0,0,.32) 0 1px, transparent 1px 3px); }
+
+  .wrap { position: relative; z-index: 2; max-width: 1040px; margin: 0 auto; padding: 8vh 22px 120px; }
+  header.t { text-align: center; }
+  h1 { font-family: 'Zen Kaku Gothic New', sans-serif; font-weight: 900; font-size: clamp(44px, 12vw, 150px);
+    line-height: .86; letter-spacing: -.03em; margin: 0; color: #fff;
+    text-shadow: 0 0 34px rgba(57,255,20,.85), 0 0 110px rgba(176,38,255,.55), 0 0 200px rgba(255,47,157,.4); }
+  .sub { margin-top: 20px; font-size: 11px; letter-spacing: .36em; color: #39ff14;
+    text-shadow: 0 0 16px rgba(57,255,20,.9); text-transform: uppercase; }
+  .thesis { margin: 26px auto 0; max-width: 66ch; font-family: 'Zen Kaku Gothic New', sans-serif;
+    font-size: 16px; line-height: 1.85; color: #cfe6c4; text-wrap: pretty;
+    text-shadow: 0 1px 12px #041206; }
+  .rule { margin: 30px auto 0; max-width: 74ch; border: 1px solid rgba(57,255,20,.4);
+    background: rgba(3,13,7,.86); backdrop-filter: blur(8px); padding: 20px 22px; text-align: left;
+    font-size: 10.5px; letter-spacing: .12em; line-height: 2.05; color: #6f8a5e; }
+  .rule b { color: #b6ff8f; font-weight: 600; }
+  .rule .k { color: #ff2f9d; }
+
+  .chapels { margin: 42px 0 0; display: grid; gap: 16px; }
+  a.chapel { display: block; text-decoration: none; border: 1px solid rgba(57,255,20,.3);
+    background: rgba(3,13,7,.84); backdrop-filter: blur(9px); -webkit-backdrop-filter: blur(9px);
+    padding: 26px 26px; transition: border-color .18s ease, box-shadow .18s ease, transform .18s ease; }
+  a.chapel:hover { transform: translateY(-3px); }
+  a.chapel .no { font-size: 9.5px; letter-spacing: .4em; }
+  a.chapel h2 { margin: 10px 0 0; font-family: 'Zen Kaku Gothic New', sans-serif; font-weight: 900;
+    font-size: clamp(26px, 5vw, 46px); line-height: 1; color: #fff; letter-spacing: -.01em; }
+  a.chapel p { margin: 14px 0 0; font-family: 'Zen Kaku Gothic New', sans-serif; font-size: 14.5px;
+    line-height: 1.72; color: #a8d9b8; max-width: 68ch; text-wrap: pretty; }
+  a.chapel .how { margin-top: 14px; font-size: 9px; letter-spacing: .2em; color: #4f8a63; line-height: 1.9; }
+  a.chapel .go { margin-top: 16px; display: inline-block; font-size: 10px; letter-spacing: .24em; }
+
+  .c1 { border-color: rgba(0,255,163,.4); }
+  .c1:hover { border-color: #00ffa3; box-shadow: 0 0 70px rgba(0,255,163,.3); }
+  .c1 .no, .c1 .go { color: #00ffa3; }
+  .c2 { border-color: rgba(255,47,157,.4); }
+  .c2:hover { border-color: #ff2f9d; box-shadow: 0 0 70px rgba(255,47,157,.3); }
+  .c2 .no, .c2 .go { color: #ff2f9d; }
+  .c3 { border-color: rgba(0,183,255,.4); }
+  .c3:hover { border-color: #00b7ff; box-shadow: 0 0 70px rgba(0,183,255,.3); }
+  .c3 .no, .c3 .go { color: #00b7ff; }
+
+  .pending { margin-top: 16px; border: 1px dashed rgba(176,38,255,.4); background: rgba(3,13,7,.6);
+    padding: 22px 26px; }
+  .pending .no { font-size: 9.5px; letter-spacing: .4em; color: #b026ff; }
+  .pending h2 { margin: 10px 0 0; font-family: 'Zen Kaku Gothic New', sans-serif; font-weight: 900;
+    font-size: clamp(22px, 4vw, 34px); color: #cfa8ff; letter-spacing: -.01em; }
+  .pending p { margin: 12px 0 0; font-family: 'Zen Kaku Gothic New', sans-serif; font-size: 14px;
+    line-height: 1.7; color: #8a7aa8; max-width: 66ch; }
+
+  .backrow { position: relative; z-index: 2; text-align: center; padding: 0 22px 70px; }
+  .back { display: inline-block; font-size: 10px; letter-spacing: .24em; color: #00b7ff;
+    text-decoration: none; border: 1px solid rgba(0,183,255,.5); padding: 10px 18px; }
+  .back:hover { color: #041206; background: #00b7ff; }
+</style>
+</head>
+<body>
+<canvas id="field" aria-hidden="true"></canvas>
+<div id="scrim" aria-hidden="true"></div>
+<div id="grain" aria-hidden="true"></div>
+<div class="sl-drips l" aria-hidden="true">
+  <i style="left:2px;--h:210px;--dur:15s;--del:0s"></i>
+  <i class="pink" style="left:10px;--h:128px;--dur:19s;--del:3.5s"></i>
+  <i style="left:6px;--h:300px;--dur:23s;--del:8s"></i>
+</div>
+<div class="sl-drips r" aria-hidden="true">
+  <i style="right:3px;--h:250px;--dur:17s;--del:1.4s"></i>
+  <i class="cer" style="right:11px;--h:110px;--dur:21s;--del:5s"></i>
+  <i class="pink" style="right:14px;--h:340px;--dur:26s;--del:12s"></i>
+</div>
+
+<div class="wrap">
+  <header class="t">
+    <h1>THE TEMPLE</h1>
+    <div class="sub">ONE SUBJECT · NO EDITORIAL · BY THE DATA</div>
+    <p class="thesis">Instruments built on Annie's half of the record — 68,998 messages, 434,795
+      words, eleven years — and on nothing else. They are not arguments and they do not have
+      conclusions. Each one takes the counts and does exactly one strange thing with them.</p>
+
+    <div class="rule">
+      <b>THE RULE, WHICH IS THE WHOLE POINT.</b><br>
+      No sentiment scoring. No curated vocabulary. No flagged phrases. No highlighted dates.
+      No threshold chosen because of what it would surface. Every number these chapels display
+      is a <span class="k">count</span>, a <span class="k">timestamp</span>, or a
+      <span class="k">transition probability</span>, computed over the whole of her half of
+      the record with no message excluded.<br><br>
+      That constraint is not modesty. Anything editorial would make the output a portrait of
+      an <em>argument</em>. Left alone, the counts make a portrait of a <em>person</em> — and
+      the interesting part is that nobody chose any of it. The one filter that exists is a
+      closed-class stopword list used by the lexicon, published as <b>LVAnnie.STOP</b> so it
+      can be read and disagreed with.
+    </div>
+  </header>
+
+  <div class="chapels">
+    <a class="chapel c1" href="./oracle.html">
+      <div class="no">CHAPEL I</div>
+      <h2>THE ORACLE</h2>
+      <p>Ask it something and it answers with passages the record already contained. It
+        generates nothing — every word it returns was written by someone on a real date. The
+        draw is seeded by your question, so the same question returns the same answer forever.
+        An oracle you can re-roll is a slot machine; one that never changes its mind is making
+        a claim.</p>
+      <div class="how">CORPUS: BOTH SIDES · 134,348 MESSAGES · RITES: VERSE / WORD / CHORUS</div>
+      <div class="go">ENTER ►</div>
+    </a>
+
+    <a class="chapel c2" href="./voice.html">
+      <div class="no">CHAPEL II</div>
+      <h2>THE VOICE</h2>
+      <p>A trigram chain over her messages alone. It does not retrieve: every line it produces
+        is new, and none of them were ever sent. Each pair of words hands off to a word that
+        really did follow it, so the sentences are false and the grammar of them is entirely
+        hers. Turn it on and it does not stop talking.</p>
+      <div class="how">CORPUS: ANNIE ONLY · 434,795 WORDS · NO SENTIMENT MODEL · NO TUNED PARAMETERS</div>
+      <div class="go">ENTER ►</div>
+    </a>
+
+    <a class="chapel c3" href="./clock.html">
+      <div class="no">CHAPEL III</div>
+      <h2>THE CLOCK</h2>
+      <p>Every message she ever sent, placed by the moment she sent it. Angle is the hour,
+        radius is the date — first message at the centre, last at the rim. Nothing excluded,
+        nothing smoothed. What the spiral draws is when she was awake, for eleven years.
+        Hover any dot and read what it was.</p>
+      <div class="how">CORPUS: ANNIE ONLY · 68,998 POINTS · NO SAMPLING · TIMEZONE-FIXED PARSING</div>
+      <div class="go">ENTER ►</div>
+    </a>
+
+    <div class="pending">
+      <div class="no">CHAPEL IV —</div>
+      <h2>UNBUILT</h2>
+      <p>The section is open-ended on purpose. Each chapel is one instrument doing one strange
+        thing to the same counts, and the list is not finished.</p>
+    </div>
+  </div>
+</div>
+
+<div class="backrow"><a class="back" href="./void.html">◂ BACK TO THE VOID</a></div>
+
+<script src="./js/temple.js"></script>
+<script>
+(function () {
+  var T = window.LVTemple;
+  var field = document.getElementById('field');
+  try { if (T.initField(field)) T.startField(field); } catch (e) { field.style.display = 'none'; }
+  T.state.fold = 8;
+  T.state.tCharge = 0.22;
+  addEventListener('pointermove', function (e) {
+    T.state.mx = (e.clientX / innerWidth - .5) * 2;
+    T.state.my = -(e.clientY / innerHeight - .5) * 2;
+  });
+  // A chapel link pulses the field on hover — the hub is alive, not a menu.
+  document.querySelectorAll('a.chapel').forEach(function (a, i) {
+    a.addEventListener('mouseenter', function () {
+      T.state.fold = 5 + i * 2;
+      T.state.tCharge = 0.6;
+    });
+    a.addEventListener('mouseleave', function () { T.state.tCharge = 0.22; });
+  });
+})();
+</script>
+</body>
+</html>

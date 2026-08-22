@@ -184,7 +184,7 @@
     EP_PENS: [
       ['hedge', 'HEDGING', '#b026ff'],
       ['cert', 'ASSERTION', '#00ffa3'],
-      ['neg', 'NEGATION', '#e01aff'],
+      ['neg', 'NEGATION', '#ff2f9d'],
       ['quer', 'OPEN QUESTION', '#39ff14']
     ],
     initEpisteme() {
@@ -329,10 +329,10 @@
           const zi = E.rows.findIndex(r => r.idx >= 0);
           if (zi <= 0) return;
           const zx = g.xOf(zi);
-          ctx.strokeStyle = 'rgba(232,230,225,0.28)'; ctx.setLineDash([3, 4]);
+          ctx.strokeStyle = 'rgba(214,255,208,0.28)'; ctx.setLineDash([3, 4]);
           ctx.beginPath(); ctx.moveTo(zx, g.padT); ctx.lineTo(zx, g.botY); ctx.stroke();
           ctx.setLineDash([]);
-          ctx.font = '8px ' + this.MONO; ctx.fillStyle = 'rgba(232,230,225,0.45)';
+          ctx.font = '8px ' + this.MONO; ctx.fillStyle = 'rgba(214,255,208,0.45)';
           ctx.textAlign = 'center'; ctx.fillText('HEDGES \u2190 | \u2192 ASSERTS', zx, g.botY + 24);
           ctx.textAlign = 'left';
         },
@@ -345,14 +345,14 @@
           }
           if (E.hover >= 0) {
             const r = E.rows[E.hover];
-            ctx.strokeStyle = 'rgba(232,230,225,0.22)'; ctx.setLineDash([2, 4]);
+            ctx.strokeStyle = 'rgba(214,255,208,0.22)'; ctx.setLineDash([2, 4]);
             ctx.beginPath(); ctx.moveTo(g.xOf(E.hover), g.padT); ctx.lineTo(g.xOf(E.hover), g.botY); ctx.stroke();
             ctx.setLineDash([]);
             this.card(ctx, mx, my, [
               [r.p.title.slice(0, 40), C.txt, '600 12px ' + this.GROT],
               [r.p.domain.toUpperCase() + ' \u00b7 #' + (E.hover + 1) + ' OF ' + E.nP + ' \u00b7 ' + this.fmt(r.w) + ' WORDS', this.WCOL[r.p.domain] || C.dim],
               ['HEDGE ' + r.hedge.toFixed(1) + '  \u00b7  ASSERT ' + r.cert.toFixed(1), '#b026ff'],
-              ['NEGATE ' + r.neg.toFixed(1) + '  \u00b7  QUESTIONS ' + r.quer.toFixed(1), '#e01aff'],
+              ['NEGATE ' + r.neg.toFixed(1) + '  \u00b7  QUESTIONS ' + r.quer.toFixed(1), '#ff2f9d'],
               ['VOLATILITY ' + (r.vol || 0).toFixed(2) + ' \u00b7 ' + ((r.vol || 0) > E.maxVolat * 0.5 ? 'SWINGS' : 'STEADY'), '#e0aaff', '9px ' + this.MONO],
               [r.idx >= 0 ? '\u25b2 ASSERTS MORE THAN IT HEDGES' : '\u25bc HEDGES MORE THAN IT ASSERTS', r.idx >= 0 ? '#00ffa3' : '#b026ff', '9px ' + this.MONO],
               ['CLICK TO READ THE PAGE', C.dim, '8.5px ' + this.MONO]
@@ -514,7 +514,7 @@
           }
           if (P.hover >= 0) {
             const it = P.rows[P.hover];
-            ctx.strokeStyle = 'rgba(232,230,225,0.22)'; ctx.setLineDash([2, 4]);
+            ctx.strokeStyle = 'rgba(214,255,208,0.22)'; ctx.setLineDash([2, 4]);
             ctx.beginPath(); ctx.moveTo(g.xOf(P.hover), g.padT); ctx.lineTo(g.xOf(P.hover), g.botY); ctx.stroke();
             ctx.setLineDash([]);
             const lines = [
@@ -562,7 +562,7 @@
         }
       }
       // proportional-coverage reference: mentions rising with the square root of page mass
-      ctx.strokeStyle = 'rgba(232,230,225,0.22)'; ctx.setLineDash([4, 5]);
+      ctx.strokeStyle = 'rgba(214,255,208,0.22)'; ctx.setLineDash([4, 5]);
       ctx.beginPath();
       for (let w = 1; w <= A.maxOwn; w *= 1.25) {
         const expect = Math.sqrt(w) * 0.9;
@@ -572,11 +572,11 @@
       ctx.stroke(); ctx.setLineDash([]);
       ctx.save();
       ctx.translate(X(A.maxOwn * 0.22), Y(Math.sqrt(A.maxOwn * 0.22) * 0.9));
-      ctx.font = '8px ' + this.MONO; ctx.fillStyle = 'rgba(232,230,225,0.4)'; ctx.textAlign = 'center';
+      ctx.font = '8px ' + this.MONO; ctx.fillStyle = 'rgba(214,255,208,0.4)'; ctx.textAlign = 'center';
       ctx.fillText('PROPORTIONAL COVERAGE', 0, -7);
       ctx.restore();
       ctx.font = '9.5px ' + this.MONO; ctx.textBaseline = 'alphabetic';
-      ctx.fillStyle = 'rgba(224,26,255,0.6)'; ctx.textAlign = 'left';
+      ctx.fillStyle = 'rgba(255,47,157,0.6)'; ctx.textAlign = 'left';
       ctx.fillText('DEBT — TALKED ABOUT FAR MORE THAN DOCUMENTED', padL + 10, padT + 18);
       ctx.fillStyle = 'rgba(0,255,163,0.55)'; ctx.textAlign = 'right';
       ctx.fillText('MASS WITHOUT PULL — BIG PAGE, RARELY NAMED', padL + pw - 8, padT + ph - 12);
@@ -603,7 +603,7 @@
         const lit = it === A.hover || it === A.pinned;
         const r = (2.4 + Math.sqrt(it.docs / A.maxDocs) * 11) * Math.min(1, A.reveal * 1.6);
         ctx.beginPath(); ctx.arc(it._x, it._y, lit ? r + 2.5 : r, 0, Math.PI * 2);
-        if (!it._on) ctx.fillStyle = 'rgba(60,68,82,0.22)';
+        if (!it._on) ctx.fillStyle = 'rgba(38,84,100,0.22)';
         else if (lit) ctx.fillStyle = '#ffffff';
         else ctx.fillStyle = hx(this.WCOL[it.p.domain] || '#8fa878', 0.4 + Math.min(0.5, it.docs / 60));
         ctx.fill();
@@ -613,7 +613,7 @@
         }
         if (it._on && (it.docs > 45 || lit)) {
           ctx.font = (lit ? '600 ' : '') + '8.5px ' + this.MONO;
-          ctx.fillStyle = lit ? C.txt : '#6b7484';
+          ctx.fillStyle = lit ? C.txt : '#4f9fb8';
           ctx.textAlign = 'center'; ctx.textBaseline = 'top';
           ctx.fillText(it.p.title.slice(0, 26), it._x, it._y + r + 4);
         }
@@ -630,9 +630,9 @@
       // ---- debt ranking panel ----
       const px = W - panelW - 14, py = padT - 24;
       const panelH = H - py - 34;
-      ctx.fillStyle = 'rgba(11,15,21,0.9)'; ctx.fillRect(px, py, panelW, panelH);
+      ctx.fillStyle = 'rgba(3,14,7,0.9)'; ctx.fillRect(px, py, panelW, panelH);
       ctx.strokeStyle = C.line; ctx.strokeRect(px + 0.5, py + 0.5, panelW, panelH);
-      ctx.font = '9px ' + this.MONO; ctx.fillStyle = '#e01aff';
+      ctx.font = '9px ' + this.MONO; ctx.fillStyle = '#ff2f9d';
       ctx.fillText('DOCUMENTATION DEBT · MOST DISCUSSED, LEAST WRITTEN', px + 12, py + 18);
       A.rowHits = [];
       const rowH = Math.min(26, (panelH - 40) / Math.max(1, A.debts.length));
@@ -640,7 +640,7 @@
         const ry = py + 32 + i * rowH;
         if (ry + rowH > py + panelH - 4) return;
         const hov = mx >= px && mx <= px + panelW && my >= ry && my < ry + rowH;
-        if (hov) { ctx.fillStyle = 'rgba(224,26,255,0.1)'; ctx.fillRect(px + 1, ry, panelW - 2, rowH); A.hover = it; }
+        if (hov) { ctx.fillStyle = 'rgba(255,47,157,0.1)'; ctx.fillRect(px + 1, ry, panelW - 2, rowH); A.hover = it; }
         ctx.font = (hov ? '600 ' : '') + '9.5px ' + this.MONO;
         ctx.fillStyle = hov ? '#e9ffe6' : (this.WCOL[it.p.domain] || '#8fa878');
         ctx.fillText(it.p.title.slice(0, 28), px + 12, ry + rowH * 0.5);
@@ -649,7 +649,7 @@
         ctx.textAlign = 'left';
         // debt bar
         const bw = (panelW - 24) * Math.min(1, it.debt / (A.debts[0].debt || 1));
-        ctx.fillStyle = hx('#e01aff', hov ? 0.75 : 0.35);
+        ctx.fillStyle = hx('#ff2f9d', hov ? 0.75 : 0.35);
         ctx.fillRect(px + 12, ry + rowH - 5, bw, 2);
         A.rowHits.push({ x: px, y: ry, w: panelW, h: rowH, it });
       });
@@ -821,7 +821,7 @@
           }
           if (P.hover >= 0) {
             const t = P.terms[P.hover];
-            ctx.strokeStyle = 'rgba(232,230,225,0.22)'; ctx.setLineDash([2, 4]);
+            ctx.strokeStyle = 'rgba(214,255,208,0.22)'; ctx.setLineDash([2, 4]);
             ctx.beginPath(); ctx.moveTo(g.xOf(P.hover), g.padT); ctx.lineTo(g.xOf(P.hover), g.botY); ctx.stroke();
             ctx.setLineDash([]);
             const u = this.dictionUsage(t.w, P.dom);
@@ -878,7 +878,7 @@
         ctx.fillStyle = hx(col, hov ? 0.95 : 0.3 + excl * 0.45);
         ctx.fillRect(gx0, y + rowH * 0.22, bw, Math.max(3, rowH * 0.5));
         ctx.font = (hov ? '600 ' : '') + Math.min(11, rowH - 4) + 'px ' + this.MONO;
-        ctx.fillStyle = hov ? '#e9ffe6' : '#a9a49a';
+        ctx.fillStyle = hov ? '#e9ffe6' : '#a3b89d';
         ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
         ctx.fillText(t.w.slice(0, 20), gx0 - 10, y + rowH / 2);
         ctx.textAlign = 'left';
@@ -893,7 +893,7 @@
       // ---- usage panel ----
       const show = D.pinned || D.hover;
       const px = W - panelW - 14, py = 62, panelH = H - py - 28;
-      ctx.fillStyle = 'rgba(11,15,21,0.9)'; ctx.fillRect(px, py, panelW, panelH);
+      ctx.fillStyle = 'rgba(3,14,7,0.9)'; ctx.fillRect(px, py, panelW, panelH);
       ctx.strokeStyle = show ? hx(col, 0.5) : C.line; ctx.strokeRect(px + 0.5, py + 0.5, panelW, panelH);
       if (!show) {
         ctx.font = '9px ' + this.MONO; ctx.fillStyle = C.faint;
@@ -914,7 +914,7 @@
           if (hov) { ctx.fillStyle = hx(col, 0.12); ctx.fillRect(px + 1, ry - 10, panelW - 2, 18); }
           ctx.fillStyle = hx(col, 0.3); ctx.fillRect(px + 12, ry + 4, (panelW - 90) * (h.c / maxC), 2);
           ctx.font = (hov ? '600 ' : '') + '9.5px ' + this.MONO;
-          ctx.fillStyle = hov ? '#e9ffe6' : '#a9a49a';
+          ctx.fillStyle = hov ? '#e9ffe6' : '#a3b89d';
           ctx.fillText(h.p.title.slice(0, 30), px + 12, ry);
           ctx.font = '8.5px ' + this.MONO; ctx.fillStyle = '#6f8a5e'; ctx.textAlign = 'right';
           ctx.fillText(h.c + '×', px + panelW - 12, ry); ctx.textAlign = 'left';
@@ -925,7 +925,7 @@
           ry = Math.max(ry + 6, py + panelH - 88);
           ctx.font = '8.5px ' + this.MONO; ctx.fillStyle = C.faint;
           ctx.fillText('IN CONTEXT', px + 12, ry); ry += 15;
-          ctx.font = '11px ' + this.GROT; ctx.fillStyle = 'rgba(232,230,225,0.86)';
+          ctx.font = '11px ' + this.GROT; ctx.fillStyle = 'rgba(214,255,208,0.86)';
           for (const ln of this.wkWrap(ctx, '“' + u.quote + '”', panelW - 26).slice(0, 4)) {
             if (ry > py + panelH - 8) break;
             ctx.fillText(ln, px + 12, ry); ry += 15;
@@ -1033,13 +1033,13 @@
           const hov = mx >= x && mx < x + cw && my >= y && my < y + rh;
           if (hov) S.hover = { r, k, label, frac, have: have.length, miss: r.ps.filter(p => !test(p)), test };
           // coverage → green, gap → red; full coverage reads as a solid block
-          const colr = frac >= 0.999 ? '#00ffa3' : frac >= 0.6 ? '#39ff14' : '#e01aff';
+          const colr = frac >= 0.999 ? '#00ffa3' : frac >= 0.6 ? '#39ff14' : '#ff2f9d';
           ctx.fillStyle = hx(colr, 0.1 + frac * 0.72);
           ctx.fillRect(x + 1, y + 1, cw - 2, rh - 2);
           if (hov) { ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 1.4; ctx.strokeRect(x + 1, y + 1, cw - 2, rh - 2); }
           if (cw > 34 && rh > 15) {
             ctx.font = '8.5px ' + this.MONO;
-            ctx.fillStyle = frac > 0.45 ? 'rgba(7,9,13,0.85)' : 'rgba(232,230,225,0.65)';
+            ctx.fillStyle = frac > 0.45 ? 'rgba(2,10,5,0.85)' : 'rgba(214,255,208,0.65)';
             ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
             ctx.fillText(Math.round(frac * 100) + '%', x + cw / 2, y + rh / 2);
             ctx.textAlign = 'left';
@@ -1052,7 +1052,7 @@
       ctx.textBaseline = 'alphabetic';
       cols.forEach(([k, label], ci) => {
         const x = gx0 + ci * cw, frac = totals[ci] / this.WK.pages.length;
-        ctx.fillStyle = 'rgba(29,36,48,0.9)'; ctx.fillRect(x + 1, gy1 + 10, cw - 2, 5);
+        ctx.fillStyle = 'rgba(10,34,16,0.9)'; ctx.fillRect(x + 1, gy1 + 10, cw - 2, 5);
         ctx.fillStyle = hx(frac >= 0.6 ? '#00ffa3' : '#39ff14', 0.85);
         ctx.fillRect(x + 1, gy1 + 10, (cw - 2) * frac, 5);
       });
@@ -1063,9 +1063,9 @@
       // ---- gap panel ----
       if (S.pinned) {
         const px = W - panelW - 14, py = 62, panelH = H - py - 28;
-        ctx.fillStyle = 'rgba(11,15,21,0.96)'; ctx.fillRect(px, py, panelW, panelH);
-        ctx.strokeStyle = '#e01aff'; ctx.strokeRect(px + 0.5, py + 0.5, panelW, panelH);
-        ctx.font = '600 10.5px ' + this.MONO; ctx.fillStyle = '#e01aff';
+        ctx.fillStyle = 'rgba(3,14,7,0.96)'; ctx.fillRect(px, py, panelW, panelH);
+        ctx.strokeStyle = '#ff2f9d'; ctx.strokeRect(px + 0.5, py + 0.5, panelW, panelH);
+        ctx.font = '600 10.5px ' + this.MONO; ctx.fillStyle = '#ff2f9d';
         ctx.fillText(S.pinned.r.t.toUpperCase() + ' · NO ' + S.pinned.label, px + 12, py + 20);
         ctx.font = '8.5px ' + this.MONO; ctx.fillStyle = C.dim;
         ctx.fillText(S.pinned.miss.length + ' OF ' + S.pinned.r.ps.length + ' PAGES MISSING THIS FIELD', px + 12, py + 35);
@@ -1073,11 +1073,11 @@
         for (const p of S.pinned.miss) {
           if (ry > py + panelH - 10) { ctx.fillStyle = C.faint; ctx.font = '8.5px ' + this.MONO; ctx.fillText('… and more', px + 12, ry); break; }
           const hov = mx >= px && mx <= px + panelW && my >= ry - 10 && my < ry + 8;
-          if (hov) { ctx.fillStyle = 'rgba(224,26,255,0.12)'; ctx.fillRect(px + 1, ry - 10, panelW - 2, 18); }
+          if (hov) { ctx.fillStyle = 'rgba(255,47,157,0.12)'; ctx.fillRect(px + 1, ry - 10, panelW - 2, 18); }
           ctx.font = '9px ' + this.MONO;
           ctx.fillStyle = this.WCOL[p.domain] || '#8fa878';
           ctx.fillText('▸', px + 12, ry);
-          ctx.fillStyle = hov ? '#e9ffe6' : '#a9a49a';
+          ctx.fillStyle = hov ? '#e9ffe6' : '#a3b89d';
           ctx.fillText(p.title.slice(0, 32), px + 26, ry);
           S.rowHits.push({ x: px, y: ry - 10, w: panelW, h: 18, id: p.id });
           ry += 19;
@@ -1088,7 +1088,7 @@
         this.card(ctx, mx, my, [
           [S.hover.r.t.toUpperCase() + ' × ' + S.hover.label, C.txt, '600 11px ' + this.MONO],
           [S.hover.have + ' OF ' + S.hover.r.ps.length + ' PAGES CARRY IT (' + Math.round(S.hover.frac * 100) + '%)', S.hover.frac >= 0.999 ? '#00ffa3' : '#39ff14'],
-          [S.hover.miss.length ? S.hover.miss.length + ' MISSING · CLICK TO LIST THEM' : 'COMPLETE COVERAGE', S.hover.miss.length ? '#e01aff' : '#00ffa3', '9px ' + this.MONO]
+          [S.hover.miss.length ? S.hover.miss.length + ' MISSING · CLICK TO LIST THEM' : 'COMPLETE COVERAGE', S.hover.miss.length ? '#ff2f9d' : '#00ffa3', '9px ' + this.MONO]
         ]);
       }
       if (this.cv) this.cv.style.cursor = (S.hover && S.hover.miss.length) || S.rowHits.some(r => mx >= r.x && mx <= r.x + r.w && my >= r.y && my <= r.y + r.h) ? 'pointer' : 'crosshair';
@@ -1292,7 +1292,7 @@
           }
           if (K.hover >= 0) {
             const r = K.rows[K.hover];
-            ctx.strokeStyle = 'rgba(232,230,225,0.22)'; ctx.setLineDash([2, 4]);
+            ctx.strokeStyle = 'rgba(214,255,208,0.22)'; ctx.setLineDash([2, 4]);
             ctx.beginPath(); ctx.moveTo(g.xOf(K.hover), g.padT); ctx.lineTo(g.xOf(K.hover), g.botY); ctx.stroke();
             ctx.setLineDash([]);
             const lines = [
@@ -1453,7 +1453,7 @@
           ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
           ctx.fillText(b.d.toUpperCase().slice(0, 9), gx0 - 14, (a0 + a1) / 2);
         }
-        ctx.strokeStyle = 'rgba(29,36,48,0.85)'; ctx.lineWidth = 1;
+        ctx.strokeStyle = 'rgba(10,34,16,0.85)'; ctx.lineWidth = 1;
         ctx.beginPath(); ctx.moveTo(gx0, a1); ctx.lineTo(gx1, a1); ctx.stroke();
         ctx.beginPath(); ctx.moveTo(gx0 + (b.b + 1) * sc, gy0); ctx.lineTo(gx0 + (b.b + 1) * sc, gy1); ctx.stroke();
       }
@@ -1476,14 +1476,14 @@
             E.hover = { pa, pb, s, ia: E.ord[cy], ib: E.ord[cx] };
           }
         }
-        ctx.strokeStyle = 'rgba(232,230,225,0.35)'; ctx.lineWidth = 1;
+        ctx.strokeStyle = 'rgba(214,255,208,0.35)'; ctx.lineWidth = 1;
         ctx.beginPath(); ctx.moveTo(gx0, my); ctx.lineTo(gx1, my); ctx.stroke();
         ctx.beginPath(); ctx.moveTo(mx, gy0); ctx.lineTo(mx, gy1); ctx.stroke();
       }
 
       // ---- top echoes panel ----
       const px = W - panelW - 14, py = 62, panelH = H - py - 28;
-      ctx.fillStyle = 'rgba(11,15,21,0.9)'; ctx.fillRect(px, py, panelW, panelH);
+      ctx.fillStyle = 'rgba(3,14,7,0.9)'; ctx.fillRect(px, py, panelW, panelH);
       ctx.strokeStyle = C.line; ctx.strokeRect(px + 0.5, py + 0.5, panelW, panelH);
       ctx.font = '9px ' + this.MONO; ctx.fillStyle = '#39ff14';
       ctx.fillText('LOUDEST ECHOES · CLICK TO READ EITHER SIDE', px + 12, py + 18);
