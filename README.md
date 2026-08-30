@@ -9,6 +9,7 @@ index.html            # entry point + inline styles and template markup
 procurement.html      # PROCUREMENT — an unlisted third section (see below)
 ask.html              # standalone view of instrument VI · THE ASK
 ledger.html           # THE DRUG LEDGER — day by day, both directions
+boss.html             # ボスの部屋 · THE BOSS'S OFFICE — the intake ledger's front end
 money.html            # THE FAMILY LEDGER — where the money came from
 transcript.html       # THE TRANSCRIPT — the complete message record, searchable
 tree.html             # THE LINE — the family tree, drawn and walkable (see below)
@@ -45,6 +46,7 @@ js/
   procurement.js      # PROCUREMENT's six instruments
   ledger-data.js      # THE DRUG LEDGER's rows
   ledger.js           # THE DRUG LEDGER's renderer
+  boss.js             # ボスの部屋: the four rooms over the local intake ledger
   money-data.js       # THE FAMILY LEDGER's events
   money.js            # THE FAMILY LEDGER's renderer
   transcript-index.js # quote → transcript line lookup (generated)
@@ -467,6 +469,59 @@ everything but a name stripped from those records, and the same three steps in
 that section apply: encrypt the payload, purge the history, make the repository
 private. The raw `.ged` export is deliberately not committed; keep it outside
 the working tree.
+
+## ボスの部屋 — THE BOSS'S OFFICE
+
+`boss.html` is the odd one out on this site, and it is worth saying how.
+
+Every other page here **reads** a finished record that ships in this repo. This
+one **writes** to a live one that does not ship here at all: it is the front end
+for the intake ledger in [wiki-brain](https://github.com/caakehorn/wiki-brain)
+(`bin/intake`, `intake/`), and that ledger lives on the machine you are sitting
+at. The page is a client for the local daemon on `127.0.0.1:8477`; the record
+never leaves that machine, this site holds no copy of it, and a browser that
+cannot reach the daemon gets an empty room. **It does not fall back to sample
+data** — a room full of invented numbers would be worse than a dark one.
+
+So the whole thing is a face on `bin/intake` and never a second copy of it.
+Every figure it prints is computed by the ledger and formatted by the ledger's
+own formatter. Nothing here does arithmetic.
+
+**Running it.** Open the house first:
+
+```
+cd wiki-brain && python3 app.py
+```
+
+The daemon allows cross-origin requests on `/api/intake*` only, from an
+allowlist only — this site's origin plus localhost. Nothing else it serves
+answers a foreign origin. That hole is documented where it is cut, in
+wiki-brain's `app.py`, together with the residual risk and the environment
+variable (`WIKI_INTAKE_ORIGINS=`) that closes it completely.
+
+**The room.** A basement club at 3am, and the mapping is the point rather than
+the decoration:
+
+| the ledger | the room |
+|---|---|
+| a unit | a table |
+| opening a unit | a delivery at the back door — punch it in |
+| an intake event | a line cut on that table |
+| `measured` / `estimated` / `unquantified` | on the scale / eyeballed / the house didn't ask |
+| an adjustment | something walked out without being consumed |
+| closing a unit | last call, and the till count after it |
+| the unit report | the receipt |
+
+The room is a joke; the arithmetic is not. Nothing on the page invents a
+quantity, every average carries the share of events it was computed from, and
+last call will not let a table close over an unexplained remainder.
+
+**The one categorical encoding** — the three measurement types — is not chosen
+by eye. Those three hexes are re-stepped until they pass all six checks against
+this page's surface (OKLCH lightness band, chroma floor, colourblind separation,
+normal-vision separation, contrast), and every swatch sits next to its own words
+so identity is never carried by colour alone. The bright neon stays on the sign,
+where nobody has to read a value off it.
 
 ## Keeping the WIKI section in sync
 
