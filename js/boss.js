@@ -24,6 +24,9 @@
   var BASES = ['http://127.0.0.1:8477', 'http://localhost:8477'];
   var PROBE_MS = 2600;
 
+  var MODE = null;    // 'daemon' | 'web' — where the numbers came from
+  var PHRASE = null;  // the gate's passphrase, used to open the sealed log
+  var LINES = [];     // web mode: the sealed log, opened
   var BASE = null;    // whichever base answered
   var ST = null;      // the ledger state, as the daemon computed it
   var ROOM = 'floor';
@@ -75,20 +78,67 @@
   // Try each base in turn. A daemon that is not running and a daemon that is
   // running but will not talk to this origin are different failures and the
   // room says which, because the fix is different.
+  // The gate already took a passphrase this session and stashed it; the sealed
+  // log opens with the same one, so web mode asks for nothing the visitor has
+  // not already been asked for.
+  function gatePhrase() {
+    try { return sessionStorage.getItem('lv.gate.pw'); } catch (e) { return null; }
+  }
+
   function probe() {
     var i = 0;
     function next() {
       if (i >= BASES.length) {
-        FAIL = FAIL || 'noanswer';
-        return Promise.resolve(false);
+        return web();
       }
       var b = BASES[i++];
       return req('/api/intake', { base: b, timeout: PROBE_MS }).then(function (r) {
         if (!r.ok) { FAIL = 'refused'; return next(); }
-        BASE = b; ST = r.body; FAIL = null; return true;
+        BASE = b; ST = r.body; FAIL = null; MODE = 'daemon'; return true;
       }, function () { return next(); });
     }
     return next();
+  }
+
+  // ── web mode ──────────────────────────────────────────────────────────────
+  // No daemon. The log comes out of wiki-brain as a sealed blob, opens with the
+  // gate's passphrase, and is projected by `boss-web.js` into the same shape the
+  // daemon returns — so everything below this line renders identically either
+  // way. What differs is stated on screen, never guessed at.
+  function web() {
+    if (!window.BossSync || !window.BossWeb) { FAIL = 'noanswer'; return Promise.resolve(false); }
+    PHRASE = gatePhrase();
+    if (!PHRASE) { FAIL = 'nophrase'; return Promise.resolve(false); }
+    if (!BossSync.token()) { FAIL = 'notoken'; return Promise.resolve(false); }
+    return BossSync.pull(PHRASE).then(function (lines) {
+      LINES = lines;
+      return fetch('https://raw.githubusercontent.com/' + BossSync.REPO +
+                   '/main/intake/substances.json')
+        .then(function (r) { return r.ok ? r.json() : null; })
+        .catch(function () { return null; })
+        .then(function (cat) {
+          ST = BossWeb.state(LINES, cat);
+          MODE = 'web'; FAIL = null;
+          return true;
+        });
+    }, function (e) {
+      FAIL = /token/i.test(e.message) ? 'notoken' : 'sealed';
+      FAILMSG = e.message;
+      return false;
+    });
+  }
+
+  var FAILMSG = null;
+
+  /** Web-mode write: append events to the log, re-seal, push. Same union merge
+      the CLI does, so a laptop and a phone writing at once cannot lose either. */
+  function webWrite(newLines, message) {
+    return BossSync.push(PHRASE, newLines, message).then(function (r) {
+      LINES = r.lines;
+      var cat = { substances: ST.substances, categories: ST.categories };
+      ST = BossWeb.state(LINES, cat);
+      return true;
+    });
   }
 
   function refresh() {
@@ -103,6 +153,7 @@
   // which is exactly how a UI stops agreeing with the ledger.
   function act(action, body, msgEl) {
     if (msgEl) { msgEl.className = 'msg'; msgEl.textContent = 'ringing it up…'; }
+    if (MODE === 'web') return actWeb(action, body, msgEl);
     return req('/api/intake/' + action, { method: 'POST', body: body }).then(function (r) {
       if (!r.ok || r.body.error) {
         if (msgEl) { msgEl.className = 'msg'; msgEl.textContent = '✗ ' + (r.body.error || ('the house said no (' + r.status + ')')); }
@@ -115,6 +166,88 @@
       if (msgEl) { msgEl.className = 'msg'; msgEl.textContent = '✗ lost the line to the house — ' + e; }
       return null;
     });
+  }
+
+  // Web-mode mutations. Deliberately only the ones capture needs: opening a
+  // table, ringing up a line, writing off what walked out. Closing a unit is a
+  // reconciliation and belongs with the tool that does the arithmetic — the room
+  // says so rather than growing a second, thinner version of it.
+  function actWeb(action, body, msgEl) {
+    var qty = null, unit = null;
+    if (body.quantity !== undefined && String(body.quantity).trim() !== '') {
+      qty = parseFloat(body.quantity);
+      unit = body.quantity_unit || null;
+      if (isNaN(qty)) { return fail(msgEl, 'that is not a number'); }
+    }
+    var lines, msg, u;
+
+    if (action === 'unit') {
+      if (qty === null) return fail(msgEl, 'a unit has to start with a quantity');
+      var sub = (ST.substances || []).filter(function (x) { return x.id === body.substance; })[0];
+      if (!sub) return fail(msgEl, 'pick something off the list');
+      var uid = BossWeb.newUnitId();
+      lines = [BossWeb.event('unit_created', uid, {
+        substance: sub.name, substance_id: sub.id, category: sub.category,
+        quantity: qty, unit: unit || sub.default_unit,
+        source_context: body.source || null, note: body.note || null
+      }, when(body.at))];
+      msg = 'intake: a table opened, sealed';
+    } else if (action === 'log') {
+      u = unitOf(body.unit); if (!u) return fail(msgEl, 'no such table');
+      var mt = body.measurement_type || (qty === null ? 'unquantified' : 'measured');
+      if (qty === null && !(body.descriptor || '').trim())
+        return fail(msgEl, 'give a quantity, or a descriptor like "one line"');
+      if (mt === 'unquantified') { qty = null; unit = null; }
+      else if (unit && BossWeb.convert(qty, unit, u.quantity_unit) === null)
+        return fail(msgEl, 'cannot express ' + unit + ' as ' + u.quantity_unit +
+                           ' — different kinds of quantity');
+      lines = [BossWeb.event('intake_logged', u.id, {
+        quantity: qty, unit: qty === null ? null : (unit || u.quantity_unit),
+        measurement_type: mt,
+        confidence: mt === 'estimated' ? (body.confidence || 'medium') : (body.confidence || null),
+        descriptor: (body.descriptor || '').trim() || null,
+        note: (body.note || '').trim() || null
+      }, when(body.at))];
+      msg = 'intake: a line, sealed';
+    } else if (action === 'adjust') {
+      u = unitOf(body.unit); if (!u) return fail(msgEl, 'no such table');
+      if (qty === null) return fail(msgEl, 'how much walked out?');
+      lines = [BossWeb.event('unit_adjusted', u.id, {
+        kind: body.kind, quantity: qty, unit: unit || u.quantity_unit,
+        note: (body.note || '').trim() || null
+      }, when(body.at))];
+      msg = 'intake: something walked out, sealed';
+    } else {
+      return fail(msgEl,
+        action === 'close'
+          ? 'Last call reconciles the till, and that arithmetic lives in bin/intake — '
+          + 'run `bin/intake close` on the machine with the ledger. The room will not '
+          + 'do a thinner version of it.'
+          : 'not something the room can do from the web — that one needs the daemon');
+    }
+
+    return webWrite(lines, msg).then(function () {
+      if (msgEl) { msgEl.className = 'msg ok'; msgEl.textContent = ''; }
+      return { ok: true };
+    }, function (e) { return fail(msgEl, e.message); });
+  }
+
+  function fail(el, text) {
+    if (el) { el.className = 'msg'; el.textContent = '✗ ' + text; }
+    return Promise.resolve(null);
+  }
+  function unitOf(ref) {
+    var hit = ST.units.filter(function (u) { return u.id === ref; })[0];
+    if (hit) return hit;
+    return ST.units.filter(function (u) {
+      return u.status === 'active' && String(u.ordinal) === String(ref).replace('#', '');
+    })[0] || null;
+  }
+  function when(text) {
+    text = (text || '').trim();
+    if (!text) return BossWeb.iso();
+    var d = new Date(text.replace(' ', 'T'));
+    return isNaN(d.getTime()) ? BossWeb.iso() : BossWeb.iso(d);
   }
 
   // ── fixtures ──────────────────────────────────────────────────────────────
@@ -469,10 +602,19 @@
   // shows none — no cached copy, no demo data, no plausible-looking sample.
   // A room full of invented numbers is worse than an empty one.
   function houseClosed() {
+    if (FAIL === 'notoken') return tokenDoor();
     var why = FAIL === 'refused'
       ? 'The daemon answered and then refused this page. It is running, but it is not allowing ' +
         'requests from <code>' + esc(location.origin) + '</code>.'
-      : 'Nothing is listening on <code>127.0.0.1:8477</code>.';
+      : FAIL === 'nophrase'
+      ? 'The gate has no passphrase in this tab, so the sealed log cannot be opened. Reload and ' +
+        'come through the front.'
+      : FAIL === 'sealed'
+      ? 'The sealed log would not open: <code>' + esc(FAILMSG || 'authentication failed') +
+        '</code>. Either the passphrase is not the one it was sealed with, or the file has been ' +
+        'altered since.'
+      : 'Nothing is listening on <code>127.0.0.1:8477</code>, and there is no token on this ' +
+        'device to read the sealed log with.';
     return '<div class="booth hot" style="text-align:center;padding:52px 24px">' +
       '<svg width="150" height="76" viewBox="0 0 150 76" aria-hidden="true" style="opacity:.75">' +
       '<g stroke="rgba(255,59,48,.5)" stroke-width="2">' +
@@ -495,6 +637,35 @@
       'no neon. This room is a face on it, never a second copy of it.</div></div>';
   }
 
+  // ── the token door ────────────────────────────────────────────────────────
+  // The one thing web mode needs that the gate cannot supply. It is kept on this
+  // device and nowhere else: never committed, never sent anywhere but
+  // api.github.com, and FORGET wipes it. The ledger itself is deliberately not
+  // cached here — a plaintext consumption record in a browser store on a public
+  // origin is the same mistake as committing one, made somewhere harder to see.
+  function tokenDoor() {
+    return '<div class="booth hot" style="padding:40px 26px">' +
+      '<div class="rubric">裏の鍵 · THE BACK KEY</div>' +
+      '<h2>THE ROOM NEEDS A KEY TO THE BOOKS</h2>' +
+      '<p class="say">No daemon on this machine, so the room reads the ledger straight out of ' +
+      '<code>' + esc(BossSync.REPO) + '</code> — <b>sealed</b>. It travels and rests as ciphertext ' +
+      'and opens with the passphrase you already gave the gate, so that repository being public ' +
+      'publishes nothing readable. GitHub stores a blob it cannot read, and so does anyone who ' +
+      'clones it.</p>' +
+      '<p class="say">What it still needs is permission to write. Make a fine-grained token with ' +
+      '<b>Contents: read and write</b> on that repository and nothing else, and paste it here — ' +
+      'it stays on this device, in this browser, and goes nowhere but api.github.com.</p>' +
+      '<div class="rowline" style="margin-top:18px">' +
+      '<input type="text" id="tokIn" placeholder="github_pat_…" style="max-width:30em" ' +
+      'autocomplete="off" spellcheck="false">' +
+      '<button class="deal" id="tokGo">OPEN THE BOOKS</button>' +
+      (BossSync.token() ? '<button class="ghost" id="tokForget">FORGET IT</button>' : '') +
+      '</div><div class="msg" id="tokMsg"></div>' +
+      '<div style="font-size:9.5px;letter-spacing:.14em;color:var(--faint);margin-top:22px;line-height:1.9">' +
+      'Prefer no token at all? Run the ledger daemon on this machine instead —<br>' +
+      '<code>cd wiki-brain &amp;&amp; python3 app.py</code> — and the room uses that.</div></div>';
+  }
+
   // ── paint ─────────────────────────────────────────────────────────────────
   function chrome() {
     var lamp = $('#house'), st = $('#houseState'), who = $('#houseWho');
@@ -502,8 +673,11 @@
       lamp.className = 'live';
       var open = ST.units.filter(function (u) { return u.status === 'active'; }).length;
       st.textContent = 'THE HOUSE IS OPEN';
+      var src = MODE === 'web'
+        ? 'sealed · ' + esc(BossSync.REPO)
+        : esc(String(BASE).replace(/^https?:\/\//, ''));
       who.innerHTML = open + ' table(s) working · ' + ST.today + ' event(s) tonight · ' +
-        '<span style="color:var(--faint)">' + esc(BASE.replace(/^https?:\/\//, '')) + '</span>';
+        '<span style="color:var(--faint)">' + src + '</span>';
     } else {
       lamp.className = 'closed';
       st.textContent = 'THE HOUSE IS CLOSED';
@@ -545,6 +719,21 @@
 
   // ── wiring ────────────────────────────────────────────────────────────────
   function wireClosed() {
+    var go = $('#tokGo');
+    if (go) {
+      go.onclick = function () {
+        var t = ($('#tokIn').value || '').trim();
+        if (!t) { $('#tokMsg').textContent = '✗ paste the token first'; return; }
+        BossSync.setToken(t);
+        go.disabled = true; go.textContent = 'OPENING…';
+        FAIL = null;
+        probe().then(function () { render(); });
+      };
+      $('#tokIn').onkeydown = function (e) { if (e.key === 'Enter') { e.preventDefault(); go.click(); } };
+      var f = $('#tokForget');
+      if (f) f.onclick = function () { BossSync.forget(); FAIL = 'notoken'; render(); };
+      return;
+    }
     var k = $('#knock');
     if (k) k.onclick = function () {
       k.disabled = true; k.textContent = 'KNOCKING…';
