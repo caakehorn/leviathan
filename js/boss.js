@@ -101,39 +101,42 @@
   }
 
   // ── web mode ──────────────────────────────────────────────────────────────
-  // No daemon. The log comes out of wiki-brain as a sealed blob, opens with the
-  // gate's passphrase, and is projected by `boss-web.js` into the same shape the
-  // daemon returns — so everything below this line renders identically either
-  // way. What differs is stated on screen, never guessed at.
+  // No daemon. The log comes straight out of wiki-brain as `bin/intake`'s own
+  // events.jsonl and is projected by `boss-web.js` into the same shape the daemon
+  // returns — so everything below this line renders identically either way.
+  // What differs is stated on screen, never guessed at.
   function web() {
     if (!window.BossSync || !window.BossWeb) { FAIL = 'noanswer'; return Promise.resolve(false); }
-    PHRASE = gatePhrase();
-    if (!PHRASE) { FAIL = 'nophrase'; return Promise.resolve(false); }
     if (!BossSync.token()) { FAIL = 'notoken'; return Promise.resolve(false); }
-    return BossSync.pull(PHRASE).then(function (lines) {
+    return BossSync.pull().then(function (lines) {
       LINES = lines;
-      return fetch('https://raw.githubusercontent.com/' + BossSync.REPO +
-                   '/main/intake/substances.json')
-        .then(function (r) { return r.ok ? r.json() : null; })
-        .catch(function () { return null; })
-        .then(function (cat) {
-          ST = BossWeb.state(LINES, cat);
-          MODE = 'web'; FAIL = null;
-          return true;
-        });
+      // The catalog decides which quick-log buttons exist, so it must not depend
+      // on a single cross-origin fetch that can fail silently. Authenticated
+      // contents API first (same host as everything else here), then the raw CDN,
+      // and `boss-web.js` carries a compiled-in copy as the floor. CATFAIL says
+      // which one answered, because a room quietly running on a stale built-in
+      // catalog is worse than one that admits it.
+      return BossSync.readSubstances().then(function (cat) {
+        CATFAIL = cat ? null : 'catalog';
+        ST = BossWeb.state(LINES, cat);
+        MODE = 'web'; FAIL = null;
+        return true;
+      });
     }, function (e) {
-      FAIL = /token/i.test(e.message) ? 'notoken' : 'sealed';
+      FAIL = 'notoken';
       FAILMSG = e.message;
       return false;
     });
   }
+
+  var CATFAIL = null;
 
   var FAILMSG = null;
 
   /** Web-mode write: append events to the log, re-seal, push. Same union merge
       the CLI does, so a laptop and a phone writing at once cannot lose either. */
   function webWrite(newLines, message) {
-    return BossSync.push(PHRASE, newLines, message).then(function (r) {
+    return BossSync.push(newLines, message).then(function (r) {
       LINES = r.lines;
       var cat = { substances: ST.substances, categories: ST.categories };
       ST = BossWeb.state(LINES, cat);
@@ -391,18 +394,60 @@
   }
 
   // ── the rooms ─────────────────────────────────────────────────────────────
+  // THE QUICK LOG sits above the floor and is ALWAYS there, open table or not.
+  // It used to render only inside a table, which meant that with nothing open
+  // the four things you log most often were invisible — the feature was there
+  // and unreachable, which is indistinguishable from missing.
+  //
+  // Tapping one with no table open for that substance opens one first, at the
+  // substance's usual size, and logs against it. That auto-opened size is a
+  // GUESS at a denominator, so it is marked as one: the unit carries a note
+  // saying it was assumed, and LAST CALL will make you reconcile it like any
+  // other. The alternative — refusing the tap until you fill in a form — is how
+  // a night goes unlogged, and an unlogged night is worse than an approximate
+  // denominator that says it is approximate.
+  var USUAL = { nicotine: 240, caffeine: 900, cannabis: 3.5, cocaine: 3.5, buprenorphine: 8 };
+
+  function quickLog() {
+    var subs = (ST.substances || []).filter(function (s) {
+      return (s.presets || []).length; });
+    if (!subs.length) return '';
+    var open = ST.units.filter(function (u) { return u.status === 'active'; });
+    var h = '<div class="booth hot"><div class="rubric">クイック · QUICK LOG</div>' +
+      '<h2 style="font-size:19px">One tap, whatever is open.</h2>' +
+      '<div class="rowline" style="margin-top:14px">';
+    subs.forEach(function (s) {
+      (s.presets || []).forEach(function (pre) {
+        var live = open.filter(function (u) { return u.substance_id === s.id; })[0];
+        h += '<button class="deal" data-q="' + esc(s.id) + '" data-qp="' + esc(pre.id) + '" ' +
+          'title="' + esc(pre.note || '') + '">' + esc(pre.label || pre.id) +
+          ' <span style="opacity:.72;font-weight:400">' + esc(pre.quantity) + ' ' +
+          esc(pre.unit) + '</span>' +
+          (live ? '' : ' <span style="opacity:.55;font-weight:400">· opens a table</span>') +
+          '</button>';
+      });
+    });
+    h += '</div><div style="font-size:9.5px;letter-spacing:.1em;color:var(--dim);' +
+      'line-height:1.8;margin-top:10px">Every preset goes down as an <b>estimate</b>, never a ' +
+      'measurement. A tap with no table open for that substance opens one at its usual size ' +
+      'and says on the record that the size was assumed.</div>' +
+      '<div class="msg" data-r="qmsg"></div></div>';
+    return h;
+  }
+
   function tables() {
     var open = ST.units.filter(function (u) { return u.status === 'active'; });
+    var head = quickLog();
     if (!open.length) {
-      return '<div class="booth"><div class="rubric">NOBODY’S WORKING</div>' +
-        '<h2>The floor is empty.</h2><p class="say">Not a single table is open. The unit ' +
-        'comes first here and nothing gets logged against a table that isn’t — that is not ' +
-        'ceremony, it is the only reason any of the numbers downstairs mean anything. A dose ' +
-        'with no denominator can tell you nothing later.<br><br>' +
-        'Go round <b>the back door</b> and put something on a table.</p>' +
+      return head + '<div class="booth"><div class="rubric">NOBODY’S WORKING</div>' +
+        '<h2>No table is open yet.</h2><p class="say">Tap anything above and the house will ' +
+        'open one for you. Or go round <b>the back door</b> and put a real quantity on the ' +
+        'table — that is better, because a unit with a known size is the denominator every ' +
+        'number downstairs is computed against, and a dose with no denominator can tell you ' +
+        'nothing later.</p>' +
         '<div style="margin-top:16px"><button class="deal" data-go="door">THE BACK DOOR ▸</button></div></div>';
     }
-    return open.map(table).join('');
+    return head + open.map(table).join('');
   }
 
   function table(u) {
@@ -692,15 +737,9 @@
     var why = FAIL === 'refused'
       ? 'The daemon answered and then refused this page. It is running, but it is not allowing ' +
         'requests from <code>' + esc(location.origin) + '</code>.'
-      : FAIL === 'nophrase'
-      ? 'The gate has no passphrase in this tab, so the sealed log cannot be opened. Reload and ' +
-        'come through the front.'
-      : FAIL === 'sealed'
-      ? 'The sealed log would not open: <code>' + esc(FAILMSG || 'authentication failed') +
-        '</code>. Either the passphrase is not the one it was sealed with, or the file has been ' +
-        'altered since.'
       : 'Nothing is listening on <code>127.0.0.1:8477</code>, and there is no token on this ' +
-        'device to read the sealed log with.';
+        'device to read the ledger with.' +
+        (FAILMSG ? ' Last error: <code>' + esc(FAILMSG) + '</code>.' : '');
     return '<div class="booth hot" style="text-align:center;padding:52px 24px">' +
       '<svg width="150" height="76" viewBox="0 0 150 76" aria-hidden="true" style="opacity:.75">' +
       '<g stroke="rgba(255,59,48,.5)" stroke-width="2">' +
@@ -831,6 +870,35 @@
   function wire() {
     $$('[data-go]').forEach(function (b) {
       b.onclick = function () { ROOM = b.dataset.go; render(); };
+    });
+
+    // the quick log — one tap, table or no table
+    $$('[data-q]').forEach(function (b) {
+      b.onclick = function () {
+        var msg = document.querySelector('[data-r="qmsg"]');
+        var sid = b.dataset.q, pid = b.dataset.qp;
+        var live = ST.units.filter(function (u) {
+          return u.status === 'active' && u.substance_id === sid; })[0];
+        b.disabled = true;
+        var go = live
+          ? Promise.resolve(live.id)
+          : act('unit', { substance: sid, quantity: String(USUAL[sid] || 1),
+                          quantity_unit: (ST.substances.filter(function (s) {
+                            return s.id === sid; })[0] || {}).default_unit,
+                          note: 'size assumed by a quick-log tap — reconcile at last call' },
+                msg).then(function (r) {
+              if (!r) return null;
+              var u = ST.units.filter(function (x) {
+                return x.status === 'active' && x.substance_id === sid; })[0];
+              return u ? u.id : null;
+            });
+        go.then(function (unitId) {
+          if (!unitId) { b.disabled = false; return; }
+          return act('log', { unit: unitId, preset: pid }, msg).then(function (r) {
+            if (r) render(); else b.disabled = false;
+          });
+        });
+      };
     });
 
     $$('.booth[data-u]').forEach(function (card) {

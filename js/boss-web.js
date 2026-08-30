@@ -657,8 +657,43 @@
 
   function newUnitId() { return 'intake_unit_' + ulid(); }
 
-  /** The exact shape `boss.js` renders, assembled from the sealed log. */
+  // THE CATALOG FLOOR. The quick-log buttons exist only for substances in the
+  // catalog, so a failed catalog fetch used to mean no buttons AND an empty
+  // select box — a total loss of function from one silent network error. This is
+  // the compiled-in copy of `intake/substances.json`, used only when every
+  // network path failed, and the room says on screen when it is running on this
+  // rather than on the live list.
+  var BUILTIN = {
+    categories: ['stimulant', 'depressant', 'psychedelic', 'dissociative', 'opioid',
+                 'cannabinoid', 'prescription', 'supplement', 'other'],
+    substances: [
+      { id: 'buprenorphine', name: 'Buprenorphine', category: 'opioid',
+        default_unit: 'mg', presets: [] },
+      { id: 'caffeine', name: 'Caffeine', category: 'stimulant', default_unit: 'mg',
+        presets: [{ id: 'coffee', label: 'A COFFEE', quantity: 150, unit: 'mg',
+                    measurement_type: 'estimated', confidence: 'low',
+                    note: 'preset: one brewed coffee, 150 mg — an 8 oz cup runs 95-165 mg, ' +
+                          'so brew strength moves this more than cup size does' }] },
+      { id: 'cannabis', name: 'Cannabis', category: 'cannabinoid', default_unit: 'g',
+        presets: [{ id: 'one-hitter', label: 'ONE HITTER', quantity: 0.05, unit: 'g',
+                    measurement_type: 'estimated', confidence: 'medium',
+                    note: 'preset: one-hitter bowl, 0.05 g — a fixed bowl, so it repeats well' }] },
+      { id: 'cocaine', name: 'Cocaine', category: 'stimulant', default_unit: 'g',
+        presets: [{ id: 'line', label: 'ONE LINE', quantity: 0.1, unit: 'g',
+                    measurement_type: 'estimated', confidence: 'low',
+                    note: 'preset: one line, 0.1 g by eye — the widest-spread estimate here' }] },
+      { id: 'nicotine', name: 'Nicotine', category: 'stimulant', default_unit: 'mg',
+        presets: [{ id: 'cigarette', label: 'ONE CIGARETTE', quantity: 12, unit: 'mg',
+                    measurement_type: 'estimated', confidence: 'medium',
+                    note: 'preset: one cigarette — 12 mg is CONTENT in the rod (typical ' +
+                          '10-14 mg), which is what leaves the pack. Absorbed dose is ' +
+                          'roughly 1-1.5 mg, about a tenth of this.' }] }
+    ]
+  };
+
+  /** The exact shape `boss.js` renders, assembled from the log. */
   function state(lines, catalog) {
+    catalog = (catalog && catalog.substances && catalog.substances.length) ? catalog : BUILTIN;
     var units = build(lines);
     var today = iso().slice(0, 10);
     var n = 0;
