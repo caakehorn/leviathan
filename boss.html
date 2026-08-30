@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- THE GATE — must be first: it hides the document synchronously, so nothing
+     behind the passphrase paints even for a frame. This is also what satisfies
+     "only through the homepage after the strobe": every page on this site loads
+     gate.js, so the curtain stands in front of this room like any other. -->
+<script src="./js/gate.js"></script>
+<title>ボスの部屋 — THE BOSS'S OFFICE</title>
+<meta name="robots" content="noindex, nofollow">
+<meta name="referrer" content="no-referrer">
+<meta name="theme-color" content="#0b0207">
+<link rel="icon" href="data:,">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous">
+<link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700;900&amp;family=Shippori+Mincho+B1:wght@700;800&amp;family=IBM+Plex+Mono:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<!-- css/slime.css is deliberately NOT loaded. Every other standalone page here
+     shares the green tank; this is a different room in the same building and it
+     is lit red. Loading slime would put radioactive pools under a basement bar. -->
+<style>
+/* ══════════════════════════════════════════════════════════════════════════
+   ボスの部屋 — THE BOSS'S OFFICE
+
+   A basement club in Kabukicho at 3am, seen from the office upstairs through
+   the one-way glass. It is the front end for the intake ledger: every fixture
+   in the room is a thing the ledger actually holds. A unit is a table. An
+   intake event is a line cut on that table. Closing a unit is last call and
+   the till count that follows it.
+
+   The joke has a spine: the room is sleazy, the arithmetic is not. Nothing on
+   this page invents a number, and where the ledger does not know something the
+   room says so in its own voice instead of filling it in.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+:root {
+  --blood:      #0b0207;   /* the ground — near-black with red in it */
+  --blood-2:    #17040d;
+  --booth:      #1e0710;   /* upholstery */
+  --ink:        #05010480;
+  --neon:       #ff1f6f;   /* the house colour */
+  --neon-hi:    #ff77a6;
+  --magenta:    #ff2fd0;
+  --cyan:       #00e5ff;   /* signage only — decoration, never a data mark */
+  --cyan-hi:    #9af4ff;
+  --amber:      #ffb020;
+  --gold:       #ffd166;
+
+  /* THE THREE MEASUREMENT TYPES are the one categorical encoding on this page,
+     so they are not chosen by eye. These three are re-stepped from the signage
+     hues until they pass all six checks against this surface: OKLCH L inside
+     the dark band 0.48-0.67, chroma >= 0.1, worst adjacent CVD dE 19.3 (protan),
+     normal-vision dE 24.1, contrast >= 3:1. The bright neon above stays where it
+     belongs - on the sign - because a mark you have to read is not decoration.
+     Identity is never carried by colour alone here: every swatch sits next to
+     its own words, and the words are in text ink, not in the series colour. */
+  --m-measured:     #12a6bd;
+  --m-estimated:    #c98400;
+  --m-unquantified: #dc22aa;
+  --money:      #3fd07a;   /* cash */
+  --bone:       #f7e9e6;
+  --smoke:      #c9a9b4;
+  --dim:        #93707f;
+  --faint:      #5a3644;
+  --danger:     #ff3b30;
+  --line:       #3a1523;
+  --line-hot:   #6b1f38;
+}
+
+* { box-sizing: border-box; }
+html, body {
+  margin: 0; padding: 0; min-height: 100%;
+  background: var(--blood);
+  color: var(--bone);
+  font-family: 'IBM Plex Mono', ui-monospace, monospace;
+  overflow-x: hidden;
+}
+::selection { background: var(--neon); color: #12000a; }
+a { color: var(--neon-hi); text-decoration: none; }
+a:hover { color: #fff; }
+button { font-family: inherit; }
+
+/* ── the room, in layers ────────────────────────────────────────────────────
+   Five fixed planes under the content: the lit walls, the venetian blind that
+   cuts the whole room into stripes, the mirror-ball speckle, the smoke, and
+   the grain. All of them pointer-events:none and aria-hidden. ── */
+.plane { position: fixed; inset: 0; pointer-events: none; z-index: 0; }
+
+#walls {
+  background:
+    radial-gradient(ellipse 60% 45% at 12% 8%,  rgba(255,31,111,.22), transparent 62%),
+    radial-gradient(ellipse 55% 40% at 88% 14%, rgba(255,47,208,.16), transparent 60%),
+    radial-gradient(ellipse 70% 50% at 50% 96%, rgba(255,31,111,.14), transparent 66%),
+    radial-gradient(ellipse 40% 30% at 78% 62%, rgba(0,229,255,.08),  transparent 60%),
+    linear-gradient(180deg, #12030a 0%, var(--blood) 45%, #0d0208 100%);
+}
+/* The blind. One repeating gradient, skewed, with a slow drift — the light
+   outside the window is a sign, and signs do not hold still. */
+#blinds {
+  background: repeating-linear-gradient(
+    172deg,
+    rgba(0,0,0,.44) 0px, rgba(0,0,0,.44) 7px,
+    transparent 7px, transparent 20px);
+  opacity: .5;
+  animation: blindDrift 19s ease-in-out infinite alternate;
+}
+@keyframes blindDrift { from { transform: translateY(-8px); } to { transform: translateY(8px); } }
+
+#ball {
+  background:
+    radial-gradient(circle at 18% 22%, rgba(255,255,255,.10) 0 1.5px, transparent 2px),
+    radial-gradient(circle at 63% 11%, rgba(0,229,255,.12) 0 1.5px, transparent 2px),
+    radial-gradient(circle at 41% 74%, rgba(255,47,208,.11) 0 1.5px, transparent 2px),
+    radial-gradient(circle at 86% 58%, rgba(255,255,255,.08) 0 1.5px, transparent 2px),
+    radial-gradient(circle at 8%  61%, rgba(255,209,102,.10) 0 1.5px, transparent 2px);
+  background-size: 190px 190px, 240px 240px, 300px 300px, 210px 210px, 270px 270px;
+  animation: ballTurn 24s linear infinite;
+}
+@keyframes ballTurn { from { background-position: 0 0, 0 0, 0 0, 0 0, 0 0; }
+                      to   { background-position: 190px 95px, -240px 120px, 300px -150px, -210px -105px, 270px 135px; } }
+
+#smoke {
+  background:
+    radial-gradient(ellipse 46% 30% at 22% 70%, rgba(201,169,180,.07), transparent 70%),
+    radial-gradient(ellipse 38% 26% at 74% 34%, rgba(201,169,180,.055), transparent 70%);
+  filter: blur(14px);
+  animation: smokeRoll 31s ease-in-out infinite alternate;
+}
+@keyframes smokeRoll {
+  from { transform: translate3d(-3%, 2%, 0) scale(1.05); }
+  to   { transform: translate3d(4%, -3%, 0) scale(1.16); }
+}
+#grain {
+  opacity: .42;
+  background: repeating-linear-gradient(0deg, rgba(0,0,0,.30) 0 1px, transparent 1px 3px);
+}
+/* The one-way glass: you are upstairs, the floor is down there. */
+#glass {
+  background: linear-gradient(180deg, rgba(255,255,255,.05) 0, transparent 90px);
+  border-top: 1px solid rgba(255,120,170,.14);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #blinds, #ball, #smoke { animation: none !important; }
+}
+
+/* ── the neon sign on the wall ──────────────────────────────────────────────
+   A real neon tube is a stroke with three glows on it and a dead-gas flicker
+   that is NOT periodic. Sub-3Hz throughout, same line gate.js draws — the
+   curtain in front of this page is already as much strobe as anyone needs. ── */
+.tube { fill: none; stroke-linecap: round; stroke-linejoin: round;
+  filter: drop-shadow(0 0 2px currentColor) drop-shadow(0 0 9px currentColor)
+          drop-shadow(0 0 26px currentColor); }
+.tube.pink { color: var(--neon); stroke: var(--neon-hi); }
+.tube.cy   { color: var(--cyan); stroke: var(--cyan-hi); }
+.tube.am   { color: var(--amber); stroke: var(--gold); }
+.flicker   { animation: flick 6.1s steps(1) infinite; }
+.flicker-2 { animation: flick2 7.7s steps(1) infinite; }
+@keyframes flick {
+  0%,68%,72%,88%,100% { opacity: 1; }
+  70%, 89% { opacity: .32; }
+}
+@keyframes flick2 {
+  0%,54%,57%,93%,100% { opacity: 1; }
+  55.5%, 94% { opacity: .25; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .flicker, .flicker-2 { animation: none; opacity: 1; }
+}
+
+#signpost {
+  position: fixed; left: 14px; top: 0; height: 100vh; width: 78px; z-index: 1;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 36px; pointer-events: none; overflow: hidden;
+}
+#signpost .kana {
+  font-family: 'Shippori Mincho B1', 'Zen Kaku Gothic New', serif; font-weight: 800;
+  writing-mode: vertical-rl; font-size: 26px; letter-spacing: .18em; flex: 0 0 auto;
+  color: var(--neon-hi);
+  text-shadow: 0 0 4px var(--neon), 0 0 16px var(--neon), 0 0 44px var(--neon);
+}
+#signpost .open {
+  writing-mode: vertical-rl; font-size: 8.5px; letter-spacing: .34em; color: var(--cyan-hi);
+  text-shadow: 0 0 8px var(--cyan), 0 0 22px var(--cyan); flex: 0 0 auto;
+}
+@media (max-height: 700px) { #signpost .open { display: none; } }
+@media (max-width: 1100px) { #signpost { display: none; } }
+
+/* ── the security camera stamp ─────────────────────────────────────────────
+   The room is watched. So is the ledger — that is the whole point of it. ── */
+#camstamp {
+  position: fixed; right: 14px; bottom: 12px; z-index: 4;
+  font-size: 9.5px; letter-spacing: .18em; color: #ff6a94; text-align: right;
+  text-shadow: 0 0 10px rgba(255,31,111,.7); line-height: 1.7; pointer-events: none;
+}
+#camstamp .rec::before {
+  content: '●'; color: var(--danger); margin-right: 6px;
+  animation: rec 2.4s steps(1) infinite;
+}
+@keyframes rec { 0%,60%{opacity:1} 61%,100%{opacity:.15} }
+@media (prefers-reduced-motion: reduce) { #camstamp .rec::before { animation: none; } }
+
+/* ── page frame ─────────────────────────────────────────────────────────── */
+.wrap { position: relative; z-index: 2; max-width: 1180px;
+  margin: 0 auto; padding: 26px 20px 90px; }
+@media (min-width: 1101px) { .wrap { padding-left: 104px; } }
+
+/* the house-rules ticker */
+#marquee {
+  border-top: 1px solid var(--line); border-bottom: 1px solid var(--line);
+  background: rgba(30,7,16,.6); overflow: hidden; white-space: nowrap;
+  font-size: 9.5px; letter-spacing: .26em; color: #c98aa0; padding: 7px 0; margin-bottom: 22px;
+}
+#marquee span { display: inline-block; padding-left: 100%; animation: slide 46s linear infinite; }
+@media (prefers-reduced-motion: reduce) {
+  #marquee span { animation: none; padding-left: 0; }
+  #marquee { white-space: normal; }
+}
+@keyframes slide { to { transform: translateX(-100%); } }
+
+header.top { display: flex; align-items: flex-end; justify-content: space-between;
+  gap: 22px; flex-wrap: wrap; border-bottom: 1px solid var(--line); padding-bottom: 16px; }
+header.top h1 {
+  margin: 0; font-family: 'Zen Kaku Gothic New', sans-serif; font-weight: 900;
+  font-size: clamp(28px, 5.6vw, 58px); line-height: .92; letter-spacing: -.03em; color: #fff;
+  text-shadow: 0 0 26px rgba(255,31,111,.55), 0 0 90px rgba(255,47,208,.35);
+}
+header.top .jp { font-family: 'Shippori Mincho B1', serif; font-weight: 800;
+  font-size: 13px; letter-spacing: .34em; color: var(--neon); margin-bottom: 8px; }
+header.top .sub { font-size: 10px; letter-spacing: .2em; color: var(--dim); margin-top: 10px; }
+
+/* the HOUSE lamp — live / closed */
+#house { text-align: right; font-size: 9.5px; letter-spacing: .22em; line-height: 1.9; }
+#house .lamp { display: inline-block; width: 8px; height: 8px; border-radius: 50%;
+  margin-right: 7px; vertical-align: 1px; background: var(--faint); }
+#house.live .lamp   { background: var(--money); box-shadow: 0 0 12px var(--money); }
+#house.closed .lamp { background: var(--danger); box-shadow: 0 0 12px var(--danger); }
+#house .who { color: var(--dim); }
+#house b { color: var(--bone); font-weight: 600; letter-spacing: .2em; }
+
+/* ── the rooms (tabs) ───────────────────────────────────────────────────── */
+nav.rooms { display: flex; gap: 4px; flex-wrap: wrap; margin: 20px 0 26px; }
+nav.rooms button {
+  background: rgba(30,7,16,.55); border: 1px solid var(--line); color: var(--dim);
+  padding: 11px 17px; cursor: pointer; font-size: 9.5px; letter-spacing: .2em;
+  transition: color .18s, border-color .18s, background .18s;
+}
+nav.rooms button .jp { display: block; font-family: 'Shippori Mincho B1', serif;
+  font-size: 11px; letter-spacing: .18em; color: var(--faint); margin-bottom: 4px; }
+nav.rooms button:hover { color: var(--neon-hi); border-color: var(--line-hot); }
+nav.rooms button.on { color: #fff; border-color: var(--neon);
+  background: rgba(255,31,111,.12); box-shadow: 0 0 34px rgba(255,31,111,.22) inset; }
+nav.rooms button.on .jp { color: var(--neon); }
+
+/* ── shared furniture ───────────────────────────────────────────────────── */
+.booth { border: 1px solid var(--line); background:
+    linear-gradient(180deg, rgba(30,7,16,.82), rgba(11,2,7,.82));
+  padding: 20px 22px; margin: 0 0 16px; position: relative; }
+.booth.hot { border-color: var(--line-hot); box-shadow: 0 0 60px rgba(255,31,111,.10) inset; }
+.booth h2 { margin: 0 0 4px; font-family: 'Zen Kaku Gothic New', sans-serif; font-weight: 900;
+  font-size: 19px; letter-spacing: .01em; color: #fff; }
+.booth .rubric { font-size: 9px; letter-spacing: .3em; color: var(--neon); margin-bottom: 10px; }
+.booth .say { font-family: 'Zen Kaku Gothic New', sans-serif; font-size: 13px;
+  line-height: 1.85; color: var(--smoke); max-width: 76ch; }
+
+.big { font-family: 'Zen Kaku Gothic New', sans-serif; font-weight: 900;
+  font-size: 40px; line-height: 1; color: #fff; letter-spacing: -.02em;
+  text-shadow: 0 0 24px rgba(255,31,111,.5); }
+.big small { font-size: 11px; font-weight: 400; letter-spacing: .16em; color: var(--dim);
+  display: block; margin-top: 8px; text-shadow: none; }
+
+/* A tag is a swatch plus words. The swatch carries the encoding, the words
+   carry the meaning, and the words are ink - never the series colour. */
+.tag { display: inline-flex; align-items: center; gap: 6px; font-size: 8.5px;
+  letter-spacing: .2em; padding: 3px 8px; border: 1px solid var(--line-hot);
+  color: var(--smoke); margin-left: 8px; vertical-align: 2px; }
+.tag i { width: 8px; height: 8px; display: block; background: currentColor;
+  border-radius: 1px; flex: 0 0 8px; }
+.tag.measured     i { color: var(--m-measured);     box-shadow: 0 0 8px var(--m-measured); }
+.tag.estimated    i { color: var(--m-estimated);    box-shadow: 0 0 8px var(--m-estimated); }
+.tag.unquantified i { color: var(--m-unquantified); box-shadow: 0 0 8px var(--m-unquantified); }
+.tag.closed  { color: var(--faint); border-color: var(--line); }
+.tag.danger  { color: var(--danger); border-color: var(--danger); }
+
+/* ── the counted meter ────────────────────────────────────────────────────
+   One value, so it is a stat tile with a proportion bar under it and not a
+   chart: no legend, no axis, the number said once and directly labelled. */
+.meter { margin-top: 14px; }
+.meter .n { font-family: 'Zen Kaku Gothic New', sans-serif; font-weight: 900;
+  font-size: 22px; color: #fff; }
+.meter .of { font-size: 10px; letter-spacing: .16em; color: var(--dim); margin-left: 8px; }
+.meter .track { height: 7px; background: rgba(255,255,255,.07); margin-top: 8px;
+  position: relative; overflow: hidden; }
+.meter .fill { position: absolute; inset: 0 auto 0 0; border-radius: 0 4px 4px 0;
+  background: var(--m-measured); box-shadow: 0 0 16px var(--m-measured); }
+.meter .cap { font-size: 9px; letter-spacing: .16em; color: var(--dim); margin-top: 7px;
+  line-height: 1.7; }
+
+/* ── the hours bar chart ──────────────────────────────────────────────────
+   One series over an ordered dimension, so there is no legend and the title
+   names it. Recessive axis, a 2px gap between bars, 4px rounded data-ends on
+   the baseline, and only the peak is labelled. */
+.hours { margin-top: 12px; }
+.hours .plot { display: flex; align-items: flex-end; gap: 2px; height: 92px; }
+.hours .bar { flex: 1; min-width: 3px; background: var(--neon); border-radius: 4px 4px 0 0;
+  box-shadow: 0 0 12px rgba(255,31,111,.45); position: relative; cursor: default;
+  transition: filter .14s; }
+.hours .bar:hover { filter: brightness(1.4); }
+.hours .bar.zero { background: rgba(255,255,255,.08); box-shadow: none; border-radius: 0;
+  height: 1px !important; }
+.hours .bar .tip { display: none; position: absolute; bottom: 100%; left: 50%;
+  transform: translateX(-50%); margin-bottom: 8px; white-space: nowrap; z-index: 5;
+  background: #1b0510; border: 1px solid var(--line-hot); color: var(--bone);
+  font-size: 10px; letter-spacing: .1em; padding: 5px 9px; }
+.hours .bar:hover .tip { display: block; }
+.hours .axis { display: flex; justify-content: space-between; margin-top: 7px;
+  font-size: 8.5px; letter-spacing: .14em; color: var(--faint); }
+.hours .peak { font-size: 9px; letter-spacing: .16em; color: var(--smoke); margin-top: 8px; }
+
+button.deal {
+  background: var(--neon); border: 1px solid var(--neon); color: #14000a;
+  padding: 12px 20px; cursor: pointer; font-size: 10.5px; letter-spacing: .24em;
+  font-weight: 700; transition: filter .16s, box-shadow .16s;
+}
+button.deal:hover { filter: brightness(1.15); box-shadow: 0 0 40px rgba(255,31,111,.5); }
+button.deal:disabled { opacity: .4; cursor: default; filter: none; box-shadow: none; }
+button.ghost { background: transparent; border: 1px solid var(--line-hot); color: var(--neon-hi);
+  padding: 10px 16px; cursor: pointer; font-size: 9.5px; letter-spacing: .2em; }
+button.ghost:hover { border-color: var(--neon); color: #fff; }
+button.ghost.cold { border-color: rgba(0,229,255,.4); color: var(--cyan-hi); }
+button.ghost.cold:hover { border-color: var(--cyan); }
+
+input[type=text], select, textarea {
+  background: rgba(5,1,4,.8); border: 1px solid var(--line); color: var(--bone);
+  padding: 10px 11px; font-family: inherit; font-size: 13px; width: 100%;
+}
+input[type=text]:focus, select:focus { outline: none; border-color: var(--neon);
+  box-shadow: 0 0 22px rgba(255,31,111,.28); }
+label.fld { display: block; font-size: 8.5px; letter-spacing: .26em; color: var(--dim);
+  margin: 14px 0 5px; }
+select option { background: #14040c; }
+
+.msg { font-size: 11.5px; line-height: 1.7; color: var(--danger); margin-top: 10px;
+  white-space: pre-wrap; min-height: 1em; }
+.msg.ok { color: var(--money); }
+
+/* the receipt — dot-matrix on the boss's desk */
+pre.receipt {
+  font: 12px/1.5 'IBM Plex Mono', monospace; white-space: pre; overflow-x: auto;
+  background: #f3ece2; color: #241a1c; padding: 22px 20px; margin: 0;
+  border: 0; box-shadow: 0 18px 60px rgba(0,0,0,.6);
+  background-image: repeating-linear-gradient(0deg, rgba(0,0,0,.035) 0 1px, transparent 1px 4px);
+}
+.receiptwrap { position: relative; margin-top: 14px;
+  filter: drop-shadow(0 0 30px rgba(255,31,111,.18)); }
+/* torn edge, top and bottom */
+.receiptwrap::before, .receiptwrap::after {
+  content: ''; position: absolute; left: 0; right: 0; height: 8px; z-index: 1;
+  background: repeating-linear-gradient(135deg, #f3ece2 0 6px, transparent 6px 12px);
+}
+.receiptwrap::before { top: -4px; }
+.receiptwrap::after { bottom: -4px; transform: scaleY(-1); }
+
+.hr { border: 0; border-top: 1px solid var(--line); margin: 22px 0; }
+.rowline { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; }
+.grid2 { display: grid; grid-template-columns: 2fr 1fr; gap: 18px; align-items: start; }
+@media (max-width: 900px) { .grid2 { grid-template-columns: 1fr; } }
+
+footer.out { margin-top: 46px; padding-top: 18px; border-top: 1px solid var(--line);
+  font-size: 9px; letter-spacing: .16em; color: var(--faint); line-height: 2; }
+footer.out a { color: var(--dim); }
+</style>
+</head>
+<body>
+
+<div class="plane" id="walls"  aria-hidden="true"></div>
+<div class="plane" id="ball"   aria-hidden="true"></div>
+<div class="plane" id="smoke"  aria-hidden="true"></div>
+<div class="plane" id="blinds" aria-hidden="true"></div>
+<div class="plane" id="grain"  aria-hidden="true"></div>
+<div class="plane" id="glass"  aria-hidden="true"></div>
+
+<!-- THE SIGN. A neon tube dancer and the house name, on the wall by the stairs.
+     Silhouette and tube-line only: this is signage, in the visual language a
+     club sign is actually built in — bent glass, one colour, no detail. -->
+<aside id="signpost" aria-hidden="true">
+  <svg width="70" height="150" viewBox="0 0 70 150" role="presentation">
+    <!-- the pole -->
+    <line class="tube cy" x1="46" y1="8" x2="46" y2="142" stroke-width="2"/>
+    <!-- the figure: one continuous bent tube, hip out, arm up on the pole -->
+    <path class="tube pink flicker" stroke-width="3" d="
+      M46 30
+      C 38 26, 30 30, 29 38
+      C 28 46, 34 50, 36 56
+      C 39 64, 30 68, 25 76
+      C 20 84, 24 92, 30 96
+      C 36 100, 34 108, 28 116
+      C 23 123, 18 128, 14 132"/>
+    <!-- the head -->
+    <circle class="tube pink flicker" cx="27" cy="24" r="6" stroke-width="2.5"/>
+    <!-- the trailing leg -->
+    <path class="tube pink flicker-2" stroke-width="3" d="M30 96 C 38 104, 46 112, 52 122"/>
+    <!-- the arm to the pole -->
+    <path class="tube pink" stroke-width="2.5" d="M33 36 C 39 32, 44 30, 46 28"/>
+  </svg>
+  <div class="kana">ボスの部屋</div>
+  <div class="open">OPEN ALL NIGHT</div>
+</aside>
+
+<div id="camstamp">
+  <div class="rec">CAM 03 · OFFICE</div>
+  <div id="camclock">--:--:--</div>
+  <div style="color:#7a4a5c">NO TAPE. NO WITNESS.</div>
+</div>
+
+<div class="wrap">
+
+  <div id="marquee"><span>HOUSE RULES ·
+    THE UNIT COMES FIRST — NOTHING GETS LOGGED AGAINST A TABLE THAT ISN'T OPEN ·
+    WHAT THE SCALE SAW IS BLUE, WHAT YOU GUESSED IS AMBER, WHAT NOBODY COUNTED IS PINK ·
+    "ONE LINE" IS A REAL EVENT AND THE HOUSE WRITES IT DOWN ·
+    NO AVERAGE IS PRINTED WITHOUT SAYING HOW MUCH OF IT WAS COUNTED ·
+    LAST CALL DOES NOT ROUND — IF THE TILL IS SHORT SOMEBODY SAYS WHY ·
+    THE BOOKS GET AMENDED. THE BOOKS DO NOT GET BURNED ·
+    MANAGEMENT IS NOT RESPONSIBLE FOR ANYTHING THAT HAPPENS AFTER 4AM ·
+  </span></div>
+
+  <header class="top">
+    <div>
+      <div class="jp">ボスの部屋 · KABUKICHO B1</div>
+      <h1>THE BOSS'S OFFICE</h1>
+      <div class="sub">THE INTAKE LEDGER, RUN OUT OF THE BACK ROOM</div>
+    </div>
+    <div id="house">
+      <div><span class="lamp"></span><b id="houseState">CHECKING THE DOOR…</b></div>
+      <div class="who" id="houseWho">&nbsp;</div>
+    </div>
+  </header>
+
+  <nav class="rooms" id="rooms"></nav>
+  <main id="stage"></main>
+
+  <footer class="out">
+    ボスの部屋 · THE BOSS'S OFFICE — a front end for <code>bin/intake</code> in
+    <a href="https://github.com/caakehorn/wiki-brain">wiki-brain</a>.<br>
+    The room is a joke. The arithmetic is not: nothing here invents a quantity,
+    every average carries the share of events it was computed from, and last
+    call will not let a unit close over an unexplained remainder.<br>
+    No ledger data is stored by this page. It is read from the local ledger
+    daemon and rendered; nothing is written to this browser.
+  </footer>
+</div>
+
+<script src="./js/boss.js"></script>
+</body>
+</html>
