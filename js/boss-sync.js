@@ -34,7 +34,8 @@
 
   var API = 'https://api.github.com';
   var REPO = 'caakehorn/wiki-brain';          // upstream. Not ours to choose.
-  var LOG = 'intake/events.enc';
+  var LOG = 'intake/events.jsonl';
+  var SUBSTANCES = 'intake/substances.json';
   var TKEY = 'lv.boss.token';
   var ITER = 250000;
 
@@ -103,9 +104,23 @@
   // ── the file ──────────────────────────────────────────────────────────────
   // A missing log is a normal state, not a failure: the first write of a
   // lifetime creates it, and asking beforehand should not read as an error.
+  //
+  // PLAINTEXT, by operator decision on 2026-08-30. It was sealed before, which
+  // kept a public repository from publishing anything readable — but it also
+  // kept the WIKI from reading it, and the whole reason the ledger lives in
+  // wiki-brain is so the corpus can set a dated first-party record against a
+  // page's narrative. A ledger the analysis layer cannot open is a ledger with
+  // no reason to be there. The operator asked for it to sync while the repo is
+  // public, stating they understood what that publishes.
+  //
+  // What that means, plainly: `intake/events.jsonl` is a public, permanent
+  // record of consumption, and git history cannot be un-published.
+  //
+  // The format is `bin/intake`'s own file, byte for byte — the same one the CLI
+  // appends and the portal writes, so all three converge without conversion.
   async function readLog() {
     var res = await call('/repos/' + REPO + '/contents/' + LOG);
-    if (res.status === 404) return { sha: null, blob: null };
+    if (res.status === 404) return { sha: null, lines: [] };
     if (!res.ok) throw new Error('could not read the log (' + res.status + ')');
     var j = await res.json();
     var text = j.content ? dec.decode(unb64(j.content)) : null;
@@ -113,15 +128,15 @@
       var b = await call('/repos/' + REPO + '/git/blobs/' + j.sha);
       text = dec.decode(unb64((await b.json()).content));
     }
-    return { sha: j.sha, blob: JSON.parse(text) };
+    return { sha: j.sha, lines: text.split('\n').filter(function (l) { return l.trim(); }) };
   }
 
-  async function writeLog(blob, sha, message) {
+  async function writeLog(lines, sha, message) {
     var res = await call('/repos/' + REPO + '/contents/' + LOG, {
       method: 'PUT',
       body: {
-        message: message || 'intake: a night, sealed',
-        content: b64(enc.encode(JSON.stringify(blob) + '\n')),
+        message: message || 'intake: a night',
+        content: b64(enc.encode(lines.join('\n') + (lines.length ? '\n' : ''))),
         sha: sha || undefined
       }
     });
@@ -152,30 +167,49 @@
     return out;
   }
 
-  /** Read, merge the caller's new lines in, re-seal, write. Retries once on a race. */
-  async function push(phrase, newLines, message) {
+  /** Read, merge the caller's new lines in, write. Retries once on a race. */
+  async function push(newLines, message) {
     for (var attempt = 0; attempt < 2; attempt++) {
       var cur = await readLog();
-      var remote = cur.blob ? (await open(phrase, cur.blob)).split('\n') : [];
-      var merged = mergeLines(remote, newLines);
-      var blob = await seal(phrase, merged.join('\n') + (merged.length ? '\n' : ''));
-      if (await writeLog(blob, cur.sha, message)) {
+      var merged = mergeLines(cur.lines, newLines);
+      if (await writeLog(merged, cur.sha, message)) {
         return { lines: merged, wrote: newLines.length };
       }
     }
     throw new Error('two devices wrote at once and the second retry also raced — try again');
   }
 
-  async function pull(phrase) {
-    var cur = await readLog();
-    if (!cur.blob) return [];
-    return (await open(phrase, cur.blob)).split('\n').filter(function (l) { return l.trim(); });
+  async function pull() {
+    return (await readLog()).lines;
+  }
+
+  /** The substance catalog, which decides what quick-log buttons exist.
+   *
+   *  Three sources, in order, because this must not hinge on one cross-origin
+   *  fetch: the authenticated contents API (same host as every other call here),
+   *  the raw CDN, then null — at which point `boss-web.js` falls back to its
+   *  compiled-in copy. Returns null only when every network path failed, and the
+   *  caller says so on screen rather than silently rendering no buttons.
+   */
+  async function readSubstances() {
+    try {
+      var res = await call('/repos/' + REPO + '/contents/' + SUBSTANCES);
+      if (res.ok) {
+        var j = await res.json();
+        if (j.content) return JSON.parse(dec.decode(unb64(j.content)));
+      }
+    } catch (e) { /* fall through to the CDN */ }
+    try {
+      var raw = await fetch('https://raw.githubusercontent.com/' + REPO + '/main/' + SUBSTANCES);
+      if (raw.ok) return await raw.json();
+    } catch (e) { /* fall through to the built-in */ }
+    return null;
   }
 
   window.BossSync = {
     REPO: REPO, LOG: LOG,
     token: token, setToken: setToken, forget: forget,
-    seal: seal, open: open, mergeLines: mergeLines,
+    mergeLines: mergeLines, readSubstances: readSubstances,
     readLog: readLog, push: push, pull: pull
   };
 })();
