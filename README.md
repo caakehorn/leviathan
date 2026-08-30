@@ -473,7 +473,29 @@ the working tree.
 `.github/workflows/sync-wiki.yml` keeps `data/wiki-data.json` in step with
 wiki-brain automatically. It runs hourly, compares wiki-brain's current commit
 against the `source_commit` recorded in the dataset, and exits in a few seconds
-when nothing has moved. When wiki-brain *has* moved it rebuilds, commits the
+when nothing has moved.
+
+**wiki-brain is private (since 2026-08-02), so the sync needs a credential.**
+`GITHUB_TOKEN` is scoped to this repository and gets a bare `404 Not Found` from
+a private third-party repo — which is what silently broke the hourly sync for
+most of that day. The workflow now requires a secret named **`WIKI_BRAIN_TOKEN`**
+and fails fast with a readable error if it is missing:
+
+1. Create a **fine-grained personal access token** — GitHub → Settings →
+   Developer settings → Personal access tokens → Fine-grained tokens.
+2. Scope it to **only** `caakehorn/wiki-brain`, with **Repository permissions →
+   Contents: Read-only**. Nothing in this workflow writes upstream, so read is
+   the entire grant it needs.
+3. Add it here under Settings → Secrets and variables → Actions → New repository
+   secret, named `WIKI_BRAIN_TOKEN`.
+4. Re-run: Actions → *Sync wiki data from wiki-brain* → Run workflow.
+
+Fine-grained tokens expire (one year maximum), and when this one does the sync
+will start failing again with the same `Not Found`. A read-only **deploy key** on
+wiki-brain, passed to `actions/checkout` via `ssh-key:`, is the alternative that
+does not expire — swap to it if the annual rotation becomes a nuisance. The
+checkout runs with `persist-credentials: false` so the token is not left behind
+in `.wiki-brain/.git/config` for later steps to read. When wiki-brain *has* moved it rebuilds, commits the
 result with the upstream SHA in the message, and then deploys the site.
 
 Keeping the file current is only half of it — the pages that read it have to
