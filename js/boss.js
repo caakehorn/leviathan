@@ -194,6 +194,26 @@
       msg = 'intake: a table opened, sealed';
     } else if (action === 'log') {
       u = unitOf(body.unit); if (!u) return fail(msgEl, 'no such table');
+      if (body.preset) {
+        var subs = (ST.substances || []).filter(function (x) {
+          return x.id === u.substance_id; })[0] || {};
+        var pre = (subs.presets || []).filter(function (x) {
+          return x.id === body.preset; })[0];
+        if (!pre) return fail(msgEl, 'no preset "' + body.preset + '" for ' + u.substance);
+        // Straight into the same envelope a typed line produces. A preset is a
+        // set of default arguments, not a different kind of event.
+        lines = [BossWeb.event('intake_logged', u.id, {
+          quantity: pre.quantity, unit: pre.unit,
+          measurement_type: pre.measurement_type || 'estimated',
+          confidence: pre.confidence || null, descriptor: null,
+          note: [pre.note, (body.note || '').trim()].filter(Boolean).join('; ') || null
+        }, when(body.at))];
+        return webWrite(lines, 'intake: ' + (pre.label || pre.id) + ', sealed')
+          .then(function () {
+            if (msgEl) { msgEl.className = 'msg ok'; msgEl.textContent = ''; }
+            return { ok: true };
+          }, function (e) { return fail(msgEl, e.message); });
+      }
       var mt = body.measurement_type || (qty === null ? 'unquantified' : 'measured');
       if (qty === null && !(body.descriptor || '').trim())
         return fail(msgEl, 'give a quantity, or a descriptor like "one line"');
@@ -290,13 +310,23 @@
   function meter(a) {
     var e = a.events, q = e.measured + e.estimated;
     var pctv = e.total ? Math.round(q / e.total * 100) : 0;
+    // Two questions, not one. "Every event carries a number" was true and
+    // misleading on a table logged entirely by one-tap presets: full coverage,
+    // zero measurements. The second sentence is the one that stops a column of
+    // estimates from reading like a column of weights.
+    var weighed = !e.measured && e.estimated
+      ? 'Not one of them was weighed — all ' + e.estimated + ' are estimates.'
+      : e.estimated
+        ? e.measured + ' weighed, ' + e.estimated + ' estimated.'
+        : e.measured ? 'Every one of them weighed.' : '';
     var cap = !e.total
       ? 'Nothing has gone down on this table yet.'
-      : e.unquantified === 0
-        ? 'Every event on this table carries a number. Nothing below is guesswork.'
-        : q + ' of ' + e.total + ' events carry a number. ' + e.unquantified +
-          ' went down without one, and the house is not going to invent them — ' +
-          'every quantity on this table is computed from the ' + q + ', not the ' + e.total + '.';
+      : (e.unquantified === 0
+          ? 'Every event on this table carries a number. '
+          : q + ' of ' + e.total + ' events carry a number. ' + e.unquantified +
+            ' went down without one, and the house is not going to invent them — ' +
+            'every quantity here is computed from the ' + q + ', not the ' + e.total + '. ')
+        + weighed;
     return '<div class="meter"><div class="n">' + pctv + '%<span class="of">COUNTED</span></div>' +
       '<div class="track"><div class="fill" style="width:' + pctv + '%"></div></div>' +
       '<div class="cap">' + esc(cap) + '</div></div>';
@@ -369,8 +399,25 @@
     h += meter(a) + '</div>';
     h += '<div style="flex:0 0 auto">' + glassTable() + '</div></div>';
 
-    // the quick ring-up — one row, Enter saves
+    // ONE TAP. The manual row below is still the honest path for anything
+    // weighed — these are for the case that actually recurs, where the
+    // alternative to a tap is not a careful entry but no entry at all.
     h += '<hr class="hr">';
+    var pres = ((ST.substances || []).filter(function (x) {
+      return x.id === u.substance_id; })[0] || {}).presets || [];
+    if (pres.length) {
+      h += '<div class="rubric">ONE TAP</div><div class="rowline" style="margin-bottom:6px">' +
+        pres.map(function (pre) {
+          return '<button class="deal" data-r="pre" data-pre="' + esc(pre.id) + '" ' +
+            'title="' + esc(pre.note || '') + '">' + esc(pre.label || pre.id) +
+            ' <span style="opacity:.72;font-weight:400">' + esc(pre.quantity) + ' ' +
+            esc(pre.unit) + '</span></button>';
+        }).join('') + '</div>' +
+        '<div style="font-size:9.5px;letter-spacing:.1em;color:var(--dim);line-height:1.8;' +
+        'margin-bottom:14px">Every preset goes down as an <b>estimate</b>, never a ' +
+        'measurement — nobody weighed these, and the house will not let a stand-in pass ' +
+        'for a scale.</div>';
+    }
     h += '<div class="rubric">RING IT UP</div>';
     h += '<div class="rowline">' +
       '<input type="text" data-r="q" placeholder="0.18" style="width:7em" aria-label="quantity">' +
@@ -763,6 +810,14 @@
           descriptor: v('desc'), at: v('at'), note: v('note')
         }, msg).then(function (r) { if (r) render(); });
       };
+      card.querySelectorAll('[data-r="pre"]').forEach(function (b) {
+        b.onclick = function () {
+          b.disabled = true;
+          act('log', { unit: id, preset: b.dataset.pre }, msg).then(function (r) {
+            if (r) render(); else b.disabled = false;
+          });
+        };
+      });
       if (g('cut')) g('cut').onclick = cut;
       ['q', 'desc'].forEach(function (r) {
         if (g(r)) g(r).onkeydown = function (e) {

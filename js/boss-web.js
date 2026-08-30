@@ -201,12 +201,24 @@
     u.reconciliation = u.status === 'closed' ? u.reconciliation : reconcile(u);
   }
 
+  // Mirrors bin/intake's coverage_line() exactly — a parity test compares the
+  // two strings, so any change here is a change there. It answers two questions:
+  // how many events carry a number at all, and how many of those came off a
+  // scale. A table logged entirely by one-tap presets has full coverage and not
+  // one measurement on it, and saying only the first half reads as reassurance.
   function coverageLine(a) {
-    var e = a.events, q = e.measured + e.estimated;
+    var e = a.events, q = e.measured + e.estimated, base;
     if (!e.total) return 'no events logged';
-    if (!e.unquantified) return 'all ' + e.total + ' events carry a quantity';
-    return q + ' of ' + e.total + ' events carry a quantity (' +
-           Math.round(a.coverage * 100) + '%); ' + e.unquantified + ' logged without one';
+    if (!e.unquantified) base = e.total === 1 ? 'the one event carries a quantity'
+                                               : 'all ' + e.total + ' events carry a quantity';
+    else base = q + ' of ' + e.total + ' events carry a quantity (' +
+                Math.round(a.coverage * 100) + '%); ' + e.unquantified + ' logged without one';
+    if (!q) return base;
+    if (!e.estimated) return base + (e.total === 1 ? ', and it was weighed' : ' — every one weighed');
+    if (!e.measured) return base + (e.estimated === 1
+      ? ' — but it was not weighed; it is an estimate'
+      : ' — but none was weighed; all ' + e.estimated + ' are estimates');
+    return base + ' — ' + e.measured + ' weighed, ' + e.estimated + ' estimated';
   }
 
   function display(u) {
