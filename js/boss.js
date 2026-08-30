@@ -237,13 +237,50 @@
         note: (body.note || '').trim() || null
       }, when(body.at))];
       msg = 'intake: something walked out, sealed';
+    } else if (action === 'close') {
+      u = unitOf(body.unit); if (!u) return fail(msgEl, 'no such table');
+      if (u.status !== 'active') return fail(msgEl, 'that table is already closed');
+      var rec = u.reconciliation, at = when(body.at);
+      lines = [];
+      if (rec && rec.needs_answer) {
+        if (!body.resolution) {
+          return fail(msgEl, fmt(Math.abs(rec.unaccounted), u.quantity_unit) + ' is ' +
+            (rec.overdrawn ? 'over-logged' : 'unaccounted for') +
+            ' — say what happened to it.');
+        }
+        if (body.resolution === 'final_intake') {
+          if (rec.overdrawn) {
+            return fail(msgEl, 'more is logged than the unit held — correct an event ' +
+                               'rather than adding another');
+          }
+          // Recorded as an estimate, never a measurement: nobody weighed this.
+          // Same event the daemon writes, same flag, same note.
+          lines.push(BossWeb.event('intake_logged', u.id, {
+            quantity: rec.unaccounted, unit: u.quantity_unit,
+            measurement_type: 'estimated', confidence: 'low', descriptor: null,
+            reconciliation: true,
+            note: 'reconciliation at close — the remainder of the unit, recorded as ' +
+                  'one estimated final intake'
+          }, at));
+        }
+      }
+      var resolved = Object.assign({}, rec || {});
+      resolved.resolution = (rec && body.resolution) ? body.resolution : 'balanced';
+      if (body.resolution === 'final_intake' && rec) {
+        resolved.quantified_intake = rec.quantified_intake + rec.unaccounted;
+        resolved.unaccounted = 0;
+      }
+      lines.push(BossWeb.event('unit_closed', u.id, {
+        disposition: body.disposition, reconciliation: resolved,
+        note: (body.note || '').trim() || null
+      }, at));
+      return webWrite(lines, 'intake: last call, sealed').then(function () {
+        if (msgEl) { msgEl.className = 'msg ok'; msgEl.textContent = ''; }
+        var closed = unitOf(u.id);
+        return { ok: true, unit: u.id, report: BossWeb.report(closed) };
+      }, function (e) { return fail(msgEl, e.message); });
     } else {
-      return fail(msgEl,
-        action === 'close'
-          ? 'Last call reconciles the till, and that arithmetic lives in bin/intake — '
-          + 'run `bin/intake close` on the machine with the ledger. The room will not '
-          + 'do a thinner version of it.'
-          : 'not something the room can do from the web — that one needs the daemon');
+      return fail(msgEl, 'not something the room can do — ' + action);
     }
 
     return webWrite(lines, msg).then(function () {
@@ -251,6 +288,8 @@
       return { ok: true };
     }, function (e) { return fail(msgEl, e.message); });
   }
+
+  function fmt(q, u) { return window.BossWeb ? BossWeb.fmtQty(q, u) : q + ' ' + u; }
 
   function fail(el, text) {
     if (el) { el.className = 'msg'; el.textContent = '✗ ' + text; }
@@ -890,6 +929,13 @@
 
     if ($('#ctGo')) $('#ctGo').onclick = function () {
       var m = $('#ctMsg'); m.className = 'msg'; m.textContent = 'counting…';
+      if (MODE === 'web') {
+        var st = BossWeb.crossStats(ST.units);
+        COUNT = { stats: st, text: BossWeb.statsText(st) };
+        m.textContent = '';
+        render();
+        return;
+      }
       req('/api/intake/stats').then(function (r) {
         if (!r.ok || r.body.error) { m.textContent = '✗ ' + (r.body.error || r.status); return; }
         COUNT = r.body; m.textContent = ''; render();
@@ -899,6 +945,16 @@
 
   function pullReceipt(id) {
     var m = $('#rpMsg') || null;
+    if (MODE === 'web') {
+      var u = unitOf(id);
+      if (!u) { if (m) { m.className = 'msg'; m.textContent = '✗ no such table'; } return; }
+      RECEIPT = { id: id, report: BossWeb.report(u), events: u.display.events };
+      ROOM = 'office';
+      render();
+      var box0 = $('.receiptwrap');
+      if (box0) box0.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return;
+    }
     req('/api/intake/report?unit=' + encodeURIComponent(id)).then(function (r) {
       if (!r.ok || r.body.error) {
         if (m) { m.className = 'msg'; m.textContent = '✗ ' + (r.body.error || r.status); }
