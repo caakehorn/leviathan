@@ -478,9 +478,9 @@ Every other page here **reads** a finished record that ships in this repo. This
 one **writes** to a live one that does not ship here at all: it is the front end
 for the intake ledger in [wiki-brain](https://github.com/caakehorn/wiki-brain)
 (`bin/intake`, `intake/`), and that ledger lives on the machine you are sitting
-at. The page is a client for the local daemon on `127.0.0.1:8477`; the record
-never leaves that machine, this site holds no copy of it, and a browser that
-cannot reach the daemon gets an empty room. **It does not fall back to sample
+at. The page is a client for the local daemon on `127.0.0.1:8477`; this site
+holds no copy of the ledger and never receives one, and a browser that cannot
+reach the daemon gets an empty room. **It does not fall back to sample
 data** — a room full of invented numbers would be worse than a dark one.
 
 So the whole thing is a face on `bin/intake` and never a second copy of it.
